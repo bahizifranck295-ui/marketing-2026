@@ -1,32 +1,5 @@
 @import "tailwindcss";
 
-/* Couleurs tirées du logo PREMIDIS (bleu + violet) */
-:root {
-  --bg: #f4f6fa;
-  --surface: #ffffff;
-  --fg: #0f172a;
-  --muted: #55607a;
-  --line: #dde3ee;
-  --accent: #0369a1;
-  --accent-soft: #e0f2fe;
-  --pending: #7e22ce;
-  --pending-soft: #f3e8ff;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #0b1020; --surface: #121a2e; --fg: #e6ebf5; --muted: #98a3bb; --line: #243049;
-    --accent: #7dd3fc; --accent-soft: #0c2a40; --pending: #d8b4fe; --pending-soft: #2a1640;
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --bg: #0b1020; --surface: #121a2e; --fg: #e6ebf5; --muted: #98a3bb; --line: #243049;
-  --accent: #7dd3fc; --accent-soft: #0c2a40; --pending: #d8b4fe; --pending-soft: #2a1640;
-  color-scheme: dark;
-}
-html, body, #root { height: 100%; }
-body { background: var(--bg); color: var(--fg); margin: 0; }
-
 @media print {
   @page {
     size: A4;
