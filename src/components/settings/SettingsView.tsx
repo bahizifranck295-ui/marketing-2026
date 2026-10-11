@@ -111,10 +111,10 @@ export const SettingsView: React.FC = () => {
     <div className="space-y-6">
       {/* Top Header */}
       <div>
-        <h1 className="text-2xl font-black text-[#1D2030] dark:text-white tracking-tight flex items-center gap-2">
+        <h1 className="text-2xl font-black text-ink dark:text-white tracking-tight flex items-center gap-2">
           Paramètres du Système
         </h1>
-        <p className="text-xs text-[#717787] dark:text-gray-400 mt-1">
+        <p className="text-xs text-muted dark:text-gray-400 mt-1">
           Configuration de l'appareil biométrique ZKTeco, horaires de référence, départements et journal d'audit
         </p>
       </div>
@@ -125,7 +125,7 @@ export const SettingsView: React.FC = () => {
           onClick={() => setActiveTab('ZKTECO')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
             activeTab === 'ZKTECO'
-              ? 'bg-[#7C4DFF] text-white shadow-xs'
+              ? 'bg-brand text-white shadow-xs'
               : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
           }`}
         >
@@ -137,7 +137,7 @@ export const SettingsView: React.FC = () => {
           onClick={() => setActiveTab('COMPANY')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
             activeTab === 'COMPANY'
-              ? 'bg-[#7C4DFF] text-white shadow-xs'
+              ? 'bg-brand text-white shadow-xs'
               : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
           }`}
         >
@@ -149,7 +149,7 @@ export const SettingsView: React.FC = () => {
           onClick={() => setActiveTab('DEPARTMENTS')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
             activeTab === 'DEPARTMENTS'
-              ? 'bg-[#7C4DFF] text-white shadow-xs'
+              ? 'bg-brand text-white shadow-xs'
               : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
           }`}
         >
@@ -161,7 +161,7 @@ export const SettingsView: React.FC = () => {
           onClick={() => setActiveTab('USERS')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
             activeTab === 'USERS'
-              ? 'bg-[#7C4DFF] text-white shadow-xs'
+              ? 'bg-brand text-white shadow-xs'
               : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
           }`}
         >
@@ -173,7 +173,7 @@ export const SettingsView: React.FC = () => {
           onClick={() => setActiveTab('AUDIT')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
             activeTab === 'AUDIT'
-              ? 'bg-[#7C4DFF] text-white shadow-xs'
+              ? 'bg-brand text-white shadow-xs'
               : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
           }`}
         >
@@ -189,7 +189,7 @@ export const SettingsView: React.FC = () => {
           <div className="glass-card rounded-2xl p-6 space-y-5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100 dark:border-gray-800">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-950 flex items-center justify-center text-[#7C4DFF]">
+                <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-950 flex items-center justify-center text-brand">
                   <Cpu className="w-5 h-5" />
                 </div>
                 <div>
@@ -266,14 +266,14 @@ export const SettingsView: React.FC = () => {
                 disabled={testingConnection}
                 className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-xs font-bold text-gray-800 dark:text-gray-200 hover:bg-gray-50 transition-all shadow-2xs disabled:opacity-50"
               >
-                <Wifi className={`w-3.5 h-3.5 text-[#7C4DFF] ${testingConnection ? 'animate-pulse' : ''}`} />
+                <Wifi className={`w-3.5 h-3.5 text-brand ${testingConnection ? 'animate-pulse' : ''}`} />
                 <span>{testingConnection ? 'Test réseau en cours...' : 'Tester la connexion TCP'}</span>
               </button>
 
               <button
                 onClick={handleSyncNow}
                 disabled={syncing}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#7C4DFF] text-white text-xs font-bold hover:bg-[#6a38f3] transition-all shadow-sm disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-brand text-white text-xs font-bold hover:bg-brand-deep transition-all shadow-sm disabled:opacity-50"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
                 <span>{syncing ? 'Import des pointages...' : 'Synchroniser maintenant'}</span>
@@ -305,7 +305,7 @@ export const SettingsView: React.FC = () => {
             <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-800">
               <div>
                 <h3 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                  <Upload className="w-4 h-4 text-[#7C4DFF]" />
+                  <Upload className="w-4 h-4 text-brand" />
                   Importateur de Fichiers de Pointage ZKTeco (USB / DAT / CSV)
                 </h3>
                 <p className="text-xs text-gray-500">
@@ -333,7 +333,7 @@ export const SettingsView: React.FC = () => {
               />
               <label 
                 htmlFor="zk-file-upload" 
-                className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-50 dark:bg-purple-950/40 text-[#7C4DFF] font-bold text-xs hover:bg-purple-100 transition-colors"
+                className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-50 dark:bg-purple-950/40 text-brand font-bold text-xs hover:bg-purple-100 transition-colors"
               >
                 <Upload className="w-3.5 h-3.5" />
                 Choisir un fichier USB ZKTeco (AttLog.dat ou .csv)
@@ -341,7 +341,7 @@ export const SettingsView: React.FC = () => {
 
               {importedFileName && (
                 <div className="pt-2 text-xs font-mono text-gray-600 dark:text-gray-300">
-                  Fichier sélectionné : <b className="text-[#7C4DFF]">{importedFileName}</b> ({importedFileContent.split('\n').length} lignes)
+                  Fichier sélectionné : <b className="text-brand">{importedFileName}</b> ({importedFileContent.split('\n').length} lignes)
                 </div>
               )}
             </div>
@@ -410,7 +410,7 @@ export const SettingsView: React.FC = () => {
                     <tr key={log.id}>
                       <td className="py-2.5 px-3 font-mono text-gray-500">{log.timestamp}</td>
                       <td className="py-2.5 px-3 font-bold">{log.type.replace(/_/g, ' ')}</td>
-                      <td className="py-2.5 px-3 text-center font-mono font-bold text-[#7C4DFF]">+{log.punchesImported}</td>
+                      <td className="py-2.5 px-3 text-center font-mono font-bold text-brand">+{log.punchesImported}</td>
                       <td className="py-2.5 px-3 text-center">
                         <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                           log.status === 'SUCCESS' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
@@ -494,7 +494,7 @@ export const SettingsView: React.FC = () => {
 
           {/* Reference schedules */}
           <div className="p-4 rounded-xl bg-purple-50/50 dark:bg-purple-950/20 border border-purple-100 dark:border-purple-900/40 space-y-3">
-            <h4 className="text-xs font-bold text-[#7C4DFF] uppercase tracking-wider">
+            <h4 className="text-xs font-bold text-brand uppercase tracking-wider">
               Horaires Généraux & Calcul Automatique
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
@@ -580,7 +580,7 @@ export const SettingsView: React.FC = () => {
             <div className="flex items-end">
               <button
                 type="submit"
-                className="w-full py-1.5 px-3 rounded-xl bg-[#7C4DFF] text-white font-bold hover:bg-[#6a38f3]"
+                className="w-full py-1.5 px-3 rounded-xl bg-brand text-white font-bold hover:bg-brand-deep"
               >
                 + Ajouter département
               </button>
@@ -600,7 +600,7 @@ export const SettingsView: React.FC = () => {
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800 font-medium">
                 {departments.map(dep => (
                   <tr key={dep.id}>
-                    <td className="py-2.5 px-3 font-mono font-bold text-[#7C4DFF]">{dep.code}</td>
+                    <td className="py-2.5 px-3 font-mono font-bold text-brand">{dep.code}</td>
                     <td className="py-2.5 px-3 font-bold text-gray-900 dark:text-white">{dep.name}</td>
                     <td className="py-2.5 px-3 text-gray-600 dark:text-gray-400">{dep.manager}</td>
                     <td className="py-2.5 px-3 text-center font-mono text-gray-500">{dep.defaultEntrance} - {dep.defaultExit}</td>
@@ -628,7 +628,7 @@ export const SettingsView: React.FC = () => {
                 <div>
                   <p className="font-bold text-gray-900 dark:text-white">{u.name}</p>
                   <p className="text-[11px] text-gray-500">{u.email}</p>
-                  <span className="inline-block mt-1 px-2 py-0.5 rounded font-bold text-[10px] bg-purple-100 text-[#7C4DFF]">
+                  <span className="inline-block mt-1 px-2 py-0.5 rounded font-bold text-[10px] bg-purple-100 text-brand">
                     Rôle : {u.role}
                   </span>
                 </div>
@@ -676,7 +676,7 @@ export const SettingsView: React.FC = () => {
                   <tr key={log.id} className="hover:bg-gray-50/50">
                     <td className="py-2.5 px-3 font-mono text-gray-400 whitespace-nowrap">{log.timestamp}</td>
                     <td className="py-2.5 px-3 font-bold text-gray-800 dark:text-gray-200">{log.userName}</td>
-                    <td className="py-2.5 px-3 font-mono text-[#7C4DFF]">{log.action}</td>
+                    <td className="py-2.5 px-3 font-mono text-brand">{log.action}</td>
                     <td className="py-2.5 px-3 font-semibold text-gray-700 dark:text-gray-300">{log.target}</td>
                     <td className="py-2.5 px-3 text-gray-500">{log.details}</td>
                   </tr>

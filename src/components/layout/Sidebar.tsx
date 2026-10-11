@@ -53,10 +53,10 @@ export const Sidebar: React.FC = () => {
   ];
 
   return (
-    <aside className="w-64 h-[calc(100vh-4rem)] sticky top-16 glass-panel border-r border-[#E1E3E9] dark:border-gray-800 flex flex-col justify-between p-4 shrink-0 transition-colors">
+    <aside className="w-64 h-[calc(100vh-4rem)] sticky top-16 glass-panel border-r border-line dark:border-gray-800 flex flex-col justify-between p-4 shrink-0 transition-colors">
       {/* Top Nav List */}
       <div className="space-y-1">
-        <div className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-[#717787] dark:text-gray-400">
+        <div className="px-3 py-2 text-[10px] font-bold font-mono uppercase tracking-[0.2em] text-muted dark:text-gray-400">
           Menu Principal
         </div>
 
@@ -68,14 +68,14 @@ export const Sidebar: React.FC = () => {
             <button
               key={item.id}
               onClick={() => setCurrentView(item.id)}
-              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 ${
+              className={`nav-item ${isActive ? 'nav-item-active' : ''} w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 ${
                 isActive
-                  ? 'bg-[#7C4DFF] text-white shadow-md shadow-[#7C4DFF]/25 font-bold'
-                  : 'text-[#1D2030] dark:text-gray-300 hover:bg-gray-100/90 dark:hover:bg-gray-800/80'
+                  ? 'bg-gradient-to-r from-brand/25 via-neon-blue/10 to-transparent text-ink dark:text-white ring-1 ring-brand/30 font-bold'
+                  : 'text-ink dark:text-gray-300 hover:bg-gray-100/90 dark:hover:bg-gray-800/80'
               }`}
             >
               <div className="flex items-center gap-3">
-                <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-[#7C4DFF] dark:text-[#59CBE8]'}`} />
+                <Icon className={`w-4 h-4 ${isActive ? 'text-neon drop-shadow-[0_0_6px_var(--color-neon)]' : 'text-brand dark:text-neon'}`} />
                 <span>{item.label}</span>
               </div>
 
@@ -83,7 +83,7 @@ export const Sidebar: React.FC = () => {
                 <span
                   className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                     isActive
-                      ? 'bg-white/20 text-white'
+                      ? 'bg-neon/15 text-neon ring-1 ring-neon/40'
                       : item.badgeColor || 'bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
                   }`}
                 >
@@ -100,7 +100,7 @@ export const Sidebar: React.FC = () => {
         <div className="p-3.5 rounded-2xl bg-gradient-to-br from-indigo-50/70 to-purple-50/40 dark:from-gray-800/40 dark:to-purple-950/20 border border-purple-100 dark:border-purple-900/30">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-1.5 text-xs font-bold text-gray-900 dark:text-white">
-              <Cpu className="w-3.5 h-3.5 text-[#7C4DFF]" />
+              <Cpu className="w-3.5 h-3.5 text-brand" />
               <span>Biométrie ZKTeco</span>
             </div>
             <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
@@ -109,13 +109,13 @@ export const Sidebar: React.FC = () => {
             </span>
           </div>
 
-          <p className="text-[11px] text-[#717787] dark:text-gray-400 leading-snug mb-2.5">
+          <p className="text-[11px] text-muted dark:text-gray-400 leading-snug mb-2.5">
             {zktecoConfig.model.replace(/\(.*?\)/, '').trim()} ({zktecoConfig.ipAddress})
           </p>
 
           <button
             onClick={() => setCurrentView('settings')}
-            className="w-full py-1.5 px-2.5 rounded-lg bg-white dark:bg-gray-900 text-[11px] font-semibold text-[#7C4DFF] dark:text-[#59CBE8] hover:shadow-xs transition-all border border-purple-100 dark:border-gray-700 text-center"
+            className="w-full py-1.5 px-2.5 rounded-lg bg-white dark:bg-gray-900 text-[11px] font-semibold text-brand dark:text-neon hover:shadow-xs transition-all border border-purple-100 dark:border-gray-700 text-center"
           >
             Gérer la pointeuse →
           </button>

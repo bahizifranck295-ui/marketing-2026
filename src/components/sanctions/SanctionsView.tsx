@@ -145,10 +145,10 @@ export const SanctionsView: React.FC = () => {
       {/* Top Header Bar with ONLY the Configuration button as requested */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-[#1D2030] dark:text-white tracking-tight flex items-center gap-2">
+          <h1 className="text-2xl font-black text-ink dark:text-white tracking-tight flex items-center gap-2">
             Configuration des Seuils & Barèmes de Retenues
           </h1>
-          <p className="text-xs text-[#717787] dark:text-gray-400 mt-1">
+          <p className="text-xs text-muted dark:text-gray-400 mt-1">
             Gestion des barèmes financiers de seuils de retard ou d'absence, montants retirables et gel des sanctions pour PREMIDIS SARL
           </p>
         </div>
@@ -157,7 +157,7 @@ export const SanctionsView: React.FC = () => {
         <div className="flex items-center gap-2.5">
           <button
             onClick={handleOpenCreateModal}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#7C4DFF] text-white hover:bg-[#6a38f3] text-xs font-bold transition-all shadow-md active:scale-95"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand text-white hover:bg-brand-deep text-xs font-bold transition-all shadow-md active:scale-95"
             title="Créer un nouveau seuil de retard ou d'absence avec somme d'argent retirable"
           >
             <Plus className="w-4 h-4" />
@@ -211,7 +211,7 @@ export const SanctionsView: React.FC = () => {
               onClick={() => setActiveTab('ACTIVE')}
               className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
                 activeTab === 'ACTIVE'
-                  ? 'bg-[#7C4DFF] text-white shadow-xs'
+                  ? 'bg-brand text-white shadow-xs'
                   : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-gray-900'
               }`}
             >
@@ -320,7 +320,7 @@ export const SanctionsView: React.FC = () => {
             {activeTab === 'ACTIVE' && (
               <button
                 onClick={handleOpenCreateModal}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#7C4DFF] text-white text-xs font-bold"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand text-white text-xs font-bold"
               >
                 <Plus className="w-3.5 h-3.5" /> Créer un barème
               </button>
@@ -464,7 +464,7 @@ export const SanctionsView: React.FC = () => {
           <div className="glass-card rounded-3xl w-full max-w-lg p-6 shadow-2xl animate-in fade-in zoom-in-95 space-y-4 text-xs bg-white dark:bg-gray-900">
             <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-800">
               <h2 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <Banknote className="w-5 h-5 text-[#7C4DFF]" />
+                <Banknote className="w-5 h-5 text-brand" />
                 {editingRuleId ? 'Modifier le Barème de Seuil & Retenue' : 'Nouveau Barème de Seuil & Retenue Financière'}
               </h2>
               <button 
@@ -634,7 +634,7 @@ export const SanctionsView: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-xl bg-[#7C4DFF] text-white font-bold hover:bg-[#6a38f3] shadow-xs"
+                  className="px-4 py-2 rounded-xl bg-brand text-white font-bold hover:bg-brand-deep shadow-xs"
                 >
                   {editingRuleId ? 'Mettre à jour le Barème' : 'Enregistrer le Barème'}
                 </button>

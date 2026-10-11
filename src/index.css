@@ -1,76 +1,360 @@
 @import "tailwindcss";
 
+/* Theme follows the .dark class set by AppContext (not only the OS setting) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ============================================================
+   PREMIDIS NEXUS — futuristic HUD design system
+   Light = "Frost" (cold glass on pale steel)
+   Dark  = "Nexus" (deep space, neon cyan + electric violet)
+   ============================================================ */
+@theme {
+  --font-sans: 'Sora', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-display: 'Chakra Petch', 'Sora', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Brand tokens (were hard-coded hex values) */
+  --color-brand: #6D3BFF;
+  --color-brand-deep: #4F1FE0;
+  --color-neon: #00B8D9;
+  --color-neon-blue: #2F6BFF;
+  --color-muted: #66708F;
+  --color-ink: #0E1430;
+  --color-ink-inv: #E6ECFF;
+  --color-line: #D9DFF2;
+
+  /* Cool, indigo-biased neutrals */
+  --color-gray-50: #F5F7FD;
+  --color-gray-100: #ECF0FA;
+  --color-gray-200: #DCE2F2;
+  --color-gray-300: #C2CAE2;
+  --color-gray-400: #8D97B8;
+  --color-gray-500: #66708F;
+  --color-gray-600: #4B5474;
+  --color-gray-700: #353D5C;
+  --color-gray-800: #1F2643;
+  --color-gray-900: #10152E;
+  --color-gray-950: #070A1C;
+
+  --glow: rgba(109, 59, 255, 0.35);
+  --glow-cyan: rgba(0, 184, 217, 0.35);
+  --surface: rgba(255, 255, 255, 0.72);
+  --surface-strong: rgba(255, 255, 255, 0.9);
+  --edge: rgba(109, 59, 255, 0.16);
+  --edge-hi: rgba(0, 184, 217, 0.55);
+  --page: #EDF1FA;
+  --grid: rgba(47, 107, 255, 0.07);
+}
+
+/* Dark "Nexus" palette — redefines the same tokens */
+.dark {
+  color-scheme: dark;
+  --color-brand: #8B6BFF;
+  --color-brand-deep: #6D3BFF;
+  --color-neon: #22E4FF;
+  --color-neon-blue: #3D7BFF;
+  --color-muted: #8892B8;
+  --color-ink: #EEF2FF;
+  --color-ink-inv: #E6ECFF;
+  --color-line: rgba(120, 160, 255, 0.14);
+
+  --color-gray-50: #F2F5FF;
+  --color-gray-100: #DFE5FA;
+  --color-gray-200: #C9D2F0;
+  --color-gray-300: #B3BEE3;
+  --color-gray-400: #8C97BF;
+  --color-gray-500: #6C779F;
+  --color-gray-600: #4E5880;
+  --color-gray-700: rgba(130, 170, 255, 0.22);
+  --color-gray-800: rgba(110, 150, 255, 0.13);
+  --color-gray-900: rgba(12, 18, 42, 0.72);
+  --color-gray-950: #04060F;
+
+  /* Neon status colours */
+  --color-emerald-300: #7DFFD8;
+  --color-emerald-400: #2EF2B8;
+  --color-emerald-500: #14E0A4;
+  --color-amber-300: #FFD98A;
+  --color-amber-400: #FFC23D;
+  --color-rose-300: #FF9BC0;
+  --color-rose-400: #FF5A93;
+  --color-rose-500: #FF3D7F;
+
+  --glow: rgba(139, 107, 255, 0.55);
+  --glow-cyan: rgba(34, 228, 255, 0.45);
+  --surface: rgba(11, 17, 40, 0.62);
+  --surface-strong: rgba(13, 20, 46, 0.88);
+  --edge: rgba(120, 160, 255, 0.14);
+  --edge-hi: rgba(34, 228, 255, 0.6);
+  --page: #03050E;
+  --grid: rgba(80, 130, 255, 0.06);
+}
+
 @layer base {
+  html { background: var(--page); }
   body {
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    font-family: var(--font-sans);
+    color: var(--color-ink);
+    background:
+      radial-gradient(1100px 600px at 12% -10%, color-mix(in srgb, var(--color-brand) 22%, transparent), transparent 60%),
+      radial-gradient(900px 520px at 100% 0%, color-mix(in srgb, var(--color-neon) 16%, transparent), transparent 60%),
+      radial-gradient(900px 700px at 60% 120%, color-mix(in srgb, var(--color-neon-blue) 14%, transparent), transparent 60%),
+      var(--page);
+    background-attachment: fixed;
+    min-height: 100vh;
   }
+  /* Blueprint grid behind everything */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 44px 44px;
+    mask-image: radial-gradient(ellipse at 50% 30%, #000 30%, transparent 85%);
+  }
+  #root { position: relative; z-index: 1; }
+
+  h1, h2 { font-family: var(--font-display); letter-spacing: -0.01em; }
+  ::selection { background: var(--color-brand); color: #fff; }
 }
 
-/* Glassmorphism & Custom scrollbar */
+/* Page titles: chromatic gradient text */
+h1.text-2xl {
+  font-size: 1.75rem;
+  font-weight: 700;
+  background: linear-gradient(100deg, var(--color-ink) 10%, var(--color-brand) 60%, var(--color-neon) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+}
+h1.text-2xl svg { color: var(--color-neon); }
+
+/* Big numeric read-outs use the display face */
+.text-3xl, .text-4xl, .text-5xl { font-family: var(--font-display); font-variant-numeric: tabular-nums; }
+
+/* ---------- Glass surfaces ---------- */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(225, 227, 233, 0.8);
-}
-
-.dark .glass-panel {
-  background: rgba(17, 24, 39, 0.75);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(55, 65, 81, 0.6);
+  background: var(--surface);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border-color: var(--edge) !important;
 }
 
 .glass-card {
-  background: #ffffff;
-  border: 1px solid #E1E3E9;
-  box-shadow: 0 4px 20px -2px rgba(124, 77, 255, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
+  position: relative;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--color-neon) 5%, transparent), transparent 40%),
+    var(--surface);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  border: 1px solid var(--edge);
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.06) inset,
+    0 20px 50px -24px rgba(16, 24, 64, 0.45);
+  transition: border-color .25s ease, box-shadow .25s ease, transform .25s ease;
+}
+/* HUD corner brackets */
+.glass-card::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  pointer-events: none;
+  padding: 1px;
+  background:
+    linear-gradient(var(--edge-hi), var(--edge-hi)) top left / 18px 1.5px,
+    linear-gradient(var(--edge-hi), var(--edge-hi)) top left / 1.5px 18px,
+    linear-gradient(var(--edge-hi), var(--edge-hi)) bottom right / 18px 1.5px,
+    linear-gradient(var(--edge-hi), var(--edge-hi)) bottom right / 1.5px 18px;
+  background-repeat: no-repeat;
+  opacity: .9;
+}
+.glass-card:hover {
+  border-color: color-mix(in srgb, var(--color-neon) 35%, transparent);
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.08) inset,
+    0 0 0 1px color-mix(in srgb, var(--color-neon) 12%, transparent),
+    0 24px 60px -24px var(--glow);
 }
 
-.dark .glass-card {
-  background: #111827;
-  border: 1px solid #1F2937;
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
+/* Plain white/dark cards that don't use .glass-card get the same treatment in dark mode */
+.dark .rounded-2xl.bg-white,
+.dark .rounded-xl.bg-white,
+.dark .rounded-3xl.bg-white {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
+
+/* ---------- Buttons ---------- */
+button, a, input, select, textarea { transition: all .2s ease; }
+
+/* Primary: plasma gradient + glow + sweeping sheen */
+button.bg-brand,
+button.from-brand {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background-image: linear-gradient(120deg, var(--color-brand) 0%, var(--color-neon-blue) 55%, var(--color-neon) 120%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--color-brand) 40%, transparent),
+    0 10px 30px -10px var(--glow),
+    0 0 22px -6px var(--glow-cyan),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.25);
+  letter-spacing: 0.01em;
+}
+button.bg-brand::after,
+button.from-brand::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.45) 50%, transparent 65%);
+  transform: translateX(-120%);
+  transition: transform .7s ease;
+}
+button.bg-brand:hover::after,
+button.from-brand:hover::after { transform: translateX(120%); }
+button.bg-brand:hover,
+button.from-brand:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--color-neon) 60%, transparent),
+    0 14px 36px -10px var(--glow),
+    0 0 30px -4px var(--glow-cyan),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+button.bg-brand:active,
+button.from-brand:active { transform: translateY(0) scale(.98); }
+
+/* Secondary bordered buttons: glass chip that lights up */
+button.border:not(.bg-brand):not(.from-brand):hover {
+  border-color: color-mix(in srgb, var(--color-neon) 70%, transparent) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-neon) 14%, transparent), 0 0 18px -6px var(--glow-cyan);
+}
+
+/* Icon buttons */
+button.p-2.rounded-xl:hover { color: var(--color-neon); }
+
+/* Focus */
+:focus-visible {
+  outline: 2px solid var(--color-neon);
+  outline-offset: 2px;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--color-neon) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-neon) 18%, transparent), 0 0 20px -8px var(--glow-cyan) !important;
+  outline: none;
+}
+.dark input, .dark select, .dark textarea { background-color: rgba(8, 12, 30, 0.6); color: var(--color-ink); }
+.dark select option { background: #0B1128; }
+
+/* ---------- Sidebar navigation ---------- */
+.nav-item { position: relative; }
+.nav-item:not(.nav-item-active):hover {
+  transform: translateX(3px);
+  box-shadow: inset 0 0 0 1px var(--edge);
+}
+.nav-item-active::before {
+  content: "";
+  position: absolute;
+  left: -16px;
+  top: 18%;
+  bottom: 18%;
+  width: 3px;
+  border-radius: 0 4px 4px 0;
+  background: var(--color-neon);
+  box-shadow: 0 0 12px var(--color-neon), 0 0 24px var(--glow-cyan);
+}
+
+/* ---------- Tables ---------- */
+thead th {
+  font-family: var(--font-mono);
+  font-size: 10px !important;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--color-muted) !important;
+}
+tbody tr { transition: background-color .15s ease, box-shadow .15s ease; }
+tbody tr:hover {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--color-neon) 9%, transparent), transparent 70%) !important;
+  box-shadow: inset 2px 0 0 var(--color-neon);
+}
+
+/* ---------- Status pills glow in dark ---------- */
+.dark .rounded-full[class*="text-emerald"],
+.dark .rounded-md[class*="text-emerald"],
+.dark .rounded[class*="text-emerald"] { box-shadow: 0 0 14px -4px rgba(46, 242, 184, .55); }
+.dark .rounded-full[class*="text-rose"],
+.dark .rounded-md[class*="text-rose"],
+.dark .rounded[class*="text-rose"] { box-shadow: 0 0 14px -4px rgba(255, 90, 147, .5); }
+.dark .rounded-full[class*="text-amber"],
+.dark .rounded-md[class*="text-amber"],
+.dark .rounded[class*="text-amber"] { box-shadow: 0 0 14px -4px rgba(255, 194, 61, .5); }
+
+/* Live dots pulse with a halo */
+.animate-pulse.rounded-full { box-shadow: 0 0 10px currentColor; }
+
+/* Feature gradient panels (e.g. risk analysis) get an animated aurora */
+.from-brand.to-neon-blue,
+.from-brand.to-neon {
+  background-size: 200% 200%;
+  animation: aurora 9s ease-in-out infinite;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.12) inset, 0 30px 70px -25px var(--glow);
+}
+@keyframes aurora {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Scan line across the top bar */
+.hud-bar { position: sticky; overflow: visible; }
+.hud-bar::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: -1px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-neon), var(--color-brand), transparent);
+  background-size: 50% 100%;
+  background-repeat: no-repeat;
+  animation: scan 6s linear infinite;
+  opacity: .8;
+}
+@keyframes scan {
+  from { background-position: -50% 0; }
+  to { background-position: 150% 0; }
+}
+
+/* Modals: deep glass backdrop */
+.bg-black\/50 { background-color: rgba(3, 5, 14, 0.6) !important; backdrop-filter: blur(6px); }
 
 /* Custom scrollbars */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: linear-gradient(var(--color-brand), var(--color-neon));
   border-radius: 9999px;
 }
 
-.dark ::-webkit-scrollbar-thumb {
-  background: #334155;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
 }
 
 /* Print styles for official reports */
 @media print {
-  .no-print {
-    display: none !important;
-  }
-  body {
-    background: #ffffff !important;
-    color: #000000 !important;
-  }
-  .print-only {
-    display: block !important;
-  }
+  .no-print { display: none !important; }
+  body { background: #ffffff !important; color: #000000 !important; }
+  body::before { display: none; }
+  .print-only { display: block !important; }
   .glass-card, .glass-panel {
     border: 1px solid #ccc !important;
     box-shadow: none !important;
     background: #fff !important;
   }
+  .glass-card::before { display: none; }
 }

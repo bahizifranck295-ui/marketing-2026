@@ -137,10 +137,10 @@ export const EmployeesView: React.FC = () => {
       {/* Top Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-[#1D2030] dark:text-white tracking-tight flex items-center gap-2">
+          <h1 className="text-2xl font-black text-ink dark:text-white tracking-tight flex items-center gap-2">
             Registre du Personnel
           </h1>
-          <p className="text-xs text-[#717787] dark:text-gray-400 mt-1">
+          <p className="text-xs text-muted dark:text-gray-400 mt-1">
             Gestion des fiches individuelles, horaires contractuels et correspondances biométriques ZKTeco
           </p>
         </div>
@@ -164,7 +164,7 @@ export const EmployeesView: React.FC = () => {
 
           <button
             onClick={handleOpenAdd}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#7C4DFF] text-white hover:bg-[#6a38f3] text-xs font-semibold shadow-sm transition-all"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-brand text-white hover:bg-brand-deep text-xs font-semibold shadow-sm transition-all"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Nouvel Employé</span>
@@ -206,7 +206,7 @@ export const EmployeesView: React.FC = () => {
               placeholder="Rechercher nom, poste, matricule..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-56 sm:w-72 pl-8 pr-3 py-1.5 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 outline-none border border-gray-200 dark:border-gray-700 focus:ring-1 focus:ring-[#7C4DFF]"
+              className="w-56 sm:w-72 pl-8 pr-3 py-1.5 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 outline-none border border-gray-200 dark:border-gray-700 focus:ring-1 focus:ring-brand"
             />
             <Search className="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-2.5" />
           </div>
@@ -221,7 +221,7 @@ export const EmployeesView: React.FC = () => {
       <div className="glass-card rounded-2xl p-5">
         <div className="overflow-x-auto rounded-xl border border-gray-100 dark:border-gray-800">
           <table className="w-full text-left text-xs">
-            <thead className="bg-gray-50/80 dark:bg-gray-800/50 text-[#717787] dark:text-gray-400 font-bold border-b border-gray-100 dark:border-gray-800">
+            <thead className="bg-gray-50/80 dark:bg-gray-800/50 text-muted dark:text-gray-400 font-bold border-b border-gray-100 dark:border-gray-800">
               <tr>
                 <th className="py-3 px-3.5">Matricule</th>
                 <th className="py-3 px-3.5">Employé</th>
@@ -243,17 +243,17 @@ export const EmployeesView: React.FC = () => {
               ) : (
                 filteredEmployees.map((emp) => (
                   <tr key={emp.id} className="hover:bg-gray-50/60 dark:hover:bg-gray-800/30 transition-colors">
-                    <td className="py-3 px-3.5 font-mono font-bold text-[#7C4DFF]">
+                    <td className="py-3 px-3.5 font-mono font-bold text-brand">
                       {emp.matricule}
                     </td>
 
                     <td className="py-3 px-3.5">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-purple-100 to-indigo-100 dark:from-purple-950 dark:to-indigo-950 text-[#7C4DFF] font-bold flex items-center justify-center text-xs">
+                        <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-purple-100 to-indigo-100 dark:from-purple-950 dark:to-indigo-950 text-brand font-bold flex items-center justify-center text-xs">
                           {emp.nom.charAt(0)}
                         </div>
                         <div>
-                          <p className="font-bold text-[#1D2030] dark:text-white">
+                          <p className="font-bold text-ink dark:text-white">
                             {emp.nom} {emp.postnom} {emp.prenom}
                           </p>
                           <p className="text-[11px] text-gray-400 font-mono">
@@ -300,14 +300,14 @@ export const EmployeesView: React.FC = () => {
                       <div className="flex items-center justify-end gap-1">
                         <button
                           onClick={() => setSelectedEmployee(emp)}
-                          className="p-1.5 rounded-lg text-gray-500 hover:text-[#7C4DFF] hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                          className="p-1.5 rounded-lg text-gray-500 hover:text-brand hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                           title="Voir profil & historique complet"
                         >
                           <Eye className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => handleOpenEdit(emp)}
-                          className="p-1.5 rounded-lg text-gray-500 hover:text-[#7C4DFF] hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                          className="p-1.5 rounded-lg text-gray-500 hover:text-brand hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                           title="Modifier le dossier"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
@@ -466,7 +466,7 @@ export const EmployeesView: React.FC = () => {
 
               {/* Schedules & Tolerances */}
               <div className="p-3.5 rounded-2xl bg-purple-50/50 dark:bg-purple-950/20 border border-purple-100 dark:border-purple-900/40 space-y-3">
-                <p className="font-bold text-[#7C4DFF] text-xs">
+                <p className="font-bold text-brand text-xs">
                   Horaires Contractuels & Règle de Retard
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -513,7 +513,7 @@ export const EmployeesView: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-xl bg-[#7C4DFF] text-white font-bold hover:bg-[#6a38f3] shadow-sm"
+                  className="px-4 py-2 rounded-xl bg-brand text-white font-bold hover:bg-brand-deep shadow-sm"
                 >
                   {editingEmployee ? 'Mettre à jour' : 'Enregistrer l\'employé'}
                 </button>
@@ -529,7 +529,7 @@ export const EmployeesView: React.FC = () => {
           <div className="glass-card rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 shadow-2xl animate-in fade-in zoom-in-95 space-y-5">
             <div className="flex items-start justify-between pb-4 border-b border-gray-100 dark:border-gray-800">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#7C4DFF] to-[#59CBE8] text-white flex items-center justify-center text-lg font-black shadow-sm">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand to-neon text-white flex items-center justify-center text-lg font-black shadow-sm">
                   {selectedEmployee.nom.charAt(0)}
                 </div>
                 <div>
@@ -539,7 +539,7 @@ export const EmployeesView: React.FC = () => {
                   <p className="text-xs text-gray-500 font-medium">
                     {selectedEmployee.poste} · {selectedEmployee.departement}
                   </p>
-                  <span className="inline-block mt-1 font-mono font-bold text-xs text-[#7C4DFF] bg-purple-50 dark:bg-purple-950/40 px-2 py-0.5 rounded">
+                  <span className="inline-block mt-1 font-mono font-bold text-xs text-brand bg-purple-50 dark:bg-purple-950/40 px-2 py-0.5 rounded">
                     Matricule : {selectedEmployee.matricule}
                   </span>
                 </div>

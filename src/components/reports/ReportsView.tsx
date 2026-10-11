@@ -298,10 +298,10 @@ export const ReportsView: React.FC = () => {
       {/* Top Header Bar with ONLY the Download PDF button */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-[#1D2030] dark:text-white tracking-tight flex items-center gap-2">
+          <h1 className="text-2xl font-black text-ink dark:text-white tracking-tight flex items-center gap-2">
             Rapports & Documents Officiels
           </h1>
-          <p className="text-xs text-[#717787] dark:text-gray-400 mt-1">
+          <p className="text-xs text-muted dark:text-gray-400 mt-1">
             Génération et exportation au format PDF des relevés de présences et des sanctions disciplinaires mensuelles
           </p>
         </div>
@@ -326,11 +326,11 @@ export const ReportsView: React.FC = () => {
           onClick={() => setActiveTab('ATTENDANCE')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${
             activeTab === 'ATTENDANCE'
-              ? 'bg-white dark:bg-gray-900 text-[#7C4DFF] shadow-xs'
+              ? 'bg-white dark:bg-gray-900 text-brand shadow-xs'
               : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'
           }`}
         >
-          <Calendar className="w-4 h-4 text-[#7C4DFF]" />
+          <Calendar className="w-4 h-4 text-brand" />
           <span>Rapports de Présence & Pointages</span>
         </button>
 
@@ -391,7 +391,7 @@ export const ReportsView: React.FC = () => {
                     onClick={() => setPeriodType('JOUR')}
                     className={`px-1.5 py-0.5 rounded transition-colors ${
                       periodType === 'JOUR'
-                        ? 'bg-white dark:bg-gray-900 text-[#7C4DFF] shadow-2xs font-extrabold'
+                        ? 'bg-white dark:bg-gray-900 text-brand shadow-2xs font-extrabold'
                         : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
                     }`}
                   >
@@ -402,7 +402,7 @@ export const ReportsView: React.FC = () => {
                     onClick={() => setPeriodType('MOIS')}
                     className={`px-1.5 py-0.5 rounded transition-colors ${
                       periodType === 'MOIS'
-                        ? 'bg-white dark:bg-gray-900 text-[#7C4DFF] shadow-2xs font-extrabold'
+                        ? 'bg-white dark:bg-gray-900 text-brand shadow-2xs font-extrabold'
                         : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
                     }`}
                   >
@@ -526,7 +526,7 @@ export const ReportsView: React.FC = () => {
           </div>
 
           <div className="text-right">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#7C4DFF] block">
+            <span className="text-xs font-bold uppercase tracking-wider text-brand block">
               Document Administratif Officiel
             </span>
             <p className="text-xs font-mono text-gray-500 mt-1">
@@ -616,7 +616,7 @@ export const ReportsView: React.FC = () => {
                   monthlySanctionsData.map((s, idx) => (
                     <tr key={s.matricule} className="hover:bg-gray-50/60 dark:hover:bg-gray-800/30">
                       <td className="py-2.5 px-3 text-gray-400 font-mono text-center">{idx + 1}</td>
-                      <td className="py-2.5 px-3 font-mono font-bold text-[#7C4DFF]">{s.matricule}</td>
+                      <td className="py-2.5 px-3 font-mono font-bold text-brand">{s.matricule}</td>
                       <td className="py-2.5 px-3 font-bold">{s.employeeName}</td>
                       <td className="py-2.5 px-3 text-gray-600 dark:text-gray-400">{s.department}</td>
                       <td className="py-2.5 px-3 text-center font-bold text-amber-600">
@@ -722,7 +722,7 @@ export const ReportsView: React.FC = () => {
                         <td className="py-2 px-2 text-center font-mono text-gray-400 border-r border-gray-200 dark:border-gray-800">
                           {row.number}
                         </td>
-                        <td className="py-2 px-3 font-mono font-bold text-[#7C4DFF] border-r border-gray-200 dark:border-gray-800">
+                        <td className="py-2 px-3 font-mono font-bold text-brand border-r border-gray-200 dark:border-gray-800">
                           {row.employee.matricule}
                         </td>
                         <td className="py-2 px-3 font-bold text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-800 truncate max-w-[150px]">
@@ -811,7 +811,7 @@ export const ReportsView: React.FC = () => {
                   filteredAttendanceData.slice(0, 25).map((r, i) => (
                     <tr key={r.id}>
                       <td className="py-2 px-3 text-gray-400 font-mono">{i + 1}</td>
-                      <td className="py-2 px-3 font-mono font-bold text-[#7C4DFF]">{r.employeeId}</td>
+                      <td className="py-2 px-3 font-mono font-bold text-brand">{r.employeeId}</td>
                       <td className="py-2 px-3 font-bold">{r.employeeName}</td>
                       <td className="py-2 px-3 text-gray-600 dark:text-gray-400">{r.department}</td>
                       <td className="py-2 px-3 text-center font-mono">{r.date}</td>

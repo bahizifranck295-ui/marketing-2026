@@ -129,10 +129,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* Header Bar */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-[#1D2030] dark:text-white tracking-tight flex items-center gap-2">
+          <h1 className="text-2xl font-black text-ink dark:text-white tracking-tight flex items-center gap-2">
             Tableau de Bord des Présences
           </h1>
-          <p className="text-xs text-[#717787] dark:text-gray-400 mt-1">
+          <p className="text-xs text-muted dark:text-gray-400 mt-1">
             PREMIDIS SARL · Suivi biométrique en temps réel de l'effectif à Goma
           </p>
         </div>
@@ -140,12 +140,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         {/* Date Selector & Action Buttons */}
         <div className="flex flex-wrap items-center gap-2.5">
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-xs font-semibold shadow-2xs">
-            <Calendar className="w-3.5 h-3.5 text-[#7C4DFF]" />
+            <Calendar className="w-3.5 h-3.5 text-brand" />
             <input 
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="bg-transparent outline-none text-[#1D2030] dark:text-white cursor-pointer font-mono"
+              className="bg-transparent outline-none text-ink dark:text-white cursor-pointer font-mono"
             />
           </div>
 
@@ -155,13 +155,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-800 text-xs font-semibold shadow-2xs transition-all disabled:opacity-50"
             title="Interroger la pointeuse ZKTeco via réseau TCP"
           >
-            <RefreshCw className={`w-3.5 h-3.5 text-[#7C4DFF] ${isSyncing ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 text-brand ${isSyncing ? 'animate-spin' : ''}`} />
             <span>{isSyncing ? 'Synchronisation...' : 'Sync ZKTeco'}</span>
           </button>
 
           <button
             onClick={onOpenQuickPunch}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#7C4DFF] text-white hover:bg-[#6a38f3] text-xs font-semibold shadow-sm transition-all"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-brand text-white hover:bg-brand-deep text-xs font-semibold shadow-sm transition-all"
           >
             <Fingerprint className="w-3.5 h-3.5" />
             <span>Pointer une arrivée</span>
@@ -201,15 +201,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
 
           <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-black text-[#1D2030] dark:text-white tabular-nums tracking-tight">
+            <span className="text-3xl font-black text-ink dark:text-white tabular-nums tracking-tight">
               {stats.present}
             </span>
-            <span className="text-xs text-[#717787] dark:text-gray-400">
+            <span className="text-xs text-muted dark:text-gray-400">
               / {stats.total} employés
             </span>
           </div>
 
-          <p className="text-[11px] text-[#717787] dark:text-gray-400 mt-2">
+          <p className="text-[11px] text-muted dark:text-gray-400 mt-2">
             Arrivés à l'heure conforme à l'horaire et tolérance
           </p>
 
@@ -242,12 +242,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <span className="text-3xl font-black text-amber-600 dark:text-amber-400 tabular-nums tracking-tight">
               {stats.retard}
             </span>
-            <span className="text-xs text-[#717787] dark:text-gray-400">
+            <span className="text-xs text-muted dark:text-gray-400">
               retardataires aujourd'hui
             </span>
           </div>
 
-          <p className="text-[11px] text-[#717787] dark:text-gray-400 mt-2">
+          <p className="text-[11px] text-muted dark:text-gray-400 mt-2">
             Arrivée au-delà des 10 min de tolérance configurée
           </p>
 
@@ -280,12 +280,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <span className="text-3xl font-black text-rose-600 dark:text-rose-400 tabular-nums tracking-tight">
               {stats.absent}
             </span>
-            <span className="text-xs text-[#717787] dark:text-gray-400">
+            <span className="text-xs text-muted dark:text-gray-400">
               non présent(s)
             </span>
           </div>
 
-          <p className="text-[11px] text-[#717787] dark:text-gray-400 mt-2">
+          <p className="text-[11px] text-muted dark:text-gray-400 mt-2">
             Aucun pointage détecté sur la journée
           </p>
 
@@ -302,15 +302,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         <div className="lg:col-span-2 p-5 rounded-2xl glass-card">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-sm font-bold text-[#1D2030] dark:text-white">
+              <h3 className="text-sm font-bold text-ink dark:text-white">
                 Taux de Ponctualité & Évolution Hebdomadaire
               </h3>
-              <p className="text-xs text-[#717787] dark:text-gray-400">
+              <p className="text-xs text-muted dark:text-gray-400">
                 Suivi des arrivées à l'heure vs retards sur les 7 derniers jours
               </p>
             </div>
             <div className="text-right">
-              <span className="text-2xl font-black text-[#1D2030] dark:text-white tabular-nums">
+              <span className="text-2xl font-black text-ink dark:text-white tabular-nums">
                 {stats.onTimeRate}%
               </span>
               <p className="text-[11px] text-emerald-600 font-semibold flex items-center justify-end gap-0.5">
@@ -334,7 +334,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     <div className="w-full max-w-[28px] bg-gray-100 dark:bg-gray-800 rounded-t-lg h-full flex items-end overflow-hidden">
                       <div 
                         style={{ height: `${heightPct}%` }}
-                        className="w-full bg-gradient-to-t from-[#7C4DFF] to-[#59CBE8] rounded-t-lg transition-all duration-300"
+                        className="w-full bg-gradient-to-t from-brand to-neon rounded-t-lg transition-all duration-300"
                       />
                     </div>
                     <span className="text-[10px] font-mono text-gray-500 mt-1">
@@ -350,7 +350,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className="flex items-center justify-between text-xs text-gray-500 mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
             <div className="flex items-center gap-4">
               <span className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-sm bg-[#7C4DFF]" /> Taux de ponctualité (%)
+                <span className="w-2.5 h-2.5 rounded-sm bg-brand" /> Taux de ponctualité (%)
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-sm bg-amber-500" /> Seuil de tolérance (10m)
@@ -363,7 +363,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
 
         {/* Card 2: Attendance Insight Card (Blue Glass Gradient Card as in Image) */}
-        <div className="p-5 rounded-2xl bg-gradient-to-br from-[#7C4DFF] to-[#407BFF] text-white flex flex-col justify-between shadow-lg shadow-[#7C4DFF]/15 relative overflow-hidden">
+        <div className="p-5 rounded-2xl bg-gradient-to-br from-brand to-neon-blue text-white flex flex-col justify-between shadow-lg shadow-brand/15 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none" />
 
           <div>
@@ -397,7 +397,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
             <button
               onClick={() => setCurrentView('sanctions')}
-              className="px-3 py-1 rounded-lg bg-white text-[#7C4DFF] hover:bg-cyan-50 text-xs font-bold transition-colors shadow-xs"
+              className="px-3 py-1 rounded-lg bg-white text-brand hover:bg-cyan-50 text-xs font-bold transition-colors shadow-xs"
             >
               Voir les dossiers
             </button>
@@ -410,7 +410,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         {/* Table Controls */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <h3 className="text-base font-bold text-[#1D2030] dark:text-white">
+            <h3 className="text-base font-bold text-ink dark:text-white">
               Historique des Pointages du Jour
             </h3>
             <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 font-bold">
@@ -466,7 +466,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 placeholder="Filtrer employé..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-36 sm:w-44 pl-7 pr-3 py-1.5 text-xs rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 outline-none focus:ring-1 focus:ring-[#7C4DFF]"
+                className="w-36 sm:w-44 pl-7 pr-3 py-1.5 text-xs rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 outline-none focus:ring-1 focus:ring-brand"
               />
               <Search className="w-3.5 h-3.5 text-gray-400 absolute left-2 top-2" />
             </div>
@@ -493,7 +493,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         {/* Data Table */}
         <div className="overflow-x-auto rounded-xl border border-gray-100 dark:border-gray-800/80">
           <table className="w-full text-left text-xs">
-            <thead className="bg-gray-50/80 dark:bg-gray-800/50 text-[#717787] dark:text-gray-400 font-bold border-b border-gray-100 dark:border-gray-800">
+            <thead className="bg-gray-50/80 dark:bg-gray-800/50 text-muted dark:text-gray-400 font-bold border-b border-gray-100 dark:border-gray-800">
               <tr>
                 <th className="py-3 px-3.5">Matricule</th>
                 <th className="py-3 px-3.5">Employé</th>
@@ -520,7 +520,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       key={record.id}
                       className="hover:bg-gray-50/60 dark:hover:bg-gray-800/30 transition-colors"
                     >
-                      <td className="py-3 px-3.5 font-mono font-bold text-[#7C4DFF]">
+                      <td className="py-3 px-3.5 font-mono font-bold text-brand">
                         {record.employeeId}
                       </td>
 
@@ -530,7 +530,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                             {record.employeeName.charAt(0)}
                           </div>
                           <div>
-                            <span className="font-bold text-[#1D2030] dark:text-white block">
+                            <span className="font-bold text-ink dark:text-white block">
                               {record.employeeName}
                             </span>
                             {record.isCorrected && (
@@ -582,7 +582,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       <td className="py-3 px-3.5 text-right">
                         <button
                           onClick={() => onOpenCorrectModal(record)}
-                          className="p-1 rounded-lg text-gray-500 hover:text-[#7C4DFF] hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                          className="p-1 rounded-lg text-gray-500 hover:text-brand hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                           title="Corriger ou documenter ce pointage"
                         >
                           <Edit3 className="w-3.5 h-3.5" />
@@ -603,7 +603,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </span>
           <button
             onClick={() => setCurrentView('attendance')}
-            className="text-xs font-bold text-[#7C4DFF] hover:underline flex items-center gap-1"
+            className="text-xs font-bold text-brand hover:underline flex items-center gap-1"
           >
             Consulter le registre complet des présences →
           </button>

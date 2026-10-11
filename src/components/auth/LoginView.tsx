@@ -40,10 +40,10 @@ export const LoginView: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-[#F2F1FA] dark:bg-[#0B0F19] text-[#1D2030] dark:text-white transition-colors relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-transparent text-ink dark:text-white transition-colors relative overflow-hidden">
       {/* Decorative ambient background glows */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#7C4DFF]/15 dark:bg-[#7C4DFF]/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#59CBE8]/15 dark:bg-[#59CBE8]/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-brand/15 dark:bg-brand/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-neon/15 dark:bg-neon/10 rounded-full blur-3xl pointer-events-none" />
 
       {/* Top right quick controls */}
       <div className="absolute top-4 right-4 flex items-center gap-2">
@@ -74,10 +74,10 @@ export const LoginView: React.FC = () => {
               referrerPolicy="no-referrer"
             />
           </div>
-          <h1 className="text-xl font-black tracking-tight text-[#1D2030] dark:text-white">
-            PREMIDIS <span className="text-[#7C4DFF]">Attendance</span>
+          <h1 className="text-xl font-black tracking-tight text-ink dark:text-white">
+            PREMIDIS <span className="text-brand">Attendance</span>
           </h1>
-          <p className="text-xs text-[#717787] dark:text-gray-400 mt-1">
+          <p className="text-xs text-muted dark:text-gray-400 mt-1">
             PREMIDIS SARL · Commune de Karisimbi, Goma
           </p>
           <p className="text-[11px] font-mono text-gray-400">
@@ -104,7 +104,7 @@ export const LoginView: React.FC = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="votre.nom@premidis.cd"
-                className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 outline-none focus:ring-2 focus:ring-[#7C4DFF]/40 text-xs font-medium"
+                className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 outline-none focus:ring-2 focus:ring-brand/40 text-xs font-medium"
               />
               <Mail className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
             </div>
@@ -116,7 +116,7 @@ export const LoginView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setForgotModal(true)}
-                className="text-[11px] text-[#7C4DFF] hover:underline"
+                className="text-[11px] text-brand hover:underline"
               >
                 Mot de passe oublié ?
               </button>
@@ -128,7 +128,7 @@ export const LoginView: React.FC = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full pl-9 pr-10 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 outline-none focus:ring-2 focus:ring-[#7C4DFF]/40 text-xs font-mono font-bold"
+                className="w-full pl-9 pr-10 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 outline-none focus:ring-2 focus:ring-brand/40 text-xs font-mono font-bold"
               />
               <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
               <button
@@ -147,7 +147,7 @@ export const LoginView: React.FC = () => {
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="rounded text-[#7C4DFF]"
+                className="rounded text-brand"
               />
               <span>Se souvenir de moi</span>
             </label>
@@ -156,7 +156,7 @@ export const LoginView: React.FC = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 px-4 rounded-xl bg-[#7C4DFF] text-white font-bold hover:bg-[#6a38f3] shadow-md shadow-[#7C4DFF]/25 flex items-center justify-center gap-2 transition-all active:scale-98 disabled:opacity-50"
+            className="w-full py-2.5 px-4 rounded-xl bg-brand text-white font-bold hover:bg-brand-deep shadow-md shadow-brand/25 flex items-center justify-center gap-2 transition-all active:scale-98 disabled:opacity-50"
           >
             <span>{loading ? 'Connexion en cours...' : 'Se connecter'}</span>
             <ArrowRight className="w-4 h-4" />
@@ -224,7 +224,7 @@ export const LoginView: React.FC = () => {
             <div className="flex justify-end pt-2">
               <button
                 onClick={() => setForgotModal(false)}
-                className="px-3 py-1.5 rounded-lg bg-[#7C4DFF] text-white font-bold"
+                className="px-3 py-1.5 rounded-lg bg-brand text-white font-bold"
               >
                 Compris
               </button>

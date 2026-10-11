@@ -148,10 +148,10 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
       {/* Top Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-[#1D2030] dark:text-white tracking-tight">
+          <h1 className="text-2xl font-black text-ink dark:text-white tracking-tight">
             Carnet de Présence du Personnel
           </h1>
-          <p className="text-xs text-[#717787] dark:text-gray-400 mt-1">
+          <p className="text-xs text-muted dark:text-gray-400 mt-1">
             Relevé officiel des pointages journaliers et carnet de synthèse mensuelle (J1 - J31)
           </p>
         </div>
@@ -164,7 +164,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
               onClick={() => setActiveTab('DAILY')}
               className={`px-3 py-1.5 rounded-lg transition-all ${
                 activeTab === 'DAILY'
-                  ? 'bg-white dark:bg-gray-900 text-[#7C4DFF] shadow-xs'
+                  ? 'bg-white dark:bg-gray-900 text-brand shadow-xs'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'
               }`}
             >
@@ -174,7 +174,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
               onClick={() => setActiveTab('MONTHLY_GRID')}
               className={`px-3 py-1.5 rounded-lg transition-all ${
                 activeTab === 'MONTHLY_GRID'
-                  ? 'bg-white dark:bg-gray-900 text-[#7C4DFF] shadow-xs'
+                  ? 'bg-white dark:bg-gray-900 text-brand shadow-xs'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'
               }`}
             >
@@ -184,7 +184,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
 
           <button
             onClick={onOpenQuickPunch}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#7C4DFF] text-white hover:bg-[#6a38f3] text-xs font-semibold shadow-sm transition-all"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-brand text-white hover:bg-brand-deep text-xs font-semibold shadow-sm transition-all"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Pointer une présence</span>
@@ -197,7 +197,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
         <div className="flex flex-wrap items-center gap-3">
           {activeTab === 'DAILY' ? (
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-              <Calendar className="w-3.5 h-3.5 text-[#7C4DFF]" />
+              <Calendar className="w-3.5 h-3.5 text-brand" />
               <input
                 type="date"
                 value={selectedDate}
@@ -207,7 +207,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
             </div>
           ) : (
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-              <Calendar className="w-3.5 h-3.5 text-[#7C4DFF]" />
+              <Calendar className="w-3.5 h-3.5 text-brand" />
               <input
                 type="month"
                 value={selectedMonth}
@@ -250,7 +250,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
               placeholder="Rechercher nom, matricule..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-48 sm:w-60 pl-8 pr-3 py-1.5 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 outline-none border border-gray-200 dark:border-gray-700 focus:ring-1 focus:ring-[#7C4DFF]"
+              className="w-48 sm:w-60 pl-8 pr-3 py-1.5 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 outline-none border border-gray-200 dark:border-gray-700 focus:ring-1 focus:ring-brand"
             />
             <Search className="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-2.5" />
           </div>
@@ -296,7 +296,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
         <div className="glass-card rounded-2xl p-5 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="font-bold text-sm text-[#1D2030] dark:text-white">
+              <span className="font-bold text-sm text-ink dark:text-white">
                 Pointages constatés le {new Date(selectedDate).toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
               </span>
               <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 font-bold text-gray-600 dark:text-gray-400">
@@ -320,7 +320,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
 
           <div className="overflow-x-auto rounded-xl border border-gray-100 dark:border-gray-800">
             <table className="w-full text-left text-xs">
-              <thead className="bg-gray-50/80 dark:bg-gray-800/50 text-[#717787] dark:text-gray-400 font-bold border-b border-gray-100 dark:border-gray-800">
+              <thead className="bg-gray-50/80 dark:bg-gray-800/50 text-muted dark:text-gray-400 font-bold border-b border-gray-100 dark:border-gray-800">
                 <tr>
                   <th className="py-3 px-3">Matricule</th>
                   <th className="py-3 px-3">Nom & Postnom</th>
@@ -345,11 +345,11 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                 ) : (
                   filteredDailyList.map((record) => (
                     <tr key={record.id} className="hover:bg-gray-50/60 dark:hover:bg-gray-800/30 transition-colors">
-                      <td className="py-3 px-3 font-mono font-bold text-[#7C4DFF]">
+                      <td className="py-3 px-3 font-mono font-bold text-brand">
                         {record.employeeId}
                       </td>
 
-                      <td className="py-3 px-3 font-bold text-[#1D2030] dark:text-white">
+                      <td className="py-3 px-3 font-bold text-ink dark:text-white">
                         {record.employeeName}
                       </td>
 
@@ -434,7 +434,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
         <div className="glass-card rounded-2xl p-5 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-100 dark:border-gray-800">
             <div>
-              <h3 className="text-base font-bold text-[#1D2030] dark:text-white">
+              <h3 className="text-base font-bold text-ink dark:text-white">
                 Carnet de Synthèse Mensuelle des Présences (J1 à J31)
               </h3>
               <p className="text-xs text-gray-500">
@@ -486,7 +486,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                       <td className="py-2 px-2 text-center font-mono text-gray-400 border-r border-gray-200 dark:border-gray-800">
                         {row.number}
                       </td>
-                      <td className="py-2 px-3 font-mono font-bold text-[#7C4DFF] border-r border-gray-200 dark:border-gray-800">
+                      <td className="py-2 px-3 font-mono font-bold text-brand border-r border-gray-200 dark:border-gray-800">
                         {row.employee.matricule}
                       </td>
                       <td className="py-2 px-3 font-bold text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-800 truncate max-w-[150px]">

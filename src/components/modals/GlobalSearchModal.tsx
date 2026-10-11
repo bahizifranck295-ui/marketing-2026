@@ -75,7 +75,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                     className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-left transition-colors"
                   >
                     <div className="flex items-center gap-2">
-                      <User className="w-3.5 h-3.5 text-[#7C4DFF]" />
+                      <User className="w-3.5 h-3.5 text-brand" />
                       <div>
                         <p className="font-bold text-gray-900 dark:text-white">{emp.nom} {emp.prenom} ({emp.matricule})</p>
                         <p className="text-[10px] text-gray-500">{emp.poste} · {emp.departement}</p>
@@ -123,7 +123,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
               onClick={() => handleSelectView('attendance')}
               className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-left"
             >
-              <Calendar className="w-3.5 h-3.5 text-[#7C4DFF]" />
+              <Calendar className="w-3.5 h-3.5 text-brand" />
               <span>Consulter les présences d'aujourd'hui</span>
             </button>
             <button

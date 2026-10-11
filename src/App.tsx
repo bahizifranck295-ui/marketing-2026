@@ -27,7 +27,7 @@ function MainApp() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F2F1FA] dark:bg-[#0B0F19] text-[#1D2030] dark:text-[#E2E8F0] flex flex-col transition-colors selection:bg-[#7C4DFF] selection:text-white">
+    <div className="min-h-screen bg-transparent text-ink dark:text-ink-inv flex flex-col transition-colors selection:bg-brand selection:text-white">
       {/* Top Navbar */}
       <Navbar 
         onOpenQuickPunch={() => setIsQuickPunchOpen(true)}

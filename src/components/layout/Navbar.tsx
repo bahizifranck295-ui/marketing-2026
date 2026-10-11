@@ -51,7 +51,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenQuickPunch, onOpenSearch }
   };
 
   return (
-    <header className="h-16 px-6 glass-panel border-b border-[#E1E3E9] dark:border-gray-800 flex items-center justify-between sticky top-0 z-30 transition-colors">
+    <header className="hud-bar h-16 px-6 glass-panel border-b border-line dark:border-gray-800 flex items-center justify-between sticky top-0 z-30 transition-colors">
       {/* Left: Brand & Breadcrumb */}
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2.5">
@@ -65,14 +65,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenQuickPunch, onOpenSearch }
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-extrabold text-base tracking-tight text-[#1D2030] dark:text-white">
-                PREMIDIS <span className="text-[#7C4DFF] font-semibold">Attendance</span>
+              <span className="font-extrabold text-base tracking-tight text-ink dark:text-white">
+                PREMIDIS <span className="text-brand font-semibold">Attendance</span>
               </span>
               <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
                 Goma, RDC
               </span>
             </div>
-            <p className="text-[11px] text-[#717787] dark:text-gray-400 -mt-0.5 hidden sm:block">
+            <p className="text-[11px] text-muted dark:text-gray-400 -mt-0.5 hidden sm:block">
               Route Aéroport N°20 · Bujovu
             </p>
           </div>
@@ -81,7 +81,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenQuickPunch, onOpenSearch }
         {/* Device Status Indicator */}
         <div className="hidden lg:flex items-center gap-2 ml-4 pl-4 border-l border-gray-200 dark:border-gray-800">
           <div className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-300">
-            <Fingerprint className="w-3.5 h-3.5 text-[#7C4DFF]" />
+            <Fingerprint className="w-3.5 h-3.5 text-brand" />
             <span className="font-medium text-[11px]">{zktecoConfig.model.split(' ')[1] || 'ZKTeco'}</span>
             <span className={`w-2 h-2 rounded-full ${
               zktecoConfig.status === 'ONLINE' ? 'bg-emerald-500 ring-2 ring-emerald-200 dark:ring-emerald-900' :
@@ -98,7 +98,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenQuickPunch, onOpenSearch }
       <div className="hidden md:flex items-center flex-1 max-w-md mx-6">
         <button
           onClick={onOpenSearch}
-          className="w-full flex items-center justify-between px-3.5 py-1.5 text-xs text-[#717787] bg-gray-100/80 hover:bg-gray-100 dark:bg-gray-800/80 dark:hover:bg-gray-800 border border-transparent hover:border-gray-300 dark:hover:border-gray-700 rounded-xl transition-all"
+          className="w-full flex items-center justify-between px-3.5 py-1.5 text-xs text-muted bg-gray-100/80 hover:bg-gray-100 dark:bg-gray-800/80 dark:hover:bg-gray-800 border border-transparent hover:border-gray-300 dark:hover:border-gray-700 rounded-xl transition-all"
         >
           <div className="flex items-center gap-2">
             <Search className="w-3.5 h-3.5 text-gray-400" />
@@ -114,14 +114,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenQuickPunch, onOpenSearch }
       <div className="flex items-center gap-2.5">
         {/* Live Clock */}
         <div className="hidden xl:flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gray-100 dark:bg-gray-800/60 text-xs font-mono font-medium text-gray-700 dark:text-gray-300 tabular-nums">
-          <Clock className="w-3.5 h-3.5 text-[#7C4DFF]" />
+          <Clock className="w-3.5 h-3.5 text-brand" />
           <span>{currentTime}</span>
         </div>
 
         {/* Quick Punch Button (Gatekeeper/Secrétariat) */}
         <button
           onClick={onOpenQuickPunch}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#7C4DFF] to-[#6a38f3] text-white text-xs font-semibold shadow-sm hover:shadow hover:brightness-105 active:scale-98 transition-all"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-brand to-brand-deep text-white text-xs font-semibold shadow-sm hover:shadow hover:brightness-105 active:scale-98 transition-all"
           title="Pointer une arrivée ou une sortie"
         >
           <Fingerprint className="w-3.5 h-3.5" />
@@ -164,10 +164,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenQuickPunch, onOpenSearch }
               )}
             </div>
             <div className="hidden lg:block">
-              <p className="text-xs font-bold text-[#1D2030] dark:text-white leading-tight">
+              <p className="text-xs font-bold text-ink dark:text-white leading-tight">
                 {currentUser?.name}
               </p>
-              <p className="text-[10px] text-[#717787] dark:text-gray-400 font-medium">
+              <p className="text-[10px] text-muted dark:text-gray-400 font-medium">
                 {getRoleLabel(currentUser?.role || '')}
               </p>
             </div>
@@ -197,7 +197,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenQuickPunch, onOpenSearch }
                     }}
                     className={`w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs transition-colors ${
                       currentUser?.role === u.role
-                        ? 'bg-[#7C4DFF]/10 text-[#7C4DFF] font-semibold'
+                        ? 'bg-brand/10 text-brand font-semibold'
                         : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
                     }`}
                   >

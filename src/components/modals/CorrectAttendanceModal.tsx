@@ -86,7 +86,7 @@ export const CorrectAttendanceModal: React.FC<CorrectAttendanceModalProps> = ({ 
               id="absentCheck"
               checked={wasAbsent}
               onChange={(e) => setWasAbsent(e.target.checked)}
-              className="rounded text-[#7C4DFF]"
+              className="rounded text-brand"
             />
             <label htmlFor="absentCheck" className="text-gray-700 dark:text-gray-300 font-semibold cursor-pointer">
               Déclarer l'employé absent pour cette journée (aucun pointage)
@@ -154,7 +154,7 @@ export const CorrectAttendanceModal: React.FC<CorrectAttendanceModalProps> = ({ 
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded-xl bg-[#7C4DFF] text-white font-bold hover:bg-[#6a38f3]"
+              className="px-4 py-2 rounded-xl bg-brand text-white font-bold hover:bg-brand-deep"
             >
               Enregistrer la Correction
             </button>

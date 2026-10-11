@@ -74,7 +74,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // 1. Theme State
   const [theme, setThemeState] = useState<'light' | 'dark'>(() => {
     const saved = localStorage.getItem('premidis_theme');
-    return (saved === 'dark' || saved === 'light') ? saved : 'light';
+    return (saved === 'dark' || saved === 'light') ? saved : 'dark';
   });
 
   const setTheme = (newTheme: 'light' | 'dark') => {

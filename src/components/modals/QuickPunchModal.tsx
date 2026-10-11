@@ -51,7 +51,7 @@ export const QuickPunchModal: React.FC<QuickPunchModalProps> = ({ isOpen, onClos
       <div className="glass-card rounded-3xl w-full max-w-md p-6 shadow-2xl animate-in fade-in zoom-in-95 space-y-4 text-xs">
         <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-800">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-purple-100 dark:bg-purple-950 flex items-center justify-center text-[#7C4DFF]">
+            <div className="w-8 h-8 rounded-xl bg-purple-100 dark:bg-purple-950 flex items-center justify-center text-brand">
               <Fingerprint className="w-4 h-4" />
             </div>
             <div>
@@ -125,7 +125,7 @@ export const QuickPunchModal: React.FC<QuickPunchModalProps> = ({ isOpen, onClos
 
             {/* Selected Employee Expected Schedule Info */}
             {selectedEmp && (
-              <div className="p-2.5 rounded-xl bg-purple-50/60 dark:bg-purple-950/20 text-[11px] text-[#7C4DFF] flex items-center justify-between font-semibold">
+              <div className="p-2.5 rounded-xl bg-purple-50/60 dark:bg-purple-950/20 text-[11px] text-brand flex items-center justify-between font-semibold">
                 <span>Horaire prévu : {selectedEmp.heureEntreeNormale} - {selectedEmp.heureSortieNormale}</span>
                 <span>Tolérance : {selectedEmp.toleranceMinutes} min</span>
               </div>
@@ -138,7 +138,7 @@ export const QuickPunchModal: React.FC<QuickPunchModalProps> = ({ isOpen, onClos
                 <button
                   type="button"
                   onClick={setNow}
-                  className="text-[11px] text-[#7C4DFF] font-bold hover:underline"
+                  className="text-[11px] text-brand font-bold hover:underline"
                 >
                   Remplir heure actuelle
                 </button>
@@ -176,7 +176,7 @@ export const QuickPunchModal: React.FC<QuickPunchModalProps> = ({ isOpen, onClos
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 rounded-xl bg-[#7C4DFF] text-white font-bold hover:bg-[#6a38f3] shadow-sm"
+                className="px-4 py-2 rounded-xl bg-brand text-white font-bold hover:bg-brand-deep shadow-sm"
               >
                 Valider le Pointage
               </button>
