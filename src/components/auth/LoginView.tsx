@@ -23,7 +23,9 @@ export const LoginView: React.FC = () => {
 
     setTimeout(() => {
       const foundUser = allUsers.find(u => u.email.toLowerCase() === email.toLowerCase().trim());
-      if (foundUser) {
+      if (foundUser && foundUser.active === false) {
+        setErrorMsg('Ce compte est désactivé. Contactez l\'administrateur.');
+      } else if (foundUser) {
         setCurrentUser(foundUser);
       } else {
         setErrorMsg('Identifiant ou mot de passe incorrect. Veuillez vérifier vos accès ou contacter l\'administrateur.');

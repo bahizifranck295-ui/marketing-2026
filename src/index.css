@@ -44,6 +44,7 @@
   --edge-hi: rgba(0, 184, 217, 0.55);
   --page: #EDF1FA;
   --grid: rgba(47, 107, 255, 0.07);
+  --bar: rgba(245, 247, 253, 0.96);
 }
 
 /* Dark "Nexus" palette — redefines the same tokens */
@@ -88,6 +89,7 @@
   --edge-hi: rgba(34, 228, 255, 0.6);
   --page: #03050E;
   --grid: rgba(80, 130, 255, 0.06);
+  --bar: rgba(5, 8, 22, 0.95);
 }
 
 @layer base {
@@ -313,7 +315,7 @@ tbody tr:hover {
 }
 
 /* Scan line across the top bar */
-.hud-bar { position: sticky; overflow: visible; }
+.hud-bar { position: sticky; overflow: visible; background: var(--bar) !important; }
 .hud-bar::after {
   content: "";
   position: absolute;

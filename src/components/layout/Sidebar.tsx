@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
-  const { currentView, setCurrentView, employees, attendanceRecords, sanctionCases, zktecoConfig } = useApp();
+  const { currentView, setCurrentView, employees, attendanceRecords, sanctionCases, zktecoConfig, can } = useApp();
 
   // Compute live badges
   const todayStr = '2026-10-11';
@@ -53,14 +53,14 @@ export const Sidebar: React.FC = () => {
   ];
 
   return (
-    <aside className="w-64 h-[calc(100vh-4rem)] sticky top-16 glass-panel border-r border-line dark:border-gray-800 flex flex-col justify-between p-4 shrink-0 transition-colors">
+    <aside className="w-64 h-[calc(100vh-5rem)] sticky top-20 glass-panel border-r border-line dark:border-gray-800 flex flex-col justify-between p-4 shrink-0 transition-colors">
       {/* Top Nav List */}
       <div className="space-y-1">
         <div className="px-3 py-2 text-[10px] font-bold font-mono uppercase tracking-[0.2em] text-muted dark:text-gray-400">
           Menu Principal
         </div>
 
-        {navItems.map((item) => {
+        {navItems.filter(item => can(item.id)).map((item) => {
           const Icon = item.icon;
           const isActive = currentView === item.id;
 
@@ -113,12 +113,12 @@ export const Sidebar: React.FC = () => {
             {zktecoConfig.model.replace(/\(.*?\)/, '').trim()} ({zktecoConfig.ipAddress})
           </p>
 
-          <button
+          {can('settings') && <button
             onClick={() => setCurrentView('settings')}
             className="w-full py-1.5 px-2.5 rounded-lg bg-white dark:bg-gray-900 text-[11px] font-semibold text-brand dark:text-neon hover:shadow-xs transition-all border border-purple-100 dark:border-gray-700 text-center"
           >
             Gérer la pointeuse →
-          </button>
+          </button>}
         </div>
 
         {/* Corporate Legal Note */}

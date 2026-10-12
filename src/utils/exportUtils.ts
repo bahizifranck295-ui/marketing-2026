@@ -2,6 +2,7 @@ import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { AttendanceRecord, CompanySettings, Employee } from '../types';
+import { drawLetterhead } from './letterhead';
 
 export const exportToExcel = (data: any[], fileName: string, sheetName = 'Présences') => {
   const worksheet = XLSX.utils.json_to_sheet(data);
@@ -25,34 +26,20 @@ export const generateAttendancePdf = (
 ) => {
   const doc = new jsPDF('landscape');
 
-  // Header PREMIDIS SARL
-  doc.setFontSize(16);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(20, 35, 59); // Brand dark blue
-  doc.text(company.companyName, 14, 15);
-
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(90, 105, 120);
-  doc.text(`${company.companySubName} | ${company.address}`, 14, 21);
-  doc.text(`RCCM : ${company.rccm} | Tél : ${company.phone} | E-mail : ${company.email}`, 14, 26);
-
-  // Line divider
-  doc.setDrawColor(214, 220, 228);
-  doc.setLineWidth(0.5);
-  doc.line(14, 29, 283, 29);
+  // En-tête officiel PREMIDIS SARL
+  const top = drawLetterhead(doc);
 
   // Title of report
   doc.setFontSize(13);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(20, 35, 59);
-  doc.text(title.toUpperCase(), 14, 37);
+  doc.text(title.toUpperCase(), 14, top + 8);
 
   if (subtitle) {
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(113, 119, 135);
-    doc.text(subtitle, 14, 43);
+    doc.text(subtitle, 14, top + 14);
   }
 
   // Statistics Summary
@@ -64,7 +51,7 @@ export const generateAttendancePdf = (
 
   doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
-  doc.text(`Total : ${total} | Présents : ${present} | Retards : ${retard} (${totalLateMin} min cumulées) | Absents : ${absent}`, 14, 50);
+  doc.text(`Total : ${total} | Présents : ${present} | Retards : ${retard} (${totalLateMin} min cumulées) | Absents : ${absent}`, 14, top + 21);
 
   // Table body
   const tableData = records.map((r, i) => [
@@ -82,7 +69,7 @@ export const generateAttendancePdf = (
   ]);
 
   autoTable(doc, {
-    startY: 55,
+    startY: top + 26,
     head: [['N°', 'Matricule', 'Nom & Postnom', 'Département', 'Date', 'Entrée Prévue', 'Entrée Réelle', 'Retard', 'Sortie', 'Statut', 'Observations']],
     body: tableData,
     theme: 'grid',
@@ -178,34 +165,20 @@ export const generateMonthlyGridPdf = (
   const monthName = new Date(`${month}-01`).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
   const capitalizedMonth = monthName.charAt(0).toUpperCase() + monthName.slice(1);
 
-  // Header PREMIDIS SARL
-  doc.setFontSize(16);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(20, 35, 59);
-  doc.text(company.companyName, 14, 15);
-
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(90, 105, 120);
-  doc.text(`${company.companySubName} | ${company.address}`, 14, 21);
-  doc.text(`RCCM : ${company.rccm} | Tél : ${company.phone} | E-mail : ${company.email}`, 14, 26);
-
-  // Line divider
-  doc.setDrawColor(214, 220, 228);
-  doc.setLineWidth(0.5);
-  doc.line(14, 29, 283, 29);
+  // En-tête officiel PREMIDIS SARL
+  const top = drawLetterhead(doc);
 
   // Title of report
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(20, 35, 59);
-  doc.text(`CARNET DE SYNTHÈSE MENSUELLE DES PRÉSENCES (J1 - J${daysInMonth}) – ${capitalizedMonth.toUpperCase()}`, 14, 37);
+  doc.text(`CARNET DE SYNTHÈSE MENSUELLE DES PRÉSENCES (J1 - J${daysInMonth}) – ${capitalizedMonth.toUpperCase()}`, 14, top + 8);
 
   if (subtitle) {
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(113, 119, 135);
-    doc.text(subtitle, 14, 43);
+    doc.text(subtitle, 14, top + 14);
   }
 
   // Summary counts across all rows
@@ -218,7 +191,7 @@ export const generateMonthlyGridPdf = (
   doc.setFontSize(8);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(20, 35, 59);
-  doc.text(`Effectif listé : ${totalEmployees} | Total Présences (P) : ${grandTotalP} | Retards (R) : ${grandTotalR} (${grandTotalLateMin} min) | Absences (A) : ${grandTotalA}`, 14, 49);
+  doc.text(`Effectif listé : ${totalEmployees} | Total Présences (P) : ${grandTotalP} | Retards (R) : ${grandTotalR} (${grandTotalLateMin} min) | Absences (A) : ${grandTotalA}`, 14, top + 20);
 
   // Table Headers: N°, Matricule, Nom, Dép, J1..J31, P, R, A, Min
   const headers = [
@@ -253,7 +226,7 @@ export const generateMonthlyGridPdf = (
   });
 
   autoTable(doc, {
-    startY: 53,
+    startY: top + 24,
     head: [headers],
     body: tableData,
     theme: 'grid',
@@ -343,19 +316,13 @@ export const generateMonthlyGridPdf = (
 export const generateEmployeesPdf = (employees: Employee[], company: CompanySettings) => {
   const doc = new jsPDF('landscape');
 
-  // Header
-  doc.setFontSize(16);
+  // En-tête officiel PREMIDIS SARL
+  const top = drawLetterhead(doc);
+
+  doc.setFontSize(13);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(20, 35, 59);
-  doc.text(company.companyName, 14, 15);
-
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(90, 105, 120);
-  doc.text(`REGISTRE GÉNÉRAL DU PERSONNEL (EFFECTIF : ${employees.length})`, 14, 22);
-
-  doc.setDrawColor(214, 220, 228);
-  doc.line(14, 25, 283, 25);
+  doc.text(`REGISTRE GÉNÉRAL DU PERSONNEL (EFFECTIF : ${employees.length})`, 14, top + 8);
 
   const tableData = employees.map((e, idx) => [
     (idx + 1).toString(),
@@ -371,7 +338,7 @@ export const generateEmployeesPdf = (employees: Employee[], company: CompanySett
   ]);
 
   autoTable(doc, {
-    startY: 30,
+    startY: top + 13,
     head: [['N°', 'Matricule', 'Nom Complet', 'Département', 'Poste / Fonction', 'Embauche', 'Horaires', 'ID ZKTeco', 'Téléphone', 'Statut']],
     body: tableData,
     theme: 'grid',
@@ -410,34 +377,20 @@ export const generateSanctionsPdf = (
 ) => {
   const doc = new jsPDF('landscape');
 
-  // Header PREMIDIS SARL
-  doc.setFontSize(16);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(20, 35, 59);
-  doc.text(company.companyName, 14, 15);
-
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(90, 105, 120);
-  doc.text(`${company.companySubName} | ${company.address}`, 14, 21);
-  doc.text(`RCCM : ${company.rccm} | Tél : ${company.phone} | E-mail : ${company.email}`, 14, 26);
-
-  // Line divider
-  doc.setDrawColor(214, 220, 228);
-  doc.setLineWidth(0.5);
-  doc.line(14, 29, 283, 29);
+  // En-tête officiel PREMIDIS SARL
+  const top = drawLetterhead(doc);
 
   // Title of report
   doc.setFontSize(13);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(190, 24, 93); // Rose/Crimson accent for disciplinary
-  doc.text(title.toUpperCase(), 14, 37);
+  doc.text(title.toUpperCase(), 14, top + 8);
 
   if (subtitle) {
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(113, 119, 135);
-    doc.text(subtitle, 14, 43);
+    doc.text(subtitle, 14, top + 14);
   }
 
   // Summary counts
@@ -449,7 +402,7 @@ export const generateSanctionsPdf = (
   doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(20, 35, 59);
-  doc.text(`Dossiers examinés : ${totalDossiers} | Retards cumulés : ${totalLates} | Absences non justifiées : ${totalAbsences} | Total retenues : ${totalDeductions} USD`, 14, 50);
+  doc.text(`Dossiers examinés : ${totalDossiers} | Retards cumulés : ${totalLates} | Absences non justifiées : ${totalAbsences} | Total retenues : ${totalDeductions} USD`, 14, top + 21);
 
   const tableData = sanctions.map((s, idx) => [
     (idx + 1).toString(),
@@ -465,7 +418,7 @@ export const generateSanctionsPdf = (
   ]);
 
   autoTable(doc, {
-    startY: 55,
+    startY: top + 26,
     head: [['N°', 'Matricule', 'Collaborateur', 'Département', 'Retards (Min)', 'Absences', 'Sanction Statutaire', 'Somme Retirable', 'Statut / Encaissement', 'Motif & Observations']],
     body: tableData,
     theme: 'grid',

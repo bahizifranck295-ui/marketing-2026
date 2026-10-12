@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
+import { UsersRolesPanel } from './UsersRolesPanel';
 import { 
   Settings, Cpu, Building2, Users, ShieldCheck, 
   History, RefreshCw, CheckCircle2, AlertTriangle, 
@@ -613,40 +614,7 @@ export const SettingsView: React.FC = () => {
       )}
 
       {/* TAB 4: USERS & ROLES */}
-      {activeTab === 'USERS' && (
-        <div className="glass-card rounded-2xl p-6 space-y-4">
-          <h3 className="text-base font-bold text-gray-900 dark:text-white">
-            Comptes Utilisateurs & Permissions d'Accès
-          </h3>
-          <p className="text-xs text-gray-500">
-            Les rôles définissent les autorisations de pointage, correction, validation des sanctions et configuration.
-          </p>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
-            {allUsers.map(u => (
-              <div key={u.id} className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 flex items-center justify-between text-xs">
-                <div>
-                  <p className="font-bold text-gray-900 dark:text-white">{u.name}</p>
-                  <p className="text-[11px] text-gray-500">{u.email}</p>
-                  <span className="inline-block mt-1 px-2 py-0.5 rounded font-bold text-[10px] bg-purple-100 text-brand">
-                    Rôle : {u.role}
-                  </span>
-                </div>
-                <button
-                  onClick={() => switchUserRole(u.role)}
-                  className={`px-3 py-1.5 rounded-lg font-bold text-[11px] transition-colors ${
-                    currentUser?.role === u.role
-                      ? 'bg-emerald-600 text-white'
-                      : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700'
-                  }`}
-                >
-                  {currentUser?.role === u.role ? 'Profil Actif' : 'Basculer'}
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {activeTab === 'USERS' && <UsersRolesPanel />}
 
       {/* TAB 5: AUDIT LOGS */}
       {activeTab === 'AUDIT' && (

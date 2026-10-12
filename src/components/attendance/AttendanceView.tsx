@@ -182,13 +182,6 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
             </button>
           </div>
 
-          <button
-            onClick={onOpenQuickPunch}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-brand text-white hover:bg-brand-deep text-xs font-semibold shadow-sm transition-all"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Pointer une présence</span>
-          </button>
         </div>
       </div>
 
@@ -269,14 +262,6 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                 <span>PDF</span>
               </button>
 
-              <button
-                onClick={handleExportDailyExcel}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 font-semibold transition-colors"
-                title="Exporter les pointages du jour en Excel"
-              >
-                <Download className="w-3.5 h-3.5 text-emerald-600" />
-                <span>Excel</span>
-              </button>
             </>
           ) : (
             <button

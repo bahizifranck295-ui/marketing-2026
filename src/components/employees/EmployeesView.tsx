@@ -154,13 +154,6 @@ export const EmployeesView: React.FC = () => {
             <span>PDF</span>
           </button>
 
-          <button
-            onClick={handleExportExcel}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-xs font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-50 transition-colors"
-          >
-            <Download className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Excel</span>
-          </button>
 
           <button
             onClick={handleOpenAdd}

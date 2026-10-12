@@ -12,6 +12,7 @@ import {
   SanctionPdfRow,
   MonthlyGridRow
 } from '../../utils/exportUtils';
+import { Letterhead } from '../common/Letterhead';
 import { StatusBadge, CodeBadge } from '../common/Badge';
 
 export const ReportsView: React.FC = () => {
@@ -496,46 +497,22 @@ export const ReportsView: React.FC = () => {
 
       {/* DOCUMENT PREVIEW CARD (A4 Print Preview Layout) */}
       <div className="glass-card rounded-2xl p-6 sm:p-8 space-y-6 bg-white dark:bg-gray-900 shadow-md">
-        {/* Official Header */}
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-4 border-b-2 border-gray-800">
-          <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-1 flex items-center justify-center shrink-0 shadow-2xs">
-              <img 
-                src={`${import.meta.env.BASE_URL}premidis-symbol.png`} 
-                alt="Logo PREMIDIS S.A.R.L." 
-                className="w-full h-full object-contain"
-                referrerPolicy="no-referrer"
-              />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xl font-black text-[#14233B] dark:text-white tracking-wider">
-                  PREMIDIS SARL
-                </span>
-                <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
-                  GOMA, RDC
-                </span>
-              </div>
-              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                Route Aéroport N°20, Quartier Bujovu, Commune de Karisimbi
-              </p>
-              <p className="text-[11px] font-mono text-gray-500">
-                RCCM : {companySettings.rccm} · Tél : {companySettings.phone}
-              </p>
-            </div>
-          </div>
+        {/* En-tête officiel PREMIDIS SARL */}
+        <div className="-mx-2 sm:-mx-4 rounded-xl overflow-hidden bg-white">
+          <Letterhead />
+        </div>
 
-          <div className="text-right">
-            <span className="text-xs font-bold uppercase tracking-wider text-brand block">
-              Document Administratif Officiel
-            </span>
-            <p className="text-xs font-mono text-gray-500 mt-1">
-              Émis le : {new Date().toLocaleDateString('fr-FR')}
-            </p>
-            <p className="text-xs font-bold text-gray-800 dark:text-gray-200">
-              Réf : PREMIDIS/RH/ATT/{selectedMonth.replace('-', '')}
-            </p>
-          </div>
+        {/* Références du document */}
+        <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b-2 border-gray-800 text-xs">
+          <span className="font-bold uppercase tracking-wider text-brand">
+            Document Administratif Officiel
+          </span>
+          <span className="font-mono text-gray-500">
+            Émis le : {new Date().toLocaleDateString('fr-FR')}
+          </span>
+          <span className="font-bold text-gray-800 dark:text-gray-200">
+            Réf : PREMIDIS/RH/ATT/{selectedMonth.replace('-', '')}
+          </span>
         </div>
 
         {/* Document Title Banner */}

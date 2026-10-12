@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { Navbar } from './components/layout/Navbar';
 import { Sidebar } from './components/layout/Sidebar';
@@ -15,15 +15,34 @@ import { GlobalSearchModal } from './components/modals/GlobalSearchModal';
 import { AttendanceRecord } from './types';
 
 function MainApp() {
-  const { currentUser, currentView } = useApp();
+  const { currentUser, currentView, setCurrentView, can } = useApp();
 
   const [isQuickPunchOpen, setIsQuickPunchOpen] = useState(false);
   const [correctingRecord, setCorrectingRecord] = useState<AttendanceRecord | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
+  // Si le module affiché n'est pas autorisé pour ce rôle, on bascule sur le premier module permis
+  const allowedViews = (['dashboard', 'employees', 'attendance', 'reports', 'sanctions', 'settings'] as const).filter(v => can(v));
+  useEffect(() => {
+    if (currentUser && !can(currentView) && allowedViews.length > 0) {
+      setCurrentView(allowedViews[0]);
+    }
+  });
+
   // If not logged in, show authentic Login page
   if (!currentUser) {
     return <LoginView />;
+  }
+
+  if (allowedViews.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6 text-center">
+        <div className="glass-card rounded-2xl p-8 max-w-md space-y-2">
+          <h1 className="text-2xl">Aucun module autorisé</h1>
+          <p className="text-sm text-muted">Le rôle de votre compte ne donne accès à aucun module. Demandez à l'administrateur de vous attribuer des permissions.</p>
+        </div>
+      </div>
+    );
   }
 
   return (

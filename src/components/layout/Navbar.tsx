@@ -14,10 +14,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenQuickPunch, onOpenSearch }
   const { 
     theme, toggleTheme, language, setLanguage, 
     currentUser, switchUserRole, allUsers, zktecoConfig,
-    companySettings, setCurrentUser, currentView
+    companySettings, setCurrentUser, currentView, getRoleLabel, addAuditLog
   } = useApp();
 
   const [currentTime, setCurrentTime] = useState('');
+  const [currentDate, setCurrentDate] = useState('');
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   useEffect(() => {
@@ -25,21 +26,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenQuickPunch, onOpenSearch }
       const now = new Date();
       // Goma / CAT timezone (GMT+2)
       setCurrentTime(now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+      setCurrentDate(now.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }));
     };
     updateTime();
     const interval = setInterval(updateTime, 1000);
     return () => clearInterval(interval);
   }, []);
-
-  const getRoleLabel = (role: string) => {
-    switch (role) {
-      case 'ADMIN': return 'Administrateur';
-      case 'SECRETAIRE': return 'Secrétaire';
-      case 'RH': return 'Responsable RH';
-      case 'DIRECTEUR': return 'Directeur';
-      default: return role;
-    }
-  };
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
@@ -51,7 +43,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenQuickPunch, onOpenSearch }
   };
 
   return (
-    <header className="hud-bar h-16 px-6 glass-panel border-b border-line dark:border-gray-800 flex items-center justify-between sticky top-0 z-30 transition-colors">
+    <header className="hud-bar h-20 px-6 glass-panel border-b border-line dark:border-gray-800 flex items-center justify-between sticky top-0 z-30 transition-colors">
       {/* Left: Brand & Breadcrumb */}
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2.5">
@@ -100,9 +92,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenQuickPunch, onOpenSearch }
           onClick={onOpenSearch}
           className="w-full flex items-center justify-between px-3.5 py-1.5 text-xs text-muted bg-gray-100/80 hover:bg-gray-100 dark:bg-gray-800/80 dark:hover:bg-gray-800 border border-transparent hover:border-gray-300 dark:hover:border-gray-700 rounded-xl transition-all"
         >
-          <div className="flex items-center gap-2">
-            <Search className="w-3.5 h-3.5 text-gray-400" />
-            <span>Rechercher un employé, matricule, département...</span>
+          <div className="flex items-center gap-2 min-w-0">
+            <Search className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+            <span className="truncate">Rechercher un employé, matricule, département...</span>
           </div>
           <kbd className="px-1.5 py-0.5 text-[10px] font-mono bg-white dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-700 text-gray-500 shadow-2xs">
             Ctrl+K
@@ -112,21 +104,15 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenQuickPunch, onOpenSearch }
 
       {/* Right Controls */}
       <div className="flex items-center gap-2.5">
-        {/* Live Clock */}
-        <div className="hidden xl:flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gray-100 dark:bg-gray-800/60 text-xs font-mono font-medium text-gray-700 dark:text-gray-300 tabular-nums">
-          <Clock className="w-3.5 h-3.5 text-brand" />
-          <span>{currentTime}</span>
+        {/* Live Clock (agrandie, visible sur tous les écrans) */}
+        <div className="hud-clock flex items-center gap-3 pl-3 pr-4 py-1.5 rounded-2xl border border-brand/30 bg-gradient-to-r from-brand/10 via-neon-blue/5 to-neon/10">
+          <Clock className="w-6 h-6 text-neon drop-shadow-[0_0_8px_var(--color-neon)]" />
+          <div className="leading-none">
+            <span className="block font-mono font-bold text-2xl tracking-wider tabular-nums text-ink dark:text-white">{currentTime}</span>
+            <span className="block mt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted">{currentDate}</span>
+          </div>
         </div>
 
-        {/* Quick Punch Button (Gatekeeper/Secrétariat) */}
-        <button
-          onClick={onOpenQuickPunch}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-brand to-brand-deep text-white text-xs font-semibold shadow-sm hover:shadow hover:brightness-105 active:scale-98 transition-all"
-          title="Pointer une arrivée ou une sortie"
-        >
-          <Fingerprint className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">Pointer</span>
-        </button>
 
         {/* Language Toggle */}
         <button
@@ -188,15 +174,16 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenQuickPunch, onOpenSearch }
                 <p className="px-3 py-1 text-[10px] uppercase tracking-wider text-gray-400 font-bold">
                   Changer de profil (Simulation des rôles)
                 </p>
-                {allUsers.map((u) => (
+                {allUsers.filter(u => u.active !== false).map((u) => (
                   <button
                     key={u.id}
                     onClick={() => {
-                      switchUserRole(u.role);
+                      setCurrentUser(u);
+                      addAuditLog('CHANGEMENT_UTILISATEUR', u.name, `Connecté sous le profil ${getRoleLabel(u.role)}`);
                       setShowUserMenu(false);
                     }}
                     className={`w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs transition-colors ${
-                      currentUser?.role === u.role
+                      currentUser?.id === u.id
                         ? 'bg-brand/10 text-brand font-semibold'
                         : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
                     }`}
@@ -207,7 +194,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenQuickPunch, onOpenSearch }
                       </div>
                       <span>{u.name}</span>
                     </div>
-                    <span className="text-[10px] font-mono text-gray-400">{u.role}</span>
+                    <span className="text-[10px] font-mono text-gray-400">{getRoleLabel(u.role)}</span>
                   </button>
                 ))}
               </div>

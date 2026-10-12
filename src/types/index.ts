@@ -1,6 +1,19 @@
 export type AttendanceStatus = 'PRESENT' | 'RETARD' | 'ABSENT';
 
-export type UserRole = 'ADMIN' | 'SECRETAIRE' | 'RH' | 'DIRECTEUR';
+// Identifiant de rôle : les 4 rôles de base plus les rôles créés par l'administrateur
+export type UserRole = string;
+
+export type AppModule = 'dashboard' | 'employees' | 'attendance' | 'reports' | 'sanctions' | 'settings';
+export type PermissionAction = 'view' | 'create' | 'edit' | 'delete' | 'export' | 'validate';
+export type ModulePermissions = Record<AppModule, PermissionAction[]>;
+
+export interface RoleDefinition {
+  id: UserRole;
+  label: string;
+  description: string;
+  permissions: ModulePermissions;
+  system?: boolean; // rôle de base, ne peut pas être supprimé
+}
 
 export interface User {
   id: string;
@@ -9,6 +22,7 @@ export interface User {
   role: UserRole;
   avatar?: string;
   department?: string;
+  active?: boolean; // false = compte désactivé, connexion refusée
 }
 
 export type AdministrativeStatus = 'ACTIF' | 'INACTIF' | 'SUSPENDU';
