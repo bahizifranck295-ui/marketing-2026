@@ -1,20 +1,45 @@
-import React, { useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
+import {
+  ArrowRight, ChevronDown, ChevronUp, ClipboardList, Crown, Eye, EyeOff,
+  Loader2, Lock, ShieldCheck, User, UserCog, Users,
+} from 'lucide-react';
 import { useApp } from '../../context/AppContext';
-import { Lock, Mail, Eye, EyeOff, ShieldCheck, Sun, Moon, Globe, ArrowRight, Fingerprint } from 'lucide-react';
+import { ThemeToggle } from '../common/ThemeToggle';
+import { LOGO_ALT, LOGO_SRC } from '../../app/brand';
+import { LoginIntro, shouldPlayIntro } from '../login/LoginIntro';
+import { User as AppUser } from '../../types';
+
+// Même parcours que PREMIDIS ERP : introduction du logo, puis formulaire et comptes de démonstration.
+const DEMO_PASSWORD = 'admin123';
+
+const ROLE_ICON: Record<string, React.ElementType> = {
+  ADMIN: ShieldCheck,
+  DIRECTEUR: Crown,
+  RH: UserCog,
+  SECRETAIRE: ClipboardList,
+};
+const ROLE_HINT: Record<string, string> = {
+  ADMIN: 'Administration système',
+  DIRECTEUR: 'Accès complet en lecture',
+  RH: 'Personnel, pointages, sanctions',
+  SECRETAIRE: 'Pointages du jour',
+};
+/** Comptes visibles par défaut ; les autres apparaissent avec « Voir tous les comptes de démonstration » */
+const MAIN_ROLES = ['ADMIN', 'DIRECTEUR'];
 
 export const LoginView: React.FC = () => {
-  const { 
-    setCurrentUser, allUsers, theme, toggleTheme, language, setLanguage, 
-    companySettings 
-  } = useApp();
+  const { setCurrentUser, allUsers, companySettings, getRoleLabel, addAuditLog } = useApp();
 
   const [email, setEmail] = useState('admin@premidis.cd');
-  const [password, setPassword] = useState('admin123');
+  const [password, setPassword] = useState(DEMO_PASSWORD);
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [showAll, setShowAll] = useState(false);
   const [forgotModal, setForgotModal] = useState(false);
+  // Introduction : « playing » (page cachée) → « revealing » (le logo rejoint sa place) → « done »
+  const [phase, setPhase] = useState<'playing' | 'revealing' | 'done'>(() => (shouldPlayIntro() ? 'playing' : 'done'));
+  const logoRef = useRef<HTMLImageElement>(null);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,213 +52,205 @@ export const LoginView: React.FC = () => {
         setErrorMsg('Ce compte est désactivé. Contactez l\'administrateur.');
       } else if (foundUser) {
         setCurrentUser(foundUser);
+        addAuditLog('CONNEXION', foundUser.name, `Connexion sous le profil ${getRoleLabel(foundUser.role)}`);
       } else {
-        setErrorMsg('Identifiant ou mot de passe incorrect. Veuillez vérifier vos accès ou contacter l\'administrateur.');
+        setErrorMsg('Email ou mot de passe incorrect.');
       }
       setLoading(false);
     }, 600);
   };
 
-  const handleQuickDemoLogin = (userRole: string) => {
-    const user = allUsers.find(u => u.role === userRole) || allUsers[0];
-    setEmail(user.email);
-    setPassword('demo2026');
-    setCurrentUser(user);
+  const target = useCallback(() => logoRef.current, []);
+  const onReveal = useCallback(() => setPhase(p => (p === 'playing' ? 'revealing' : p)), []);
+  const onDone = useCallback(() => setPhase('done'), []);
+  const hidden = phase === 'playing';
+
+  const activeUsers = allUsers.filter(u => u.active !== false);
+  const mainDemos = MAIN_ROLES.map(r => activeUsers.find(u => u.role === r)).filter(Boolean) as AppUser[];
+  const moreDemos = activeUsers.filter(u => !mainDemos.includes(u));
+
+  const demoCard = (u: AppUser, i: number) => {
+    const Icon = ROLE_ICON[u.role] || Users;
+    const active = email.toLowerCase() === u.email.toLowerCase();
+    return (
+      <button
+        key={u.id}
+        type="button"
+        data-demo-account={u.role}
+        onClick={() => { setEmail(u.email); setPassword(DEMO_PASSWORD); setErrorMsg(''); }}
+        style={{ transitionDelay: `${i * 60}ms` }}
+        className={`group flex min-w-0 items-center gap-3 rounded-2xl border p-3 text-left transition-colors ${
+          active ? 'border-brand bg-brand/10' : 'border-slate-200 bg-white/60 hover:border-brand/60 hover:bg-brand/5'
+        }`}
+      >
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#087bff] to-[#8200ff] text-white shadow-md">
+          <Icon className="h-5 w-5" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-bold text-ink">{getRoleLabel(u.role)}</span>
+          <span className="block truncate text-[11px] text-slate-500">{u.email}</span>
+          <span className="block truncate text-[11px] font-semibold text-brand">{ROLE_HINT[u.role] || u.name}</span>
+        </span>
+      </button>
+    );
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-transparent text-ink dark:text-white transition-colors relative overflow-hidden">
-      {/* Decorative ambient background glows */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-brand/15 dark:bg-brand/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-neon/15 dark:bg-neon/10 rounded-full blur-3xl pointer-events-none" />
-
-      {/* Top right quick controls */}
-      <div className="absolute top-4 right-4 flex items-center gap-2">
-        <button
-          onClick={() => setLanguage(language === 'fr' ? 'en' : 'fr')}
-          className="p-2 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-white/80 dark:hover:bg-gray-800 text-xs font-bold transition-colors"
-          title="Changer langue"
-        >
-          <span className="uppercase">{language}</span>
-        </button>
-        <button
-          onClick={toggleTheme}
-          className="p-2 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-white/80 dark:hover:bg-gray-800 transition-colors"
-          title="Changer thème"
-        >
-          {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-gray-600" />}
-        </button>
+    <div className={`relative min-h-screen overflow-hidden ${hidden ? 'login-hidden' : ''}`} data-login-phase={phase}>
+      <div className="login-bg login-reveal" aria-hidden>
+        <div className="login-bg-horizon" />
       </div>
 
-      <div className="w-full max-w-md glass-card rounded-3xl p-8 shadow-2xl relative z-10 border border-white/60 dark:border-gray-800/80">
-        {/* Brand header */}
-        <div className="text-center mb-6">
-          <div className="w-16 h-16 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-2 flex items-center justify-center shadow-md mx-auto mb-3 overflow-hidden">
-            <img 
-              src={`${import.meta.env.BASE_URL}premidis-symbol.png`} 
-              alt="Logo PREMIDIS S.A.R.L." 
-              className="w-full h-full object-contain"
-              referrerPolicy="no-referrer"
-            />
-          </div>
-          <h1 className="text-xl font-black tracking-tight text-ink dark:text-white">
-            PREMIDIS <span className="text-brand">Attendance</span>
-          </h1>
-          <p className="text-xs text-muted dark:text-gray-400 mt-1">
-            PREMIDIS SARL · Commune de Karisimbi, Goma
+      <div
+        className="relative z-10 mx-auto flex min-h-screen w-full max-w-lg flex-col items-center justify-center gap-5 px-4 py-8"
+        inert={hidden || undefined}
+      >
+        <ThemeToggle className="login-reveal absolute right-4 top-4" />
+
+        {/* Logo officiel et présentation */}
+        <div className="flex flex-col items-center gap-3 text-center">
+          <img
+            ref={logoRef}
+            src={LOGO_SRC}
+            alt={LOGO_ALT}
+            data-login-logo
+            style={{ aspectRatio: '1683 / 935' }}
+            className={`logo-tile h-24 w-auto rounded-2xl object-contain p-1.5 shadow-[0_0_40px_rgba(8,123,255,0.35)] sm:h-28 ${
+              phase === 'done' ? '' : 'opacity-0'
+            }`}
+          />
+          <p className="login-reveal max-w-xs text-sm text-slate-600">
+            Le suivi des présences, des retards et des sanctions du personnel, au même endroit.
           </p>
-          <p className="text-[11px] font-mono text-gray-400">
-            N° RCCM : CD/GOM/RCCM/14-B-0203
-          </p>
+          <span className="login-reveal rounded-full border border-brand/30 bg-brand/10 px-3 py-1 text-[11px] text-slate-600">
+            <span className="font-bold text-brand">PREMIDIS Attendance</span> · Présences, pointages ZKTeco et sanctions
+          </span>
         </div>
 
-        {errorMsg && (
-          <div className="p-3 mb-4 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs">
-            {errorMsg}
-          </div>
-        )}
-
-        {/* Login form */}
-        <form onSubmit={handleLogin} className="space-y-4 text-xs">
-          <div>
-            <label className="block text-gray-600 dark:text-gray-400 font-bold mb-1">
-              Adresse e-mail ou Identifiant
+        {/* Formulaire de connexion */}
+        <div className="login-glass login-reveal w-full space-y-5 rounded-3xl p-5 sm:p-6" style={{ transitionDelay: '120ms' }}>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <label className="block space-y-1.5">
+              <span className="text-xs font-semibold text-slate-700">Nom d'utilisateur ou email</span>
+              <span className="relative block">
+                <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input
+                  id="login-email"
+                  type="text"
+                  name="login"
+                  inputMode="email"
+                  autoComplete="username"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Nom d'utilisateur ou email"
+                  className="h-11 w-full rounded-xl border border-slate-200 bg-white/70 pl-9 pr-3 text-sm text-ink outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/30"
+                />
+              </span>
             </label>
-            <div className="relative">
-              <input
-                type="text"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="votre.nom@premidis.cd"
-                className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 outline-none focus:ring-2 focus:ring-brand/40 text-xs font-medium"
-              />
-              <Mail className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
-            </div>
-          </div>
 
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-gray-600 dark:text-gray-400 font-bold">Mot de passe</label>
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
+                <label htmlFor="login-password">Mot de passe</label>
+                <button type="button" onClick={() => setForgotModal(true)} className="text-[11px] font-semibold text-brand hover:underline">
+                  Mot de passe oublié ?
+                </button>
+              </div>
+              <span className="relative block">
+                <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input
+                  id="login-password"
+                  type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Mot de passe"
+                  className="h-11 w-full rounded-xl border border-slate-200 bg-white/70 pl-9 pr-10 text-sm text-ink outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/30"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(v => !v)}
+                  aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                  title={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                  className="absolute right-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-slate-500 hover:text-brand"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </span>
+            </div>
+
+            {errorMsg && (
+              <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700" role="alert">
+                {errorMsg}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#087bff] to-[#8200ff] text-sm font-bold text-white shadow-[0_8px_24px_-8px_rgba(8,123,255,0.7)] transition hover:brightness-110 disabled:opacity-70"
+            >
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+              Se connecter
+              {!loading && <ArrowRight className="h-4 w-4" />}
+            </button>
+          </form>
+
+          {/* Comptes de démonstration */}
+          <div className="space-y-3" data-demo-accounts>
+            <div className="flex items-center gap-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+              <span className="h-px flex-1 bg-slate-200" />
+              Comptes de démonstration
+              <span className="h-px flex-1 bg-slate-200" />
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2">{mainDemos.map(demoCard)}</div>
+            {showAll && moreDemos.length > 0 && (
+              <div className="grid gap-2 sm:grid-cols-2" data-demo-more>{moreDemos.map(demoCard)}</div>
+            )}
+            {moreDemos.length > 0 && (
               <button
                 type="button"
-                onClick={() => setForgotModal(true)}
-                className="text-[11px] text-brand hover:underline"
+                data-demo-toggle
+                aria-expanded={showAll}
+                onClick={() => setShowAll(v => !v)}
+                className="flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 transition hover:border-brand/60 hover:text-brand"
               >
-                Mot de passe oublié ?
+                {showAll ? 'Masquer les autres comptes' : 'Voir tous les comptes de démonstration'}
+                {showAll ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
               </button>
-            </div>
-            <div className="relative">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full pl-9 pr-10 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 outline-none focus:ring-2 focus:ring-brand/40 text-xs font-mono font-bold"
-              />
-              <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
-              >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
-            </div>
+            )}
+            <p className="text-center text-[11px] text-slate-500">
+              Mot de passe de démonstration : <span className="font-semibold">{DEMO_PASSWORD}</span>
+            </p>
           </div>
-
-          <div className="flex items-center justify-between text-xs pt-1">
-            <label className="flex items-center gap-2 cursor-pointer text-gray-600 dark:text-gray-400">
-              <input
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className="rounded text-brand"
-              />
-              <span>Se souvenir de moi</span>
-            </label>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-2.5 px-4 rounded-xl bg-brand text-white font-bold hover:bg-brand-deep shadow-md shadow-brand/25 flex items-center justify-center gap-2 transition-all active:scale-98 disabled:opacity-50"
-          >
-            <span>{loading ? 'Connexion en cours...' : 'Se connecter'}</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
-        </form>
-
-        {/* Quick Demo Access Switcher */}
-        <div className="mt-6 pt-5 border-t border-gray-100 dark:border-gray-800 text-xs">
-          <p className="text-center text-gray-400 font-bold mb-2 text-[10px] uppercase tracking-wider">
-            Accès Démonstration Rapide (Choix du Rôle)
-          </p>
-
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={() => handleQuickDemoLogin('ADMIN')}
-              className="p-2 rounded-xl bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700/60 text-left transition-colors"
-            >
-              <p className="font-bold text-gray-900 dark:text-white text-[11px]">Administrateur</p>
-              <p className="text-[10px] text-gray-400">Franck Bahizi</p>
-            </button>
-
-            <button
-              onClick={() => handleQuickDemoLogin('SECRETAIRE')}
-              className="p-2 rounded-xl bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700/60 text-left transition-colors"
-            >
-              <p className="font-bold text-gray-900 dark:text-white text-[11px]">Secrétaire</p>
-              <p className="text-[10px] text-gray-400">Sylvie Masika</p>
-            </button>
-
-            <button
-              onClick={() => handleQuickDemoLogin('RH')}
-              className="p-2 rounded-xl bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700/60 text-left transition-colors"
-            >
-              <p className="font-bold text-gray-900 dark:text-white text-[11px]">Responsable RH</p>
-              <p className="text-[10px] text-gray-400">Justin Paluku</p>
-            </button>
-
-            <button
-              onClick={() => handleQuickDemoLogin('DIRECTEUR')}
-              className="p-2 rounded-xl bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700/60 text-left transition-colors"
-            >
-              <p className="font-bold text-gray-900 dark:text-white text-[11px]">Direction Générale</p>
-              <p className="text-[10px] text-gray-400">D. Kasereka</p>
-            </button>
-          </div>
-        </div>
-
-        {/* Footer info */}
-        <div className="mt-6 text-center text-[11px] text-gray-400">
-          Système interne sécurisé réservé au personnel habilité de PREMIDIS SARL
         </div>
       </div>
 
-      {/* Forgot modal */}
+      {/* Mot de passe oublié */}
       {forgotModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="glass-card rounded-2xl max-w-sm w-full p-5 space-y-3 text-xs">
-            <h3 className="font-bold text-sm text-gray-900 dark:text-white">Récupération de Compte</h3>
-            <p className="text-gray-500 leading-relaxed">
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" role="dialog" aria-modal="true">
+          <div className="rounded-2xl bg-white border border-slate-200 shadow-xl max-w-sm w-full p-5 space-y-3 text-xs">
+            <h3 className="font-bold text-sm text-slate-900">Récupération de compte</h3>
+            <p className="text-slate-500 leading-relaxed">
               Pour des motifs de sécurité interne à PREMIDIS SARL, la réinitialisation de mot de passe doit être validée par le service informatique ou la Direction RH.
             </p>
-            <p className="text-gray-600 dark:text-gray-300 font-mono text-[11px]">
+            <p className="text-slate-600 font-mono text-[11px]">
               Contact : {companySettings.phone} | {companySettings.email}
             </p>
             <div className="flex justify-end pt-2">
-              <button
-                onClick={() => setForgotModal(false)}
-                className="px-3 py-1.5 rounded-lg bg-brand text-white font-bold"
-              >
+              <button onClick={() => setForgotModal(false)} className="h-9 px-4 rounded-md bg-brand text-white text-sm font-medium hover:bg-brand-strong">
                 Compris
               </button>
             </div>
           </div>
         </div>
       )}
+
+      {phase !== 'done' && <LoginIntro target={target} onReveal={onReveal} onDone={onDone} />}
     </div>
   );
 };

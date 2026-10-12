@@ -5,6 +5,7 @@ import {
   SyncLogEntry, SanctionStatus, AppModule, PermissionAction, RoleDefinition
 } from '../types';
 import { INITIAL_ROLES } from '../data/permissions';
+import { useTheme, setThemeUser } from '../theme/theme';
 import { 
   INITIAL_COMPANY_SETTINGS, INITIAL_USERS, INITIAL_DEPARTMENTS, 
   INITIAL_EMPLOYEES, generateMockAttendance, INITIAL_SANCTION_RULES, 
@@ -84,32 +85,9 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // 1. Theme State
-  const [theme, setThemeState] = useState<'light' | 'dark'>(() => {
-    const saved = localStorage.getItem('premidis_theme');
-    return (saved === 'dark' || saved === 'light') ? saved : 'dark';
-  });
-
-  const setTheme = (newTheme: 'light' | 'dark') => {
-    setThemeState(newTheme);
-    localStorage.setItem('premidis_theme', newTheme);
-    if (newTheme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  };
-
-  const toggleTheme = () => {
-    setTheme(theme === 'light' ? 'dark' : 'light');
-  };
-
-  useEffect(() => {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [theme]);
+  // Thème clair / sombre : même moteur que PREMIDIS ERP (attribut data-theme, préférence par utilisateur)
+  const { theme, setPref, toggle: toggleTheme } = useTheme();
+  const setTheme = (newTheme: 'light' | 'dark') => setPref(newTheme);
 
   // 2. Language State
   const [language, setLanguageState] = useState<AppLanguage>(() => {
@@ -146,6 +124,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     try { localStorage.setItem('premidis_roles', JSON.stringify(roles)); } catch { /* stockage indisponible */ }
   }, [roles]);
+
+  useEffect(() => {
+    setThemeUser(currentUser?.id || null);
+  }, [currentUser?.id]);
 
   const getRoleLabel = (roleId: string) => roles.find(r => r.id === roleId)?.label || roleId;
 

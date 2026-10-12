@@ -49,38 +49,38 @@ export const QuickPunchModal: React.FC<QuickPunchModalProps> = ({ isOpen, onClos
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
       <div className="glass-card rounded-3xl w-full max-w-md p-6 shadow-2xl animate-in fade-in zoom-in-95 space-y-4 text-xs">
-        <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-800">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-purple-100 dark:bg-purple-950 flex items-center justify-center text-brand">
+            <div className="w-8 h-8 rounded-xl bg-purple-100 flex items-center justify-center text-brand">
               <Fingerprint className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-gray-900 dark:text-white">
+              <h2 className="text-sm font-bold text-slate-900">
                 Enregistrement Rapide de Pointage
               </h2>
-              <p className="text-[11px] text-gray-500">Poste de garde & Secrétariat PREMIDIS</p>
+              <p className="text-[11px] text-slate-500">Poste de garde & Secrétariat PREMIDIS</p>
             </div>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-sm">✕</button>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-sm">✕</button>
         </div>
 
         {successMsg ? (
           <div className="py-8 text-center space-y-2">
             <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto animate-bounce" />
-            <p className="text-sm font-bold text-gray-900 dark:text-white">Pointage Enregistré avec Succès !</p>
-            <p className="text-xs text-gray-500">{selectedEmp?.nom} ({selectedMatricule}) à {punchTime}</p>
+            <p className="text-sm font-bold text-slate-900">Pointage Enregistré avec Succès !</p>
+            <p className="text-xs text-slate-500">{selectedEmp?.nom} ({selectedMatricule}) à {punchTime}</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Punch Type Selector */}
-            <div className="grid grid-cols-2 gap-2 p-1 bg-gray-100 dark:bg-gray-800 rounded-xl font-bold">
+            <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl font-bold">
               <button
                 type="button"
                 onClick={() => setPunchType('IN')}
                 className={`py-2 rounded-lg text-center transition-all ${
                   punchType === 'IN'
                     ? 'bg-emerald-600 text-white shadow-xs'
-                    : 'text-gray-600 dark:text-gray-400'
+                    : 'text-slate-600'
                 }`}
               >
                 Arrivée (Entrée)
@@ -91,7 +91,7 @@ export const QuickPunchModal: React.FC<QuickPunchModalProps> = ({ isOpen, onClos
                 className={`py-2 rounded-lg text-center transition-all ${
                   punchType === 'OUT'
                     ? 'bg-blue-600 text-white shadow-xs'
-                    : 'text-gray-600 dark:text-gray-400'
+                    : 'text-slate-600'
                 }`}
               >
                 Départ (Sortie)
@@ -100,7 +100,7 @@ export const QuickPunchModal: React.FC<QuickPunchModalProps> = ({ isOpen, onClos
 
             {/* Employee Search & Selector */}
             <div>
-              <label className="block text-gray-600 dark:text-gray-400 font-bold mb-1">
+              <label className="block text-slate-600 font-bold mb-1">
                 Sélectionner l'employé *
               </label>
               <input
@@ -108,12 +108,12 @@ export const QuickPunchModal: React.FC<QuickPunchModalProps> = ({ isOpen, onClos
                 placeholder="Filtrer par nom ou matricule..."
                 value={searchEmployee}
                 onChange={(e) => setSearchEmployee(e.target.value)}
-                className="w-full px-3 py-1.5 mb-1.5 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 outline-none"
+                className="w-full px-3 py-1.5 mb-1.5 rounded-xl bg-slate-50 border border-slate-200 outline-none"
               />
               <select
                 value={selectedMatricule}
                 onChange={(e) => setSelectedMatricule(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 outline-none font-bold"
+                className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 outline-none font-bold"
               >
                 {filteredEmployees.map(e => (
                   <option key={e.id} value={e.matricule}>
@@ -125,7 +125,7 @@ export const QuickPunchModal: React.FC<QuickPunchModalProps> = ({ isOpen, onClos
 
             {/* Selected Employee Expected Schedule Info */}
             {selectedEmp && (
-              <div className="p-2.5 rounded-xl bg-purple-50/60 dark:bg-purple-950/20 text-[11px] text-brand flex items-center justify-between font-semibold">
+              <div className="p-2.5 rounded-xl bg-purple-50/60 text-[11px] text-brand flex items-center justify-between font-semibold">
                 <span>Horaire prévu : {selectedEmp.heureEntreeNormale} - {selectedEmp.heureSortieNormale}</span>
                 <span>Tolérance : {selectedEmp.toleranceMinutes} min</span>
               </div>
@@ -134,7 +134,7 @@ export const QuickPunchModal: React.FC<QuickPunchModalProps> = ({ isOpen, onClos
             {/* Time input */}
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-gray-600 dark:text-gray-400 font-bold">Heure du pointage (HH:mm) *</label>
+                <label className="text-slate-600 font-bold">Heure du pointage (HH:mm) *</label>
                 <button
                   type="button"
                   onClick={setNow}
@@ -149,20 +149,20 @@ export const QuickPunchModal: React.FC<QuickPunchModalProps> = ({ isOpen, onClos
                   required
                   value={punchTime}
                   onChange={(e) => setPunchTime(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 outline-none font-mono font-bold text-center text-sm"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 outline-none font-mono font-bold text-center text-sm"
                 />
               </div>
             </div>
 
             {/* Notes */}
             <div>
-              <label className="block text-gray-600 dark:text-gray-400 font-bold mb-1">Observation / Justification éventuelle</label>
+              <label className="block text-slate-600 font-bold mb-1">Observation / Justification éventuelle</label>
               <input
                 type="text"
                 placeholder="ex. Pointage relevé à la barrière manuellement"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className="w-full px-3 py-1.5 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 outline-none"
+                className="w-full px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 outline-none"
               />
             </div>
 
@@ -170,7 +170,7 @@ export const QuickPunchModal: React.FC<QuickPunchModalProps> = ({ isOpen, onClos
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold"
+                className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-semibold"
               >
                 Annuler
               </button>

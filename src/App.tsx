@@ -12,6 +12,7 @@ import { LoginView } from './components/auth/LoginView';
 import { QuickPunchModal } from './components/modals/QuickPunchModal';
 import { CorrectAttendanceModal } from './components/modals/CorrectAttendanceModal';
 import { GlobalSearchModal } from './components/modals/GlobalSearchModal';
+import { StartupIntro } from './components/login/StartupIntro';
 import { AttendanceRecord } from './types';
 
 function MainApp() {
@@ -46,20 +47,18 @@ function MainApp() {
   }
 
   return (
-    <div className="min-h-screen bg-transparent text-ink dark:text-ink-inv flex flex-col transition-colors selection:bg-brand selection:text-white">
-      {/* Top Navbar */}
-      <Navbar 
-        onOpenQuickPunch={() => setIsQuickPunchOpen(true)}
-        onOpenSearch={() => setIsSearchOpen(true)}
-      />
+    <div className="min-h-screen bg-app text-slate-900 flex flex-col lg:flex-row selection:bg-brand selection:text-white">
+      {/* Menu latéral (même structure que PREMIDIS ERP) */}
+      <Sidebar />
 
-      {/* Main Body */}
-      <div className="flex-1 flex max-w-[1600px] w-full mx-auto">
-        {/* Navigation Sidebar */}
-        <Sidebar />
+      <div className="flex-1 flex flex-col min-w-0 min-h-screen">
+        {/* Barre d'outils : recherche, horloge, langue, thème, utilisateur */}
+        <Navbar
+          onOpenQuickPunch={() => setIsQuickPunchOpen(true)}
+          onOpenSearch={() => setIsSearchOpen(true)}
+        />
 
-        {/* Content Viewport */}
-        <main className="flex-1 p-6 lg:p-8 overflow-y-auto max-w-[calc(100vw-16rem)]">
+        <main className="flex-1 px-4 pt-4 pb-28 lg:pb-8 lg:px-6 w-full max-w-[1400px] mx-auto">
           {currentView === 'dashboard' && (
             <DashboardView 
               onOpenQuickPunch={() => setIsQuickPunchOpen(true)}
@@ -113,9 +112,15 @@ function MainApp() {
   );
 }
 
+function Startup() {
+  const { currentUser } = useApp();
+  return <StartupIntro hasSession={!!currentUser} />;
+}
+
 export default function App() {
   return (
     <AppProvider>
+      <Startup />
       <MainApp />
     </AppProvider>
   );

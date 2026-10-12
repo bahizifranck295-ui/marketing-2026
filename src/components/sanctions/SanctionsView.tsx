@@ -145,10 +145,10 @@ export const SanctionsView: React.FC = () => {
       {/* Top Header Bar with ONLY the Configuration button as requested */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-ink dark:text-white tracking-tight flex items-center gap-2">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
             Configuration des Seuils & Barèmes de Retenues
           </h1>
-          <p className="text-xs text-muted dark:text-gray-400 mt-1">
+          <p className="text-xs text-muted mt-1">
             Gestion des barèmes financiers de seuils de retard ou d'absence, montants retirables et gel des sanctions pour PREMIDIS SARL
           </p>
         </div>
@@ -170,12 +170,12 @@ export const SanctionsView: React.FC = () => {
       {notification && (
         <div className={`p-3.5 rounded-2xl text-xs font-bold flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-2 ${
           notification.type === 'freeze'
-            ? 'bg-blue-50 text-blue-800 dark:bg-blue-950/60 dark:text-blue-200 border border-blue-200 dark:border-blue-800'
+            ? 'bg-blue-50 text-blue-800 border border-blue-200'
             : notification.type === 'unfreeze'
-            ? 'bg-amber-50 text-amber-800 dark:bg-amber-950/60 dark:text-amber-200 border border-amber-200 dark:border-amber-800'
+            ? 'bg-amber-50 text-amber-800 border border-amber-200'
             : notification.type === 'delete'
-            ? 'bg-rose-50 text-rose-800 dark:bg-rose-950/60 dark:text-rose-200 border border-rose-200 dark:border-rose-800'
-            : 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800'
+            ? 'bg-rose-50 text-rose-800 border border-rose-200'
+            : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
         }`}>
           <span>{notification.message}</span>
           <button 
@@ -188,14 +188,14 @@ export const SanctionsView: React.FC = () => {
       )}
 
       {/* Legal & Regulatory Compliance Notice */}
-      <div className="p-3.5 rounded-2xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-xs flex items-center justify-between gap-3">
+      <div className="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200 text-amber-900 text-xs flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
           <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
           <p className="text-[11px] leading-snug">
             <b>Conformité Statutaire PREMIDIS SARL :</b> Les montants retirables configurés dans ces barèmes s'appliquent automatiquement dès franchissement des seuils non justifiés, avec possibilité de geler toute sanction à tout moment.
           </p>
         </div>
-        <span className="hidden md:inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 dark:text-amber-300 whitespace-nowrap">
+        <span className="hidden md:inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 whitespace-nowrap">
           <ShieldCheck className="w-3.5 h-3.5" /> Barème RH Officiel
         </span>
       </div>
@@ -203,7 +203,7 @@ export const SanctionsView: React.FC = () => {
       {/* MAIN SECTION: BARÈMES DES SOMMES RETIRABLES & GESTION DU GEL DES SANCTIONS */}
       <div className="p-5 rounded-2xl glass-card space-y-5">
         {/* Navigation Tabs (Actives vs Gelées) and Type Filter */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-100 dark:border-gray-800">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
           <div className="flex items-center gap-2">
             {/* Tab: Active Rules */}
             <button
@@ -212,13 +212,13 @@ export const SanctionsView: React.FC = () => {
               className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
                 activeTab === 'ACTIVE'
                   ? 'bg-brand text-white shadow-xs'
-                  : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-gray-900'
+                  : 'bg-slate-100 text-slate-600 hover:text-slate-900'
               }`}
             >
               <Banknote className="w-3.5 h-3.5" />
               <span>Barèmes Actifs en Vigueur</span>
               <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
-                activeTab === 'ACTIVE' ? 'bg-white/20 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                activeTab === 'ACTIVE' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
               }`}>
                 {activeRules.length}
               </span>
@@ -231,13 +231,13 @@ export const SanctionsView: React.FC = () => {
               className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
                 activeTab === 'FROZEN'
                   ? 'bg-blue-600 text-white shadow-xs'
-                  : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-blue-600'
+                  : 'bg-slate-100 text-slate-600 hover:text-blue-600'
               }`}
             >
               <Snowflake className="w-3.5 h-3.5 text-blue-300" />
               <span>Sanctions Gelées</span>
               <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
-                activeTab === 'FROZEN' ? 'bg-white/20 text-white' : 'bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300'
+                activeTab === 'FROZEN' ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-700'
               }`}>
                 {frozenRules.length}
               </span>
@@ -246,17 +246,17 @@ export const SanctionsView: React.FC = () => {
 
           {/* Quick Filter: All vs Retard vs Absence */}
           <div className="flex items-center gap-2 text-xs">
-            <span className="text-gray-400 font-semibold flex items-center gap-1">
+            <span className="text-slate-400 font-semibold flex items-center gap-1">
               <Filter className="w-3 h-3" /> Filtrer :
             </span>
-            <div className="flex bg-gray-100 dark:bg-gray-800 p-0.5 rounded-lg text-[11px] font-bold">
+            <div className="flex bg-slate-100 p-0.5 rounded-lg text-[11px] font-bold">
               <button
                 type="button"
                 onClick={() => setFilterType('ALL')}
                 className={`px-2 py-1 rounded transition-colors ${
                   filterType === 'ALL'
-                    ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-2xs'
-                    : 'text-gray-500 hover:text-gray-800 dark:hover:text-white'
+                    ? 'bg-white text-slate-900 shadow-2xs'
+                    : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
                 Tous
@@ -266,8 +266,8 @@ export const SanctionsView: React.FC = () => {
                 onClick={() => setFilterType('RETARD')}
                 className={`px-2 py-1 rounded transition-colors ${
                   filterType === 'RETARD'
-                    ? 'bg-white dark:bg-gray-900 text-amber-600 shadow-2xs'
-                    : 'text-gray-500 hover:text-gray-800 dark:hover:text-white'
+                    ? 'bg-white text-amber-600 shadow-2xs'
+                    : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
                 Retards
@@ -277,8 +277,8 @@ export const SanctionsView: React.FC = () => {
                 onClick={() => setFilterType('ABSENCE')}
                 className={`px-2 py-1 rounded transition-colors ${
                   filterType === 'ABSENCE'
-                    ? 'bg-white dark:bg-gray-900 text-rose-600 shadow-2xs'
-                    : 'text-gray-500 hover:text-gray-800 dark:hover:text-white'
+                    ? 'bg-white text-rose-600 shadow-2xs'
+                    : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
                 Absences
@@ -288,14 +288,14 @@ export const SanctionsView: React.FC = () => {
         </div>
 
         {/* Tab info text */}
-        <div className="flex items-center justify-between text-xs text-gray-500">
+        <div className="flex items-center justify-between text-xs text-slate-500">
           <p>
             {activeTab === 'ACTIVE' 
               ? `Barèmes actifs déclenchant des retenues financières dès l'atteinte des seuils non justifiés (${displayedRules.length} affiché(s)).`
               : `Sanctions gelées : ces règles sont désactivées, ne s'appliquent plus et n'imputent aucune retenue (${displayedRules.length} affiché(s)).`}
           </p>
           {activeTab === 'FROZEN' && (
-            <span className="text-[11px] text-blue-600 dark:text-blue-400 font-semibold flex items-center gap-1">
+            <span className="text-[11px] text-blue-600 font-semibold flex items-center gap-1">
               <Snowflake className="w-3 h-3" /> Les sanctions gelées peuvent être dégelées à tout moment
             </span>
           )}
@@ -303,15 +303,15 @@ export const SanctionsView: React.FC = () => {
 
         {/* CARDS GRID OF THE RULES */}
         {displayedRules.length === 0 ? (
-          <div className="py-14 text-center rounded-2xl bg-gray-50/50 dark:bg-gray-800/20 border border-dashed border-gray-200 dark:border-gray-800 space-y-3">
-            <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto text-gray-400">
+          <div className="py-14 text-center rounded-2xl bg-slate-50/50 border border-dashed border-slate-200 space-y-3">
+            <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto text-slate-400">
               {activeTab === 'ACTIVE' ? <Banknote className="w-6 h-6" /> : <Snowflake className="w-6 h-6" />}
             </div>
             <div>
-              <p className="text-sm font-bold text-gray-700 dark:text-gray-300">
+              <p className="text-sm font-bold text-slate-700">
                 {activeTab === 'ACTIVE' ? 'Aucun barème actif trouvé.' : 'Aucune sanction gelée pour le moment.'}
               </p>
-              <p className="text-xs text-gray-400 mt-0.5">
+              <p className="text-xs text-slate-400 mt-0.5">
                 {activeTab === 'ACTIVE' 
                   ? 'Cliquez sur « + Configurer un Seuil / Retenue » pour définir une règle.' 
                   : 'Lorsqu\'une sanction est gelée dans la liste active, elle apparaît ici pour être réactivée si besoin.'}
@@ -333,17 +333,17 @@ export const SanctionsView: React.FC = () => {
                 key={rule.id} 
                 className={`p-4 rounded-2xl border text-xs space-y-3 relative overflow-hidden transition-all shadow-xs ${
                   rule.isActive 
-                    ? 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 hover:border-purple-300 dark:hover:border-purple-800' 
-                    : 'bg-blue-50/40 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900/60'
+                    ? 'bg-white border-slate-200 hover:border-purple-300' 
+                    : 'bg-blue-50/40 border-blue-200'
                 }`}
               >
                 {/* Header of Card: Name + Amount */}
                 <div className="flex items-start justify-between gap-2">
                   <div className="space-y-0.5">
-                    <span className="font-bold text-sm text-gray-900 dark:text-white leading-tight block">
+                    <span className="font-bold text-sm text-slate-900 leading-tight block">
                       {rule.name}
                     </span>
-                    <span className="text-[10px] text-gray-400">
+                    <span className="text-[10px] text-slate-400">
                       Entrée en vigueur : {rule.effectiveDate}
                     </span>
                   </div>
@@ -352,13 +352,13 @@ export const SanctionsView: React.FC = () => {
                   {rule.deductionAmount > 0 ? (
                     <span className={`px-2.5 py-1 rounded-xl text-xs font-black whitespace-nowrap border ${
                       rule.isActive
-                        ? 'bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border-rose-200 dark:border-rose-800'
-                        : 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border-blue-200 dark:border-blue-800 line-through'
+                        ? 'bg-rose-50 text-rose-700 border-rose-200'
+                        : 'bg-blue-100 text-blue-700 border-blue-200 line-through'
                     }`}>
                       -{rule.deductionAmount} {rule.currency}
                     </span>
                   ) : (
-                    <span className="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-gray-100 dark:bg-gray-800 text-gray-500 whitespace-nowrap">
+                    <span className="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-slate-100 text-slate-500 whitespace-nowrap">
                       0 {rule.currency}
                     </span>
                   )}
@@ -368,13 +368,13 @@ export const SanctionsView: React.FC = () => {
                 <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
                   <span className={`px-2 py-0.5 rounded-md font-bold ${
                     rule.targetType === 'ABSENCE' 
-                      ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 dark:border-rose-900' 
-                      : 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-900'
+                      ? 'bg-rose-50 text-rose-700 border border-rose-200' 
+                      : 'bg-amber-50 text-amber-700 border border-amber-200'
                   }`}>
                     {rule.targetType === 'ABSENCE' ? '🚫 Absences Injustifiées' : '⏱️ Retards Injustifiés'}
                   </span>
 
-                  <span className="px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-mono font-bold">
+                  <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-mono font-bold">
                     {rule.targetType === 'ABSENCE' 
                       ? `Seuil : Dès ${rule.thresholdAbsenceCount || 1} absence(s)`
                       : `Seuil : Dès ${rule.thresholdLateCount} retards (${rule.thresholdLateMinutes || 0}m)`}
@@ -382,23 +382,23 @@ export const SanctionsView: React.FC = () => {
                 </div>
 
                 {/* Description */}
-                <p className="text-[11px] text-gray-600 dark:text-gray-400 leading-snug line-clamp-2">
+                <p className="text-[11px] text-slate-600 leading-snug line-clamp-2">
                   {rule.description || 'Barème statutaire de conformité salariale.'}
                 </p>
 
                 {/* Sanction Status Info */}
-                <div className="pt-2 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between text-[11px]">
-                  <span className="text-gray-400 font-medium">
+                <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
+                  <span className="text-slate-400 font-medium">
                     Sanction : <b>{rule.sanctionType.replace(/_/g, ' ')}</b>
                   </span>
                   
                   {rule.isActive ? (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                       En vigueur
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-950/80 px-2 py-0.5 rounded-md">
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 bg-blue-100 px-2 py-0.5 rounded-md">
                       <Snowflake className="w-3 h-3" />
                       Gelée (Inactive)
                     </span>
@@ -406,13 +406,13 @@ export const SanctionsView: React.FC = () => {
                 </div>
 
                 {/* ACTIONS: GELER / DÉGELER / MODIFIER / SUPPRIMER */}
-                <div className="pt-2 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between gap-2">
+                <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
                   <div className="flex items-center gap-1.5">
                     {/* Modify Button */}
                     <button
                       type="button"
                       onClick={() => handleOpenEditModal(rule)}
-                      className="p-1.5 rounded-lg text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                      className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
                       title="Modifier les seuils et montants"
                     >
                       <Edit3 className="w-3.5 h-3.5" />
@@ -422,7 +422,7 @@ export const SanctionsView: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => handleDeleteRule(rule)}
-                      className="p-1.5 rounded-lg text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors"
+                      className="p-1.5 rounded-lg text-rose-500 hover:text-rose-700 hover:bg-rose-50 transition-colors"
                       title="Supprimer ce barème"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -434,10 +434,10 @@ export const SanctionsView: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => handleFreezeRule(rule)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950/60 dark:text-blue-300 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800 text-xs font-bold transition-all active:scale-95"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 text-xs font-bold transition-all active:scale-95"
                       title="Geler cette sanction pour qu'elle ne fonctionne plus et disparaisse de la liste active"
                     >
-                      <Snowflake className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                      <Snowflake className="w-3.5 h-3.5 text-blue-600" />
                       <span>Geler la sanction</span>
                     </button>
                   ) : (
@@ -461,15 +461,15 @@ export const SanctionsView: React.FC = () => {
       {/* MODAL CONFIGURE RULE: WITH DEDUCTIBLE MONEY AMOUNTS FOR LATE & ABSENCE */}
       {isRuleModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="glass-card rounded-3xl w-full max-w-lg p-6 shadow-2xl animate-in fade-in zoom-in-95 space-y-4 text-xs bg-white dark:bg-gray-900">
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-800">
-              <h2 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          <div className="glass-card rounded-3xl w-full max-w-lg p-6 shadow-2xl animate-in fade-in zoom-in-95 space-y-4 text-xs bg-white">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
                 <Banknote className="w-5 h-5 text-brand" />
                 {editingRuleId ? 'Modifier le Barème de Seuil & Retenue' : 'Nouveau Barème de Seuil & Retenue Financière'}
               </h2>
               <button 
                 onClick={() => setIsRuleModalOpen(false)} 
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-sm font-bold"
+                className="text-slate-400 hover:text-slate-600 text-sm font-bold"
               >
                 ✕
               </button>
@@ -478,10 +478,10 @@ export const SanctionsView: React.FC = () => {
             <form onSubmit={handleSaveRule} className="space-y-3.5">
               {/* Target Type Selector */}
               <div>
-                <label className="block text-gray-600 dark:text-gray-400 font-bold mb-1">
+                <label className="block text-slate-600 font-bold mb-1">
                   Type de manquement ciblé *
                 </label>
-                <div className="grid grid-cols-2 gap-2 p-1 bg-gray-100 dark:bg-gray-800 rounded-xl font-bold">
+                <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl font-bold">
                   <button
                     type="button"
                     onClick={() => setRuleForm({ 
@@ -492,7 +492,7 @@ export const SanctionsView: React.FC = () => {
                     className={`py-1.5 rounded-lg text-center transition-all ${
                       ruleForm.targetType === 'RETARD'
                         ? 'bg-amber-600 text-white shadow-xs'
-                        : 'text-gray-600 dark:text-gray-400'
+                        : 'text-slate-600'
                     }`}
                   >
                     ⏱️ Retards Non Justifiés
@@ -507,7 +507,7 @@ export const SanctionsView: React.FC = () => {
                     className={`py-1.5 rounded-lg text-center transition-all ${
                       ruleForm.targetType === 'ABSENCE'
                         ? 'bg-rose-600 text-white shadow-xs'
-                        : 'text-gray-600 dark:text-gray-400'
+                        : 'text-slate-600'
                     }`}
                   >
                     🚫 Absences Non Justifiées
@@ -516,13 +516,13 @@ export const SanctionsView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-gray-600 dark:text-gray-400 font-bold mb-1">Intitulé du barème *</label>
+                <label className="block text-slate-600 font-bold mb-1">Intitulé du barème *</label>
                 <input
                   type="text"
                   required
                   value={ruleForm.name}
                   onChange={(e) => setRuleForm({ ...ruleForm, name: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 outline-none font-bold text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 outline-none font-bold text-slate-900"
                 />
               </div>
 
@@ -530,45 +530,45 @@ export const SanctionsView: React.FC = () => {
               {ruleForm.targetType === 'RETARD' ? (
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-gray-600 dark:text-gray-400 font-bold mb-1">Seuil nombre de retards *</label>
+                    <label className="block text-slate-600 font-bold mb-1">Seuil nombre de retards *</label>
                     <input
                       type="number"
                       min="1"
                       max="30"
                       value={ruleForm.thresholdLateCount}
                       onChange={(e) => setRuleForm({ ...ruleForm, thresholdLateCount: parseInt(e.target.value) || 1 })}
-                      className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 outline-none font-mono font-bold text-gray-900 dark:text-white"
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 outline-none font-mono font-bold text-slate-900"
                     />
                   </div>
                   <div>
-                    <label className="block text-gray-600 dark:text-gray-400 font-bold mb-1">Cumul minutes minimum</label>
+                    <label className="block text-slate-600 font-bold mb-1">Cumul minutes minimum</label>
                     <input
                       type="number"
                       min="0"
                       value={ruleForm.thresholdLateMinutes}
                       onChange={(e) => setRuleForm({ ...ruleForm, thresholdLateMinutes: parseInt(e.target.value) || 0 })}
-                      className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 outline-none font-mono font-bold text-gray-900 dark:text-white"
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 outline-none font-mono font-bold text-slate-900"
                     />
                   </div>
                 </div>
               ) : (
                 <div>
-                  <label className="block text-gray-600 dark:text-gray-400 font-bold mb-1">Seuil d'absences non justifiées (journées) *</label>
+                  <label className="block text-slate-600 font-bold mb-1">Seuil d'absences non justifiées (journées) *</label>
                   <input
                     type="number"
                     min="1"
                     max="10"
                     value={ruleForm.thresholdAbsenceCount}
                     onChange={(e) => setRuleForm({ ...ruleForm, thresholdAbsenceCount: parseInt(e.target.value) || 1 })}
-                    className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 outline-none font-mono font-bold text-gray-900 dark:text-white"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 outline-none font-mono font-bold text-slate-900"
                   />
-                  <span className="text-[10px] text-gray-400">ex. 1 pour déclencher dès la 1ère absence, ou 2 pour récidive.</span>
+                  <span className="text-[10px] text-slate-400">ex. 1 pour déclencher dès la 1ère absence, ou 2 pour récidive.</span>
                 </div>
               )}
 
               {/* SOMME D'ARGENT RETIRABLE (Demande utilisateur) */}
-              <div className="p-3.5 rounded-xl bg-rose-50/70 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800 space-y-2">
-                <label className="block text-rose-900 dark:text-rose-200 font-bold">
+              <div className="p-3.5 rounded-xl bg-rose-50/70 border border-rose-200 space-y-2">
+                <label className="block text-rose-900 font-bold">
                   Somme d'argent retirable / déductible *
                 </label>
                 <div className="grid grid-cols-3 gap-2">
@@ -580,7 +580,7 @@ export const SanctionsView: React.FC = () => {
                       required
                       value={ruleForm.deductionAmount}
                       onChange={(e) => setRuleForm({ ...ruleForm, deductionAmount: parseFloat(e.target.value) || 0 })}
-                      className="w-full px-3 py-2 rounded-xl bg-white dark:bg-gray-900 border border-rose-300 dark:border-rose-700 font-mono font-black text-rose-700 text-sm outline-none"
+                      className="w-full px-3 py-2 rounded-xl bg-white border border-rose-300 font-mono font-black text-rose-700 text-sm outline-none"
                       placeholder="Montant (ex. 15, 20, 50)"
                     />
                   </div>
@@ -588,24 +588,24 @@ export const SanctionsView: React.FC = () => {
                     <select
                       value={ruleForm.currency}
                       onChange={(e) => setRuleForm({ ...ruleForm, currency: e.target.value as any })}
-                      className="w-full px-3 py-2 rounded-xl bg-white dark:bg-gray-900 border border-rose-300 dark:border-rose-700 font-mono font-bold text-xs outline-none"
+                      className="w-full px-3 py-2 rounded-xl bg-white border border-rose-300 font-mono font-bold text-xs outline-none"
                     >
                       <option value="USD">USD ($)</option>
                       <option value="CDF">CDF (Francs)</option>
                     </select>
                   </div>
                 </div>
-                <p className="text-[11px] text-rose-700/80 dark:text-rose-400">
+                <p className="text-[11px] text-rose-700/80">
                   Montant prélevable une fois le seuil de non-justification atteint.
                 </p>
               </div>
 
               <div>
-                <label className="block text-gray-600 dark:text-gray-400 font-bold mb-1">Sanction statutaire associée</label>
+                <label className="block text-slate-600 font-bold mb-1">Sanction statutaire associée</label>
                 <select
                   value={ruleForm.sanctionType}
                   onChange={(e) => setRuleForm({ ...ruleForm, sanctionType: e.target.value as any })}
-                  className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 outline-none text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900"
                 >
                   <option value="RETENUE_SALARIALE_PROPOSEE">Retenue Compensatoire sur Salaire</option>
                   <option value="AVERTISSEMENT_ECRIT">Avertissement Écrit avec Retenue</option>
@@ -615,12 +615,12 @@ export const SanctionsView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-gray-600 dark:text-gray-400 font-bold mb-1">Description & justification juridique</label>
+                <label className="block text-slate-600 font-bold mb-1">Description & justification juridique</label>
                 <textarea
                   rows={2}
                   value={ruleForm.description}
                   onChange={(e) => setRuleForm({ ...ruleForm, description: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 outline-none text-xs text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 outline-none text-xs text-slate-900"
                 />
               </div>
 
@@ -628,7 +628,7 @@ export const SanctionsView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsRuleModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-200"
+                  className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-semibold hover:bg-slate-200"
                 >
                   Annuler
                 </button>

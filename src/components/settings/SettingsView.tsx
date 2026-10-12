@@ -112,22 +112,22 @@ export const SettingsView: React.FC = () => {
     <div className="space-y-6">
       {/* Top Header */}
       <div>
-        <h1 className="text-2xl font-black text-ink dark:text-white tracking-tight flex items-center gap-2">
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
           Paramètres du Système
         </h1>
-        <p className="text-xs text-muted dark:text-gray-400 mt-1">
+        <p className="text-xs text-muted mt-1">
           Configuration de l'appareil biométrique ZKTeco, horaires de référence, départements et journal d'audit
         </p>
       </div>
 
       {/* Tabs navigation */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-gray-200 dark:border-gray-800 pb-2">
+      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-2">
         <button
           onClick={() => setActiveTab('ZKTECO')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
             activeTab === 'ZKTECO'
               ? 'bg-brand text-white shadow-xs'
-              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+              : 'text-slate-600 hover:bg-slate-100'
           }`}
         >
           <Cpu className="w-3.5 h-3.5" />
@@ -139,7 +139,7 @@ export const SettingsView: React.FC = () => {
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
             activeTab === 'COMPANY'
               ? 'bg-brand text-white shadow-xs'
-              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+              : 'text-slate-600 hover:bg-slate-100'
           }`}
         >
           <Building2 className="w-3.5 h-3.5" />
@@ -151,7 +151,7 @@ export const SettingsView: React.FC = () => {
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
             activeTab === 'DEPARTMENTS'
               ? 'bg-brand text-white shadow-xs'
-              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+              : 'text-slate-600 hover:bg-slate-100'
           }`}
         >
           <Users className="w-3.5 h-3.5" />
@@ -163,7 +163,7 @@ export const SettingsView: React.FC = () => {
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
             activeTab === 'USERS'
               ? 'bg-brand text-white shadow-xs'
-              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+              : 'text-slate-600 hover:bg-slate-100'
           }`}
         >
           <ShieldCheck className="w-3.5 h-3.5" />
@@ -175,7 +175,7 @@ export const SettingsView: React.FC = () => {
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
             activeTab === 'AUDIT'
               ? 'bg-brand text-white shadow-xs'
-              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+              : 'text-slate-600 hover:bg-slate-100'
           }`}
         >
           <History className="w-3.5 h-3.5" />
@@ -188,16 +188,16 @@ export const SettingsView: React.FC = () => {
         <div className="space-y-6">
           {/* Hardware Connection Card */}
           <div className="glass-card rounded-2xl p-6 space-y-5">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100 dark:border-gray-800">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-950 flex items-center justify-center text-brand">
+                <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center text-brand">
                   <Cpu className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-gray-900 dark:text-white">
+                  <h3 className="text-base font-bold text-slate-900">
                     Pointeuse Biométrique ZKTeco
                   </h3>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-slate-500">
                     Connexion réseau TCP/IP, protocole ZKEMkeeper ou synchronisation par fichier USB
                   </p>
                 </div>
@@ -206,7 +206,7 @@ export const SettingsView: React.FC = () => {
               {/* Live Status Chip */}
               <div className="flex items-center gap-2">
                 <span className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 ${
-                  zktecoConfig.status === 'ONLINE' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' :
+                  zktecoConfig.status === 'ONLINE' ? 'bg-emerald-100 text-emerald-800' :
                   zktecoConfig.status === 'SYNCHRONIZING' ? 'bg-amber-100 text-amber-800 animate-pulse' :
                   'bg-rose-100 text-rose-800'
                 }`}>
@@ -219,53 +219,53 @@ export const SettingsView: React.FC = () => {
             {/* Parameters Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 text-xs">
               <div>
-                <label className="block text-gray-500 font-bold mb-1">Marque</label>
+                <label className="block text-slate-500 font-bold mb-1">Marque</label>
                 <input
                   type="text"
                   disabled
                   value={zktecoConfig.brand}
-                  className="w-full px-3 py-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold outline-none"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-gray-500 font-bold mb-1">Modèle de l'appareil</label>
+                <label className="block text-slate-500 font-bold mb-1">Modèle de l'appareil</label>
                 <input
                   type="text"
                   value={zktecoConfig.model}
                   onChange={(e) => updateZKTecoConfig({ model: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 font-bold outline-none"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-gray-500 font-bold mb-1">Adresse IP (LAN interne)</label>
+                <label className="block text-slate-500 font-bold mb-1">Adresse IP (LAN interne)</label>
                 <input
                   type="text"
                   value={zktecoConfig.ipAddress}
                   onChange={(e) => updateZKTecoConfig({ ipAddress: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 font-mono font-bold outline-none"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-mono font-bold outline-none"
                   placeholder="192.168.1.201"
                 />
               </div>
 
               <div>
-                <label className="block text-gray-500 font-bold mb-1">Port de communication</label>
+                <label className="block text-slate-500 font-bold mb-1">Port de communication</label>
                 <input
                   type="number"
                   value={zktecoConfig.port}
                   onChange={(e) => updateZKTecoConfig({ port: parseInt(e.target.value) || 4370 })}
-                  className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 font-mono font-bold outline-none"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-mono font-bold outline-none"
                 />
               </div>
             </div>
 
             {/* Test and Sync Buttons */}
-            <div className="flex flex-wrap items-center gap-3 pt-3 border-t border-gray-100 dark:border-gray-800">
+            <div className="flex flex-wrap items-center gap-3 pt-3 border-t border-slate-100">
               <button
                 onClick={handleTestConnection}
                 disabled={testingConnection}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-xs font-bold text-gray-800 dark:text-gray-200 hover:bg-gray-50 transition-all shadow-2xs disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-slate-300 text-xs font-bold text-slate-800 hover:bg-slate-50 transition-all shadow-2xs disabled:opacity-50"
               >
                 <Wifi className={`w-3.5 h-3.5 text-brand ${testingConnection ? 'animate-pulse' : ''}`} />
                 <span>{testingConnection ? 'Test réseau en cours...' : 'Tester la connexion TCP'}</span>
@@ -285,8 +285,8 @@ export const SettingsView: React.FC = () => {
             {testResult && (
               <div className={`p-3.5 rounded-xl text-xs font-medium flex items-center gap-2 animate-in fade-in ${
                 testResult.success 
-                  ? 'bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300'
-                  : 'bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-300'
+                  ? 'bg-emerald-50 border border-emerald-200 text-emerald-800'
+                  : 'bg-rose-50 border border-rose-200 text-rose-800'
               }`}>
                 {testResult.success ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <AlertTriangle className="w-4 h-4 text-rose-600" />}
                 <span>{testResult.message}</span>
@@ -294,7 +294,7 @@ export const SettingsView: React.FC = () => {
             )}
 
             {syncResult && (
-              <div className="p-3.5 rounded-xl text-xs font-medium bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 flex items-center gap-2 animate-in fade-in">
+              <div className="p-3.5 rounded-xl text-xs font-medium bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center gap-2 animate-in fade-in">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                 <span>{syncResult}</span>
               </div>
@@ -303,20 +303,20 @@ export const SettingsView: React.FC = () => {
 
           {/* USB / FILE IMPORTER FOR ZKTECO (Crucial fallback when device is not reachable via LAN) */}
           <div className="glass-card rounded-2xl p-6 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-800">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div>
-                <h3 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                   <Upload className="w-4 h-4 text-brand" />
                   Importateur de Fichiers de Pointage ZKTeco (USB / DAT / CSV)
                 </h3>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-slate-500">
                   Importez les fichiers extraits par clé USB sur la machine (formats ZKTeco `AttLog.dat`, `attendance.csv`, etc.)
                 </p>
               </div>
 
               <button
                 onClick={loadSampleZKTecoFile}
-                className="px-3 py-1 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 text-xs font-semibold text-gray-700 dark:text-gray-300 transition-colors"
+                className="px-3 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-semibold text-slate-700 transition-colors"
                 title="Charger un échantillon réel de pointages ZKTeco pour démonstration"
               >
                 Charger échantillon ZKTeco
@@ -324,7 +324,7 @@ export const SettingsView: React.FC = () => {
             </div>
 
             {/* Drop / Select zone */}
-            <div className="p-4 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700 text-center space-y-2">
+            <div className="p-4 rounded-xl border-2 border-dashed border-slate-300 text-center space-y-2">
               <input
                 type="file"
                 accept=".dat,.csv,.txt,.log"
@@ -334,14 +334,14 @@ export const SettingsView: React.FC = () => {
               />
               <label 
                 htmlFor="zk-file-upload" 
-                className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-50 dark:bg-purple-950/40 text-brand font-bold text-xs hover:bg-purple-100 transition-colors"
+                className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-50 text-brand font-bold text-xs hover:bg-purple-100 transition-colors"
               >
                 <Upload className="w-3.5 h-3.5" />
                 Choisir un fichier USB ZKTeco (AttLog.dat ou .csv)
               </label>
 
               {importedFileName && (
-                <div className="pt-2 text-xs font-mono text-gray-600 dark:text-gray-300">
+                <div className="pt-2 text-xs font-mono text-slate-600">
                   Fichier sélectionné : <b className="text-brand">{importedFileName}</b> ({importedFileContent.split('\n').length} lignes)
                 </div>
               )}
@@ -350,8 +350,8 @@ export const SettingsView: React.FC = () => {
             {/* Preview of file content if loaded */}
             {importedFileContent && (
               <div className="space-y-2">
-                <p className="text-xs font-bold text-gray-700 dark:text-gray-300">Aperçu du contenu brut de la pointeuse :</p>
-                <pre className="p-3 rounded-xl bg-gray-900 text-green-400 font-mono text-[11px] max-h-32 overflow-y-auto">
+                <p className="text-xs font-bold text-slate-700">Aperçu du contenu brut de la pointeuse :</p>
+                <pre className="p-3 rounded-xl bg-slate-900 text-green-400 font-mono text-[11px] max-h-32 overflow-y-auto">
                   {importedFileContent}
                 </pre>
 
@@ -391,13 +391,13 @@ export const SettingsView: React.FC = () => {
 
           {/* Sync History Logs */}
           <div className="glass-card rounded-2xl p-6 space-y-4">
-            <h3 className="text-sm font-bold text-gray-900 dark:text-white">
+            <h3 className="text-sm font-bold text-slate-900">
               Historique des Synchronisations & Événements Appareil
             </h3>
 
-            <div className="overflow-x-auto rounded-xl border border-gray-100 dark:border-gray-800">
+            <div className="overflow-x-auto rounded-xl border border-slate-100">
               <table className="w-full text-left text-xs">
-                <thead className="bg-gray-50 dark:bg-gray-800 text-gray-500 font-bold border-b border-gray-100 dark:border-gray-800">
+                <thead className="bg-slate-50 text-slate-500 font-bold border-b border-slate-100">
                   <tr>
                     <th className="py-2.5 px-3">Horodatage</th>
                     <th className="py-2.5 px-3">Type</th>
@@ -406,10 +406,10 @@ export const SettingsView: React.FC = () => {
                     <th className="py-2.5 px-3">Détails / Protocole</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-gray-800 font-medium">
+                <tbody className="divide-y divide-slate-100 font-medium">
                   {zktecoConfig.syncLogs.map(log => (
                     <tr key={log.id}>
-                      <td className="py-2.5 px-3 font-mono text-gray-500">{log.timestamp}</td>
+                      <td className="py-2.5 px-3 font-mono text-slate-500">{log.timestamp}</td>
                       <td className="py-2.5 px-3 font-bold">{log.type.replace(/_/g, ' ')}</td>
                       <td className="py-2.5 px-3 text-center font-mono font-bold text-brand">+{log.punchesImported}</td>
                       <td className="py-2.5 px-3 text-center">
@@ -419,7 +419,7 @@ export const SettingsView: React.FC = () => {
                           {log.status}
                         </span>
                       </td>
-                      <td className="py-2.5 px-3 text-gray-600 dark:text-gray-400">{log.message}</td>
+                      <td className="py-2.5 px-3 text-slate-600">{log.message}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -432,104 +432,104 @@ export const SettingsView: React.FC = () => {
       {/* TAB 2: COMPANY & DEFAULT SCHEDULES */}
       {activeTab === 'COMPANY' && (
         <div className="glass-card rounded-2xl p-6 space-y-5">
-          <h3 className="text-base font-bold text-gray-900 dark:text-white">
+          <h3 className="text-base font-bold text-slate-900">
             Identité de PREMIDIS SARL & Horaires Officiels
           </h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
             <div>
-              <label className="block text-gray-500 font-bold mb-1">Raison sociale</label>
+              <label className="block text-slate-500 font-bold mb-1">Raison sociale</label>
               <input
                 type="text"
                 value={companySettings.companyName}
                 onChange={(e) => updateCompanySettings({ companyName: e.target.value })}
-                className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 font-bold outline-none"
+                className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold outline-none"
               />
             </div>
             <div>
-              <label className="block text-gray-500 font-bold mb-1">Sous-titre / Activité</label>
+              <label className="block text-slate-500 font-bold mb-1">Sous-titre / Activité</label>
               <input
                 type="text"
                 value={companySettings.companySubName}
                 onChange={(e) => updateCompanySettings({ companySubName: e.target.value })}
-                className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 outline-none"
+                className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 outline-none"
               />
             </div>
             <div>
-              <label className="block text-gray-500 font-bold mb-1">Adresse complète</label>
+              <label className="block text-slate-500 font-bold mb-1">Adresse complète</label>
               <input
                 type="text"
                 value={companySettings.address}
                 onChange={(e) => updateCompanySettings({ address: e.target.value })}
-                className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 outline-none"
+                className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 outline-none"
               />
             </div>
             <div>
-              <label className="block text-gray-500 font-bold mb-1">Numéro RCCM officiel</label>
+              <label className="block text-slate-500 font-bold mb-1">Numéro RCCM officiel</label>
               <input
                 type="text"
                 value={companySettings.rccm}
                 onChange={(e) => updateCompanySettings({ rccm: e.target.value })}
-                className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 font-mono font-bold outline-none"
+                className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-mono font-bold outline-none"
               />
             </div>
             <div>
-              <label className="block text-gray-500 font-bold mb-1">Téléphone de contact</label>
+              <label className="block text-slate-500 font-bold mb-1">Téléphone de contact</label>
               <input
                 type="text"
                 value={companySettings.phone}
                 onChange={(e) => updateCompanySettings({ phone: e.target.value })}
-                className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 font-mono outline-none"
+                className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-mono outline-none"
               />
             </div>
             <div>
-              <label className="block text-gray-500 font-bold mb-1">WhatsApp officiel</label>
+              <label className="block text-slate-500 font-bold mb-1">WhatsApp officiel</label>
               <input
                 type="text"
                 value={companySettings.whatsapp}
                 onChange={(e) => updateCompanySettings({ whatsapp: e.target.value })}
-                className="w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 font-mono outline-none"
+                className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-mono outline-none"
               />
             </div>
           </div>
 
           {/* Reference schedules */}
-          <div className="p-4 rounded-xl bg-purple-50/50 dark:bg-purple-950/20 border border-purple-100 dark:border-purple-900/40 space-y-3">
+          <div className="p-4 rounded-xl bg-purple-50/50 border border-purple-100 space-y-3">
             <h4 className="text-xs font-bold text-brand uppercase tracking-wider">
               Horaires Généraux & Calcul Automatique
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
               <div>
-                <label className="block text-gray-600 dark:text-gray-400 font-bold mb-1">Arrivée au plus tard (Entrée)</label>
+                <label className="block text-slate-600 font-bold mb-1">Arrivée au plus tard (Entrée)</label>
                 <input
                   type="time"
                   value={companySettings.defaultExpectedCheckIn}
                   onChange={(e) => updateCompanySettings({ defaultExpectedCheckIn: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 font-mono font-bold text-center"
+                  className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold text-center"
                 />
               </div>
               <div>
-                <label className="block text-gray-600 dark:text-gray-400 font-bold mb-1">Fin de service (Sortie)</label>
+                <label className="block text-slate-600 font-bold mb-1">Fin de service (Sortie)</label>
                 <input
                   type="time"
                   value={companySettings.defaultExpectedCheckOut}
                   onChange={(e) => updateCompanySettings({ defaultExpectedCheckOut: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 font-mono font-bold text-center"
+                  className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold text-center"
                 />
               </div>
               <div>
-                <label className="block text-gray-600 dark:text-gray-400 font-bold mb-1">Tolérance autorisée (minutes)</label>
+                <label className="block text-slate-600 font-bold mb-1">Tolérance autorisée (minutes)</label>
                 <input
                   type="number"
                   min="0"
                   max="60"
                   value={companySettings.defaultToleranceMinutes}
                   onChange={(e) => updateCompanySettings({ defaultToleranceMinutes: parseInt(e.target.value) || 10 })}
-                  className="w-full px-3 py-2 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 font-mono font-bold text-center"
+                  className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold text-center"
                 />
               </div>
             </div>
-            <p className="text-[11px] text-gray-500 italic">
+            <p className="text-[11px] text-slate-500 italic">
               Règle : Tout pointage enregistré après l'heure d'entrée + la tolérance est automatiquement qualifié en statut « Retard ».
             </p>
           </div>
@@ -539,43 +539,43 @@ export const SettingsView: React.FC = () => {
       {/* TAB 3: DEPARTMENTS */}
       {activeTab === 'DEPARTMENTS' && (
         <div className="glass-card rounded-2xl p-6 space-y-5">
-          <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-800">
-            <h3 className="text-base font-bold text-gray-900 dark:text-white">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+            <h3 className="text-base font-bold text-slate-900">
               Départements de PREMIDIS SARL
             </h3>
           </div>
 
-          <form onSubmit={handleAddDepartment} className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs p-3 rounded-xl bg-gray-50 dark:bg-gray-800/40">
+          <form onSubmit={handleAddDepartment} className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs p-3 rounded-xl bg-slate-50">
             <div>
-              <label className="block text-gray-500 font-bold mb-1">Nom du département</label>
+              <label className="block text-slate-500 font-bold mb-1">Nom du département</label>
               <input
                 type="text"
                 required
                 placeholder="ex. Sécurité & Gardiennage"
                 value={newDepName}
                 onChange={(e) => setNewDepName(e.target.value)}
-                className="w-full px-3 py-1.5 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 outline-none font-medium"
+                className="w-full px-3 py-1.5 rounded-xl bg-white border border-slate-200 outline-none font-medium"
               />
             </div>
             <div>
-              <label className="block text-gray-500 font-bold mb-1">Code</label>
+              <label className="block text-slate-500 font-bold mb-1">Code</label>
               <input
                 type="text"
                 required
                 placeholder="SEC"
                 value={newDepCode}
                 onChange={(e) => setNewDepCode(e.target.value)}
-                className="w-full px-3 py-1.5 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 outline-none font-mono uppercase"
+                className="w-full px-3 py-1.5 rounded-xl bg-white border border-slate-200 outline-none font-mono uppercase"
               />
             </div>
             <div>
-              <label className="block text-gray-500 font-bold mb-1">Responsable</label>
+              <label className="block text-slate-500 font-bold mb-1">Responsable</label>
               <input
                 type="text"
                 placeholder="Chef de département"
                 value={newDepManager}
                 onChange={(e) => setNewDepManager(e.target.value)}
-                className="w-full px-3 py-1.5 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 outline-none"
+                className="w-full px-3 py-1.5 rounded-xl bg-white border border-slate-200 outline-none"
               />
             </div>
             <div className="flex items-end">
@@ -588,9 +588,9 @@ export const SettingsView: React.FC = () => {
             </div>
           </form>
 
-          <div className="overflow-x-auto rounded-xl border border-gray-100 dark:border-gray-800">
+          <div className="overflow-x-auto rounded-xl border border-slate-100">
             <table className="w-full text-left text-xs">
-              <thead className="bg-gray-50 dark:bg-gray-800 text-gray-500 font-bold">
+              <thead className="bg-slate-50 text-slate-500 font-bold">
                 <tr>
                   <th className="py-2.5 px-3">Code</th>
                   <th className="py-2.5 px-3">Département</th>
@@ -598,13 +598,13 @@ export const SettingsView: React.FC = () => {
                   <th className="py-2.5 px-3 text-center">Horaires par défaut</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-800 font-medium">
+              <tbody className="divide-y divide-slate-100 font-medium">
                 {departments.map(dep => (
                   <tr key={dep.id}>
                     <td className="py-2.5 px-3 font-mono font-bold text-brand">{dep.code}</td>
-                    <td className="py-2.5 px-3 font-bold text-gray-900 dark:text-white">{dep.name}</td>
-                    <td className="py-2.5 px-3 text-gray-600 dark:text-gray-400">{dep.manager}</td>
-                    <td className="py-2.5 px-3 text-center font-mono text-gray-500">{dep.defaultEntrance} - {dep.defaultExit}</td>
+                    <td className="py-2.5 px-3 font-bold text-slate-900">{dep.name}</td>
+                    <td className="py-2.5 px-3 text-slate-600">{dep.manager}</td>
+                    <td className="py-2.5 px-3 text-center font-mono text-slate-500">{dep.defaultEntrance} - {dep.defaultExit}</td>
                   </tr>
                 ))}
               </tbody>
@@ -620,17 +620,17 @@ export const SettingsView: React.FC = () => {
       {activeTab === 'AUDIT' && (
         <div className="glass-card rounded-2xl p-6 space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-base font-bold text-gray-900 dark:text-white">
+            <h3 className="text-base font-bold text-slate-900">
               Journal d'Audit & Traçabilité des Opérations
             </h3>
-            <span className="text-xs font-mono text-gray-400">
+            <span className="text-xs font-mono text-slate-400">
               {auditLogs.length} événements enregistrés
             </span>
           </div>
 
-          <div className="overflow-x-auto rounded-xl border border-gray-100 dark:border-gray-800 max-h-96">
+          <div className="overflow-x-auto rounded-xl border border-slate-100 max-h-96">
             <table className="w-full text-left text-xs">
-              <thead className="bg-gray-50 dark:bg-gray-800 text-gray-500 font-bold sticky top-0">
+              <thead className="bg-slate-50 text-slate-500 font-bold sticky top-0">
                 <tr>
                   <th className="py-2.5 px-3">Date & Heure</th>
                   <th className="py-2.5 px-3">Utilisateur</th>
@@ -639,14 +639,14 @@ export const SettingsView: React.FC = () => {
                   <th className="py-2.5 px-3">Détails</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-800 font-medium text-[11px]">
+              <tbody className="divide-y divide-slate-100 font-medium text-[11px]">
                 {auditLogs.map(log => (
-                  <tr key={log.id} className="hover:bg-gray-50/50">
-                    <td className="py-2.5 px-3 font-mono text-gray-400 whitespace-nowrap">{log.timestamp}</td>
-                    <td className="py-2.5 px-3 font-bold text-gray-800 dark:text-gray-200">{log.userName}</td>
+                  <tr key={log.id} className="hover:bg-slate-50/50">
+                    <td className="py-2.5 px-3 font-mono text-slate-400 whitespace-nowrap">{log.timestamp}</td>
+                    <td className="py-2.5 px-3 font-bold text-slate-800">{log.userName}</td>
                     <td className="py-2.5 px-3 font-mono text-brand">{log.action}</td>
-                    <td className="py-2.5 px-3 font-semibold text-gray-700 dark:text-gray-300">{log.target}</td>
-                    <td className="py-2.5 px-3 text-gray-500">{log.details}</td>
+                    <td className="py-2.5 px-3 font-semibold text-slate-700">{log.target}</td>
+                    <td className="py-2.5 px-3 text-slate-500">{log.details}</td>
                   </tr>
                 ))}
               </tbody>

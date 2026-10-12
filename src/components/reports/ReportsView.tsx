@@ -299,10 +299,10 @@ export const ReportsView: React.FC = () => {
       {/* Top Header Bar with ONLY the Download PDF button */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-ink dark:text-white tracking-tight flex items-center gap-2">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
             Rapports & Documents Officiels
           </h1>
-          <p className="text-xs text-muted dark:text-gray-400 mt-1">
+          <p className="text-xs text-muted mt-1">
             Génération et exportation au format PDF des relevés de présences et des sanctions disciplinaires mensuelles
           </p>
         </div>
@@ -321,14 +321,14 @@ export const ReportsView: React.FC = () => {
       </div>
 
       {/* DISTINCT TABS: PRÉSENCE VS SANCTIONS DISCIPLINAIRES MENSUELLES */}
-      <div className="p-1 bg-gray-100 dark:bg-gray-800/80 rounded-2xl inline-flex text-xs font-bold shadow-2xs">
+      <div className="p-1 bg-slate-100 rounded-2xl inline-flex text-xs font-bold shadow-2xs">
         <button
           type="button"
           onClick={() => setActiveTab('ATTENDANCE')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${
             activeTab === 'ATTENDANCE'
-              ? 'bg-white dark:bg-gray-900 text-brand shadow-xs'
-              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'
+              ? 'bg-white text-brand shadow-xs'
+              : 'text-slate-600 hover:text-slate-900'
           }`}
         >
           <Calendar className="w-4 h-4 text-brand" />
@@ -341,13 +341,13 @@ export const ReportsView: React.FC = () => {
           onClick={() => setActiveTab('SANCTIONS')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${
             activeTab === 'SANCTIONS'
-              ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 shadow-xs'
-              : 'text-gray-600 dark:text-gray-400 hover:text-rose-600'
+              ? 'bg-rose-50 text-rose-700 shadow-xs'
+              : 'text-slate-600 hover:text-rose-600'
           }`}
         >
           <AlertOctagon className="w-4 h-4 text-rose-600" />
           <span>Sanctions Disciplinaires Mensuelles</span>
-          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-rose-100 dark:bg-rose-900/60 text-rose-700 dark:text-rose-300">
+          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700">
             {monthlySanctionsData.length}
           </span>
         </button>
@@ -357,21 +357,21 @@ export const ReportsView: React.FC = () => {
       <div className="p-5 rounded-2xl glass-card space-y-4">
         {/* TAB 2: MONTHLY SANCTIONS DISTINCT HEADER BANNER */}
         {activeTab === 'SANCTIONS' && (
-          <div className="p-3.5 rounded-xl bg-rose-50/70 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/40 text-xs flex items-center justify-between">
+          <div className="p-3.5 rounded-xl bg-rose-50/70 border border-rose-200 text-xs flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-rose-100 dark:bg-rose-900/60 flex items-center justify-center text-rose-700 dark:text-rose-300">
+              <div className="w-8 h-8 rounded-lg bg-rose-100 flex items-center justify-center text-rose-700">
                 <AlertOctagon className="w-4 h-4" />
               </div>
               <div>
-                <p className="font-bold text-rose-900 dark:text-rose-200">
+                <p className="font-bold text-rose-900">
                   Rapport Mensuel des Sanctions Disciplinaires & Retenues Financières
                 </p>
-                <p className="text-[11px] text-rose-700/80 dark:text-rose-400">
+                <p className="text-[11px] text-rose-700/80">
                   Période mensuelle : <b className="font-mono">{selectedMonth}</b> · Cumul des manquements non justifiés et retenues soumises à la Direction Générale
                 </p>
               </div>
             </div>
-            <span className="text-xs font-bold font-mono px-2.5 py-1 rounded-lg bg-white dark:bg-gray-900 border border-rose-200 text-rose-700">
+            <span className="text-xs font-bold font-mono px-2.5 py-1 rounded-lg bg-white border border-rose-200 text-rose-700">
               {monthlySanctionsData.length} dossiers pour {selectedMonth}
             </span>
           </div>
@@ -382,18 +382,18 @@ export const ReportsView: React.FC = () => {
           {/* 1. Period Selector (Day or Month toggle for attendance, Month for sanctions) */}
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="text-gray-500 font-bold">
+              <label className="text-slate-500 font-bold">
                 {activeTab === 'SANCTIONS' ? 'Mois sélectionné' : 'Période concernée'}
               </label>
               {activeTab === 'ATTENDANCE' && (
-                <div className="flex text-[10px] font-bold bg-gray-200 dark:bg-gray-700 rounded-md p-0.5">
+                <div className="flex text-[10px] font-bold bg-slate-200 rounded-md p-0.5">
                   <button
                     type="button"
                     onClick={() => setPeriodType('JOUR')}
                     className={`px-1.5 py-0.5 rounded transition-colors ${
                       periodType === 'JOUR'
-                        ? 'bg-white dark:bg-gray-900 text-brand shadow-2xs font-extrabold'
-                        : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
+                        ? 'bg-white text-brand shadow-2xs font-extrabold'
+                        : 'text-slate-500 hover:text-slate-900'
                     }`}
                   >
                     Jour
@@ -403,8 +403,8 @@ export const ReportsView: React.FC = () => {
                     onClick={() => setPeriodType('MOIS')}
                     className={`px-1.5 py-0.5 rounded transition-colors ${
                       periodType === 'MOIS'
-                        ? 'bg-white dark:bg-gray-900 text-brand shadow-2xs font-extrabold'
-                        : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
+                        ? 'bg-white text-brand shadow-2xs font-extrabold'
+                        : 'text-slate-500 hover:text-slate-900'
                     }`}
                   >
                     Mois
@@ -417,25 +417,25 @@ export const ReportsView: React.FC = () => {
                 type="month"
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
-                className="w-full px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 font-mono font-bold text-gray-900 dark:text-white outline-none cursor-pointer"
+                className="w-full px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200 font-mono font-bold text-slate-900 outline-none cursor-pointer"
               />
             ) : (
               <input
                 type="date"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                className="w-full px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 font-mono font-bold text-gray-900 dark:text-white outline-none cursor-pointer"
+                className="w-full px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200 font-mono font-bold text-slate-900 outline-none cursor-pointer"
               />
             )}
           </div>
 
           {/* 2. Department Filter */}
           <div>
-            <label className="block text-gray-500 font-bold mb-1">Département</label>
+            <label className="block text-slate-500 font-bold mb-1">Département</label>
             <select
               value={selectedDepartment}
               onChange={(e) => setSelectedDepartment(e.target.value)}
-              className="w-full px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 font-medium text-gray-900 dark:text-white outline-none cursor-pointer"
+              className="w-full px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200 font-medium text-slate-900 outline-none cursor-pointer"
             >
               <option value="ALL">Tous les départements</option>
               {departments.map(d => (
@@ -446,11 +446,11 @@ export const ReportsView: React.FC = () => {
 
           {/* 3. Employee Filter */}
           <div>
-            <label className="block text-gray-500 font-bold mb-1">Employé spécifique</label>
+            <label className="block text-slate-500 font-bold mb-1">Employé spécifique</label>
             <select
               value={selectedEmployeeId}
               onChange={(e) => setSelectedEmployeeId(e.target.value)}
-              className="w-full px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 font-medium text-gray-900 dark:text-white outline-none cursor-pointer truncate"
+              className="w-full px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200 font-medium text-slate-900 outline-none cursor-pointer truncate"
             >
               <option value="ALL">Tout le personnel</option>
               {employees.map(e => (
@@ -462,13 +462,13 @@ export const ReportsView: React.FC = () => {
           {/* 4. Filter for Status in Attendance, or Encaissement in Sanctions */}
           {activeTab === 'ATTENDANCE' ? (
             <div>
-              <label className="block text-gray-500 font-bold mb-1">
+              <label className="block text-slate-500 font-bold mb-1">
                 Filtre par Statut
               </label>
               <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value as any)}
-                className="w-full px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 font-bold text-gray-900 dark:text-white outline-none cursor-pointer"
+                className="w-full px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200 font-bold text-slate-900 outline-none cursor-pointer"
               >
                 <option value="ALL">Tous les statuts</option>
                 <option value="PRESENT">🟢 Présent (P)</option>
@@ -478,13 +478,13 @@ export const ReportsView: React.FC = () => {
             </div>
           ) : (
             <div>
-              <label className="block text-gray-500 font-bold mb-1">
+              <label className="block text-slate-500 font-bold mb-1">
                 Filtre Sanction / Encaissement
               </label>
               <select
                 value={sanctionFilterMode}
                 onChange={(e) => setSanctionFilterMode(e.target.value as any)}
-                className="w-full px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 font-bold text-gray-900 dark:text-white outline-none cursor-pointer"
+                className="w-full px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200 font-bold text-slate-900 outline-none cursor-pointer"
               >
                 <option value="ALL">📋 Toutes les sanctions à écoper</option>
                 <option value="ENCAISSEE">🟢 Déjà encaissée / Validée</option>
@@ -496,31 +496,31 @@ export const ReportsView: React.FC = () => {
       </div>
 
       {/* DOCUMENT PREVIEW CARD (A4 Print Preview Layout) */}
-      <div className="glass-card rounded-2xl p-6 sm:p-8 space-y-6 bg-white dark:bg-gray-900 shadow-md">
+      <div className="glass-card rounded-2xl p-6 sm:p-8 space-y-6 bg-white shadow-md">
         {/* En-tête officiel PREMIDIS SARL */}
         <div className="-mx-2 sm:-mx-4 rounded-xl overflow-hidden bg-white">
           <Letterhead />
         </div>
 
         {/* Références du document */}
-        <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b-2 border-gray-800 text-xs">
+        <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b-2 border-slate-800 text-xs">
           <span className="font-bold uppercase tracking-wider text-brand">
             Document Administratif Officiel
           </span>
-          <span className="font-mono text-gray-500">
+          <span className="font-mono text-slate-500">
             Émis le : {new Date().toLocaleDateString('fr-FR')}
           </span>
-          <span className="font-bold text-gray-800 dark:text-gray-200">
+          <span className="font-bold text-slate-800">
             Réf : PREMIDIS/RH/ATT/{selectedMonth.replace('-', '')}
           </span>
         </div>
 
         {/* Document Title Banner */}
-        <div className="text-center py-2.5 bg-gray-50 dark:bg-gray-800/40 rounded-xl space-y-0.5">
-          <h2 className="text-base font-black uppercase text-gray-900 dark:text-white tracking-tight">
+        <div className="text-center py-2.5 bg-slate-50 rounded-xl space-y-0.5">
+          <h2 className="text-base font-black uppercase text-slate-900 tracking-tight">
             {dynamicReportTitle}
           </h2>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-slate-500">
             Période : {activeTab === 'SANCTIONS' || !isDaily ? selectedMonth : selectedDate} · Service : {selectedDepartment === 'ALL' ? 'Tous départements' : selectedDepartment}
             {activeTab === 'ATTENDANCE' && selectedStatus !== 'ALL' && ` · Statut : ${selectedStatus}`}
             {activeTab === 'SANCTIONS' && sanctionFilterMode !== 'ALL' && ` · Filtre : ${sanctionFilterMode === 'ENCAISSEE' ? 'Déjà encaissées' : 'À prélever'}`}
@@ -529,41 +529,41 @@ export const ReportsView: React.FC = () => {
 
         {/* Statistical Summary Bar */}
         {activeTab === 'SANCTIONS' && (
-          <div className="flex flex-wrap items-center justify-between text-xs font-bold px-4 py-2.5 rounded-xl bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50">
-            <span className="text-rose-900 dark:text-rose-200 font-extrabold">
+          <div className="flex flex-wrap items-center justify-between text-xs font-bold px-4 py-2.5 rounded-xl bg-rose-50/70 border border-rose-200">
+            <span className="text-rose-900 font-extrabold">
               Dossiers à sanctionner : {monthlySanctionsData.length}
             </span>
-            <span className="text-emerald-700 dark:text-emerald-300">
+            <span className="text-emerald-700">
               Déjà encaissées / prélevées : {monthlySanctionsData.filter(s => s.status === 'APPROUVEE').length} ({monthlySanctionsData.filter(s => s.status === 'APPROUVEE').reduce((a, b) => a + b.deductionAmount, 0)} USD)
             </span>
-            <span className="text-amber-700 dark:text-amber-300">
+            <span className="text-amber-700">
               En attente d'encaissement : {monthlySanctionsData.filter(s => s.status === 'EN_EXAMEN').length} ({monthlySanctionsData.filter(s => s.status === 'EN_EXAMEN').reduce((a, b) => a + b.deductionAmount, 0)} USD)
             </span>
-            <span className="text-gray-700 dark:text-gray-300">
+            <span className="text-slate-700">
               Total retenues : {monthlySanctionsData.reduce((a, b) => a + b.deductionAmount, 0)} USD
             </span>
           </div>
         )}
         {activeTab === 'ATTENDANCE' && !isDaily && (
-          <div className="flex flex-wrap items-center justify-between text-xs font-bold px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-gray-800/60">
-            <span className="text-gray-700 dark:text-gray-300">Effectif listé : {monthlyStats.totalListed}</span>
-            <span className="text-emerald-700 dark:text-emerald-400">Total Présences (P) : {monthlyStats.grandP}</span>
-            <span className="text-amber-700 dark:text-amber-400">Total Retards (R) : {monthlyStats.grandR} ({monthlyStats.grandLateMin} min)</span>
-            <span className="text-rose-700 dark:text-rose-400">Total Absents (A) : {monthlyStats.grandA}</span>
+          <div className="flex flex-wrap items-center justify-between text-xs font-bold px-4 py-2.5 rounded-xl bg-slate-100">
+            <span className="text-slate-700">Effectif listé : {monthlyStats.totalListed}</span>
+            <span className="text-emerald-700">Total Présences (P) : {monthlyStats.grandP}</span>
+            <span className="text-amber-700">Total Retards (R) : {monthlyStats.grandR} ({monthlyStats.grandLateMin} min)</span>
+            <span className="text-rose-700">Total Absents (A) : {monthlyStats.grandA}</span>
           </div>
         )}
 
         {activeTab === 'ATTENDANCE' && isDaily && (
-          <div className="flex flex-wrap items-center justify-between text-xs font-bold px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-gray-800/60">
-            <span className="text-gray-700 dark:text-gray-300">Total lignes : {attendanceStats.total}</span>
-            <span className="text-emerald-700 dark:text-emerald-400">Présents : {attendanceStats.presents}</span>
-            <span className="text-amber-700 dark:text-amber-400">Retards : {attendanceStats.retards} ({attendanceStats.totalLateMin} min)</span>
-            <span className="text-rose-700 dark:text-rose-400">Absents : {attendanceStats.absents}</span>
+          <div className="flex flex-wrap items-center justify-between text-xs font-bold px-4 py-2.5 rounded-xl bg-slate-100">
+            <span className="text-slate-700">Total lignes : {attendanceStats.total}</span>
+            <span className="text-emerald-700">Présents : {attendanceStats.presents}</span>
+            <span className="text-amber-700">Retards : {attendanceStats.retards} ({attendanceStats.totalLateMin} min)</span>
+            <span className="text-rose-700">Absents : {attendanceStats.absents}</span>
           </div>
         )}
 
         {/* Live Table Preview */}
-        <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
+        <div className="overflow-x-auto rounded-xl border border-slate-200">
           {activeTab === 'SANCTIONS' ? (
             <table className="w-full text-left text-xs">
               <thead className="bg-[#781432] text-white font-bold">
@@ -580,10 +580,10 @@ export const ReportsView: React.FC = () => {
                   <th className="py-2.5 px-3">Observations / Visa</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-800 font-medium">
+              <tbody className="divide-y divide-slate-200 font-medium">
                 {monthlySanctionsData.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="py-10 text-center text-gray-400">
+                    <td colSpan={10} className="py-10 text-center text-slate-400">
                       {sanctionFilterMode === 'ENCAISSEE' 
                         ? `Aucune sanction déjà encaissée pour le mois de ${selectedMonth}.`
                         : `Aucun manquement ni dossier disciplinaire pour le mois de ${selectedMonth}.`}
@@ -591,42 +591,42 @@ export const ReportsView: React.FC = () => {
                   </tr>
                 ) : (
                   monthlySanctionsData.map((s, idx) => (
-                    <tr key={s.matricule} className="hover:bg-gray-50/60 dark:hover:bg-gray-800/30">
-                      <td className="py-2.5 px-3 text-gray-400 font-mono text-center">{idx + 1}</td>
+                    <tr key={s.matricule} className="hover:bg-slate-50/60">
+                      <td className="py-2.5 px-3 text-slate-400 font-mono text-center">{idx + 1}</td>
                       <td className="py-2.5 px-3 font-mono font-bold text-brand">{s.matricule}</td>
                       <td className="py-2.5 px-3 font-bold">{s.employeeName}</td>
-                      <td className="py-2.5 px-3 text-gray-600 dark:text-gray-400">{s.department}</td>
+                      <td className="py-2.5 px-3 text-slate-600">{s.department}</td>
                       <td className="py-2.5 px-3 text-center font-bold text-amber-600">
                         {s.lateCount > 0 ? `${s.lateCount} (${s.totalMinutesLate}m)` : '0'}
                       </td>
                       <td className="py-2.5 px-3 text-center font-bold text-rose-600">
                         {s.absenceCount > 0 ? `${s.absenceCount} j` : '0'}
                       </td>
-                      <td className="py-2.5 px-3 font-semibold text-gray-700 dark:text-gray-300">
+                      <td className="py-2.5 px-3 font-semibold text-slate-700">
                         {s.proposedSanction.replace(/_/g, ' ')}
                       </td>
                       <td className="py-2.5 px-3 text-center font-mono font-bold">
                         {s.deductionAmount > 0 ? (
                           <span className={`px-2 py-0.5 rounded ${
                             s.status === 'APPROUVEE'
-                              ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-300 font-black'
-                              : 'bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-300 border border-rose-200'
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-300 font-black'
+                              : 'bg-rose-50 text-rose-700 border border-rose-200'
                           }`}>
                             -{s.deductionAmount} {s.currency}
                           </span>
                         ) : (
-                          <span className="text-gray-400">0 USD</span>
+                          <span className="text-slate-400">0 USD</span>
                         )}
                       </td>
                       <td className="py-2.5 px-3 text-center">
                         <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded text-[10px] font-bold ${
                           s.status === 'APPROUVEE' && s.deductionAmount > 0 
-                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-200 border border-emerald-300' 
+                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' 
                             : s.status === 'APPROUVEE' 
-                            ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-200 border border-blue-300' 
+                            ? 'bg-blue-100 text-blue-800 border border-blue-300' 
                             : s.status === 'REJETEE' 
-                            ? 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border border-gray-300' 
-                            : 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-200 border border-amber-300'
+                            ? 'bg-slate-100 text-slate-700 border border-slate-300' 
+                            : 'bg-amber-100 text-amber-800 border border-amber-300'
                         }`}>
                           {s.status === 'APPROUVEE' && s.deductionAmount > 0 
                             ? '✅ Encaissée sur paie' 
@@ -637,7 +637,7 @@ export const ReportsView: React.FC = () => {
                             : '⏳ À prélever (En examen)'}
                         </span>
                       </td>
-                      <td className="py-2.5 px-3 text-gray-500 text-[11px] truncate max-w-[150px]">
+                      <td className="py-2.5 px-3 text-slate-500 text-[11px] truncate max-w-[150px]">
                         {s.decisionMotif || (s.decisionDate ? `Visé le ${s.decisionDate}` : 'En attente Direction')}
                       </td>
                     </tr>
@@ -648,12 +648,12 @@ export const ReportsView: React.FC = () => {
           ) : !isDaily ? (
             /* EXACT MONTHLY SYNTHESIS CARNET J1-J31 GRID REPLICA FROM ATTENDANCE VIEW */
             <div>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-gray-50/70 dark:bg-gray-800/40 border-b border-gray-200 dark:border-gray-800">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-slate-50/70 border-b border-slate-200">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
+                  <span className="text-xs font-bold text-slate-700">
                     Carnet Mensuel des Présences (J1 à J{daysInMonth})
                   </span>
-                  <span className="text-[11px] font-mono text-gray-400">
+                  <span className="text-[11px] font-mono text-slate-400">
                     · {monthlySynthesis.length} collaborateur(s) listé(s)
                   </span>
                 </div>
@@ -667,45 +667,45 @@ export const ReportsView: React.FC = () => {
               <table className="w-full text-left text-[11px] border-collapse">
                 <thead className="bg-[#14233B] text-white font-bold">
                   <tr>
-                    <th className="py-2.5 px-2 text-center border-r border-gray-700 w-8">N°</th>
-                    <th className="py-2.5 px-3 border-r border-gray-700 min-w-[65px]">Matricule</th>
-                    <th className="py-2.5 px-3 border-r border-gray-700 min-w-[150px]">Nom & Postnom</th>
-                    <th className="py-2.5 px-3 border-r border-gray-700 min-w-[120px]">Département</th>
+                    <th className="py-2.5 px-2 text-center border-r border-slate-700 w-8">N°</th>
+                    <th className="py-2.5 px-3 border-r border-slate-700 min-w-[65px]">Matricule</th>
+                    <th className="py-2.5 px-3 border-r border-slate-700 min-w-[150px]">Nom & Postnom</th>
+                    <th className="py-2.5 px-3 border-r border-slate-700 min-w-[120px]">Département</th>
                     
                     {/* Days 1 to daysInMonth */}
                     {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(day => (
-                      <th key={day} className="py-2 px-1 text-center border-r border-gray-700 min-w-[24px]">
+                      <th key={day} className="py-2 px-1 text-center border-r border-slate-700 min-w-[24px]">
                         {day}
                       </th>
                     ))}
 
                     {/* Monthly Summary Totals */}
-                    <th className="py-2.5 px-2 text-center bg-emerald-900/60 border-r border-gray-700 text-emerald-200 min-w-[32px]" title="Total Présents">P</th>
-                    <th className="py-2.5 px-2 text-center bg-amber-900/60 border-r border-gray-700 text-amber-200 min-w-[32px]" title="Total Retards">R</th>
-                    <th className="py-2.5 px-2 text-center bg-rose-900/60 border-r border-gray-700 text-rose-200 min-w-[32px]" title="Total Absents">A</th>
-                    <th className="py-2.5 px-2 text-center bg-gray-800 text-white min-w-[45px]" title="Retard cumulé en minutes">Min.</th>
+                    <th className="py-2.5 px-2 text-center bg-emerald-900/60 border-r border-slate-700 text-emerald-200 min-w-[32px]" title="Total Présents">P</th>
+                    <th className="py-2.5 px-2 text-center bg-amber-900/60 border-r border-slate-700 text-amber-200 min-w-[32px]" title="Total Retards">R</th>
+                    <th className="py-2.5 px-2 text-center bg-rose-900/60 border-r border-slate-700 text-rose-200 min-w-[32px]" title="Total Absents">A</th>
+                    <th className="py-2.5 px-2 text-center bg-slate-800 text-white min-w-[45px]" title="Retard cumulé en minutes">Min.</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200 dark:divide-gray-800 font-medium">
+                <tbody className="divide-y divide-slate-200 font-medium">
                   {monthlySynthesis.length === 0 ? (
                     <tr>
-                      <td colSpan={4 + daysInMonth + 4} className="py-12 text-center text-gray-400">
+                      <td colSpan={4 + daysInMonth + 4} className="py-12 text-center text-slate-400">
                         Aucun employé trouvé pour cette sélection.
                       </td>
                     </tr>
                   ) : (
                     monthlySynthesis.map((row) => (
-                      <tr key={row.employee.id} className="hover:bg-gray-50/80 dark:hover:bg-gray-800/40">
-                        <td className="py-2 px-2 text-center font-mono text-gray-400 border-r border-gray-200 dark:border-gray-800">
+                      <tr key={row.employee.id} className="hover:bg-slate-50/80">
+                        <td className="py-2 px-2 text-center font-mono text-slate-400 border-r border-slate-200">
                           {row.number}
                         </td>
-                        <td className="py-2 px-3 font-mono font-bold text-brand border-r border-gray-200 dark:border-gray-800">
+                        <td className="py-2 px-3 font-mono font-bold text-brand border-r border-slate-200">
                           {row.employee.matricule}
                         </td>
-                        <td className="py-2 px-3 font-bold text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-800 truncate max-w-[150px]">
+                        <td className="py-2 px-3 font-bold text-slate-900 border-r border-slate-200 truncate max-w-[150px]">
                           {row.employee.nom} {row.employee.postnom} {row.employee.prenom}
                         </td>
-                        <td className="py-2 px-3 text-gray-600 dark:text-gray-400 border-r border-gray-200 dark:border-gray-800 truncate max-w-[120px]">
+                        <td className="py-2 px-3 text-slate-600 border-r border-slate-200 truncate max-w-[120px]">
                           {row.employee.departement}
                         </td>
 
@@ -714,7 +714,7 @@ export const ReportsView: React.FC = () => {
                           const rec = row.days[day];
                           if (!rec) {
                             return (
-                              <td key={day} className="py-1 px-1 text-center border-r border-gray-200 dark:border-gray-800 text-gray-300 dark:text-gray-700">
+                              <td key={day} className="py-1 px-1 text-center border-r border-slate-200 text-slate-300">
                                 ·
                               </td>
                             );
@@ -733,7 +733,7 @@ export const ReportsView: React.FC = () => {
                           return (
                             <td 
                               key={day} 
-                              className="py-1 px-1 text-center border-r border-gray-200 dark:border-gray-800"
+                              className="py-1 px-1 text-center border-r border-slate-200"
                               title={`J${day} : ${rec.status} (${rec.actualCheckIn || 'Non pointé'})`}
                             >
                               <span className={`inline-block w-5 h-5 leading-5 rounded text-[10px] font-bold ${bg}`}>
@@ -744,16 +744,16 @@ export const ReportsView: React.FC = () => {
                         })}
 
                         {/* Totals */}
-                        <td className="py-2 px-2 text-center font-bold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/20 border-r border-gray-200 dark:border-gray-800">
+                        <td className="py-2 px-2 text-center font-bold text-emerald-700 bg-emerald-50 border-r border-slate-200">
                           {row.totalP}
                         </td>
-                        <td className="py-2 px-2 text-center font-bold text-amber-700 bg-amber-50 dark:bg-amber-950/20 border-r border-gray-200 dark:border-gray-800">
+                        <td className="py-2 px-2 text-center font-bold text-amber-700 bg-amber-50 border-r border-slate-200">
                           {row.totalR}
                         </td>
-                        <td className="py-2 px-2 text-center font-bold text-rose-700 bg-rose-50 dark:bg-rose-950/20 border-r border-gray-200 dark:border-gray-800">
+                        <td className="py-2 px-2 text-center font-bold text-rose-700 bg-rose-50 border-r border-slate-200">
                           {row.totalA}
                         </td>
-                        <td className="py-2 px-2 text-center font-mono font-bold text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-800/60">
+                        <td className="py-2 px-2 text-center font-mono font-bold text-slate-900 bg-slate-50">
                           {row.totalLateMin}m
                         </td>
                       </tr>
@@ -777,20 +777,20 @@ export const ReportsView: React.FC = () => {
                   <th className="py-2.5 px-3">Observations</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-800 font-medium">
+              <tbody className="divide-y divide-slate-200 font-medium">
                 {filteredAttendanceData.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="py-10 text-center text-gray-400">
+                    <td colSpan={9} className="py-10 text-center text-slate-400">
                       Aucune donnée ne correspond aux critères sélectionnés.
                     </td>
                   </tr>
                 ) : (
                   filteredAttendanceData.slice(0, 25).map((r, i) => (
                     <tr key={r.id}>
-                      <td className="py-2 px-3 text-gray-400 font-mono">{i + 1}</td>
+                      <td className="py-2 px-3 text-slate-400 font-mono">{i + 1}</td>
                       <td className="py-2 px-3 font-mono font-bold text-brand">{r.employeeId}</td>
                       <td className="py-2 px-3 font-bold">{r.employeeName}</td>
-                      <td className="py-2 px-3 text-gray-600 dark:text-gray-400">{r.department}</td>
+                      <td className="py-2 px-3 text-slate-600">{r.department}</td>
                       <td className="py-2 px-3 text-center font-mono">{r.date}</td>
                       <td className="py-2 px-3 text-center font-mono font-bold">{r.actualCheckIn || '–'}</td>
                       <td className="py-2 px-3 text-center font-mono">
@@ -799,7 +799,7 @@ export const ReportsView: React.FC = () => {
                       <td className="py-2 px-3 text-center">
                         <StatusBadge status={r.status} size="sm" />
                       </td>
-                      <td className="py-2 px-3 text-gray-500 truncate max-w-[150px]">
+                      <td className="py-2 px-3 text-slate-500 truncate max-w-[150px]">
                         {r.notes || (r.isCorrected ? `Ajusté (${r.correctionReason})` : '–')}
                       </td>
                     </tr>
@@ -811,33 +811,33 @@ export const ReportsView: React.FC = () => {
         </div>
 
         {activeTab === 'ATTENDANCE' && isDaily && filteredAttendanceData.length > 25 && (
-          <p className="text-center text-xs text-gray-400 italic">
+          <p className="text-center text-xs text-slate-400 italic">
             Affichage des 25 premières lignes (le fichier PDF complet contiendra l'intégralité des {filteredAttendanceData.length} lignes).
           </p>
         )}
 
         {/* Signature & Cachet Blocks */}
-        <div className="pt-8 mt-6 border-t border-gray-200 dark:border-gray-800 grid grid-cols-1 sm:grid-cols-3 gap-6 text-center text-xs">
+        <div className="pt-8 mt-6 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-3 gap-6 text-center text-xs">
           <div>
-            <p className="font-bold text-gray-800 dark:text-gray-200">Pour le Secrétariat & Contrôle</p>
-            <p className="text-[11px] text-gray-400 mt-0.5">Vérification physique des registres</p>
-            <div className="h-16 border-b border-dashed border-gray-300 dark:border-gray-700 mt-2 flex items-end justify-center pb-1 text-gray-400 italic text-[10px]">
+            <p className="font-bold text-slate-800">Pour le Secrétariat & Contrôle</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">Vérification physique des registres</p>
+            <div className="h-16 border-b border-dashed border-slate-300 mt-2 flex items-end justify-center pb-1 text-slate-400 italic text-[10px]">
               Signature de l'opérateur
             </div>
           </div>
 
           <div>
-            <p className="font-bold text-gray-800 dark:text-gray-200">Le Responsable RH</p>
-            <p className="text-[11px] text-gray-400 mt-0.5">Examen des justifications & manquements</p>
-            <div className="h-16 border-b border-dashed border-gray-300 dark:border-gray-700 mt-2 flex items-end justify-center pb-1 text-gray-400 italic text-[10px]">
+            <p className="font-bold text-slate-800">Le Responsable RH</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">Examen des justifications & manquements</p>
+            <div className="h-16 border-b border-dashed border-slate-300 mt-2 flex items-end justify-center pb-1 text-slate-400 italic text-[10px]">
               Signature & Cachet RH
             </div>
           </div>
 
           <div>
-            <p className="font-bold text-gray-800 dark:text-gray-200">Pour la Direction Générale</p>
-            <p className="text-[11px] text-gray-400 mt-0.5">PREMIDIS SARL – Siège de Goma</p>
-            <div className="h-16 border-b border-dashed border-gray-300 dark:border-gray-700 mt-2 flex items-end justify-center pb-1 text-gray-400 italic text-[10px]">
+            <p className="font-bold text-slate-800">Pour la Direction Générale</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">PREMIDIS SARL – Siège de Goma</p>
+            <div className="h-16 border-b border-dashed border-slate-300 mt-2 flex items-end justify-center pb-1 text-slate-400 italic text-[10px]">
               Signature & Sceau Officiel
             </div>
           </div>

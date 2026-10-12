@@ -1,21 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
-import { 
-  Sun, Moon, Globe, Shield, User, Clock, 
-  Search, RefreshCw, CheckCircle2, AlertTriangle, Fingerprint, LogOut
-} from 'lucide-react';
+import { Clock, Search, LogOut, Wifi, WifiOff, Languages } from 'lucide-react';
+import { ThemeToggle } from '../common/ThemeToggle';
+import { LOGO_ALT, LOGO_SRC } from '../../app/brand';
 
 interface NavbarProps {
   onOpenQuickPunch: () => void;
   onOpenSearch: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onOpenQuickPunch, onOpenSearch }) => {
-  const { 
-    theme, toggleTheme, language, setLanguage, 
-    currentUser, switchUserRole, allUsers, zktecoConfig,
-    companySettings, setCurrentUser, currentView, getRoleLabel, addAuditLog
-  } = useApp();
+// Barre d'outils au langage visuel PREMIDIS ERP (boutons « hdr-btn », pastilles d'état)
+export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
+  const { language, setLanguage, currentUser, zktecoConfig, setCurrentUser, addAuditLog } = useApp();
 
   const [currentTime, setCurrentTime] = useState('');
   const [currentDate, setCurrentDate] = useState('');
@@ -23,7 +19,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenQuickPunch, onOpenSearch }
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
-      // Goma / CAT timezone (GMT+2)
       setCurrentTime(now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
       setCurrentDate(now.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }));
     };
@@ -32,104 +27,64 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenQuickPunch, onOpenSearch }
     return () => clearInterval(interval);
   }, []);
 
+  const online = zktecoConfig.status === 'ONLINE';
 
   return (
-    <header className="hud-bar h-20 px-6 glass-panel border-b border-line dark:border-gray-800 flex items-center justify-between sticky top-0 z-30 transition-colors">
-      {/* Left: Brand & Breadcrumb */}
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2.5">
-          <div className="w-10 h-10 rounded-xl bg-white dark:bg-gray-900 border border-gray-200/80 dark:border-gray-800 p-1 flex items-center justify-center shadow-xs shrink-0 overflow-hidden">
-            <img 
-              src={`${import.meta.env.BASE_URL}premidis-symbol.png`} 
-              alt="Logo PREMIDIS S.A.R.L." 
-              className="w-full h-full object-contain"
-              referrerPolicy="no-referrer"
-            />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-extrabold text-base tracking-tight text-ink dark:text-white">
-                PREMIDIS <span className="text-brand font-semibold">Attendance</span>
-              </span>
-              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
-                Goma, RDC
-              </span>
-            </div>
-            <p className="text-[11px] text-muted dark:text-gray-400 -mt-0.5 hidden sm:block">
-              Route Aéroport N°20 · Bujovu
-            </p>
-          </div>
+    <header className="px-4 lg:px-6 pt-4 w-full max-w-[1400px] mx-auto">
+      <div className="flex flex-wrap items-center gap-2">
+        {/* Logo (mobile : le menu latéral est masqué) */}
+        <div className="lg:hidden h-9 w-14 rounded-xl logo-tile border border-line flex items-center justify-center p-0.5 shadow-xs">
+          <img src={LOGO_SRC} alt={LOGO_ALT} className="max-h-full max-w-full object-contain" />
         </div>
 
-        {/* Device Status Indicator */}
-        <div className="hidden lg:flex items-center gap-2 ml-4 pl-4 border-l border-gray-200 dark:border-gray-800">
-          <div className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-300">
-            <Fingerprint className="w-3.5 h-3.5 text-brand" />
-            <span className="font-medium text-[11px]">{zktecoConfig.model.split(' ')[1] || 'ZKTeco'}</span>
-            <span className={`w-2 h-2 rounded-full ${
-              zktecoConfig.status === 'ONLINE' ? 'bg-emerald-500 ring-2 ring-emerald-200 dark:ring-emerald-900' :
-              zktecoConfig.status === 'SYNCHRONIZING' ? 'bg-amber-500 animate-pulse' : 'bg-rose-500'
-            }`} />
-            <span className="text-[10px] text-gray-500 dark:text-gray-400 capitalize">
-              {zktecoConfig.status.toLowerCase()}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Center: Global Search Bar */}
-      <div className="hidden md:flex items-center flex-1 max-w-md mx-6">
+        {/* Recherche globale */}
         <button
           onClick={onOpenSearch}
-          className="w-full flex items-center justify-between px-3.5 py-1.5 text-xs text-muted bg-gray-100/80 hover:bg-gray-100 dark:bg-gray-800/80 dark:hover:bg-gray-800 border border-transparent hover:border-gray-300 dark:hover:border-gray-700 rounded-xl transition-all"
+          className="hdr-btn flex-1 min-w-[200px] max-w-md h-9 flex items-center justify-between gap-2 px-3 rounded-xl text-xs"
         >
-          <div className="flex items-center gap-2 min-w-0">
-            <Search className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-            <span className="truncate">Rechercher un employé, matricule, département...</span>
+          <span className="flex items-center gap-2 min-w-0">
+            <Search className="h-4 w-4 shrink-0" />
+            <span className="truncate text-slate-500">Rechercher un employé, matricule, département…</span>
+          </span>
+          <kbd className="px-1.5 py-0.5 text-[10px] font-mono rounded border border-slate-200 text-slate-500">Ctrl+K</kbd>
+        </button>
+
+        {/* Pointeuse ZKTeco : en ligne / hors ligne */}
+        <span
+          className={`hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium ${
+            online ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'
+          }`}
+          title={zktecoConfig.model}
+        >
+          {online ? <Wifi className="h-3 w-3" /> : <WifiOff className="h-3 w-3" />}
+          {zktecoConfig.model.split(' ')[1] || 'ZKTeco'} · {online ? 'En ligne' : zktecoConfig.status === 'SYNCHRONIZING' ? 'Synchronisation' : 'Hors ligne'}
+        </span>
+
+        <div className="ml-auto flex flex-wrap items-center gap-2">
+          {/* Horloge en direct (agrandie, visible sur tous les modules) */}
+          <div className="flex items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 shadow-xs">
+            <Clock className="h-5 w-5 text-brand" />
+            <div className="leading-none">
+              <span className="block font-mono text-xl font-bold tabular-nums tracking-wide text-slate-900">{currentTime}</span>
+              <span className="mt-0.5 block whitespace-nowrap text-[10px] font-semibold capitalize text-slate-500">{currentDate}</span>
+            </div>
           </div>
-          <kbd className="px-1.5 py-0.5 text-[10px] font-mono bg-white dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-700 text-gray-500 shadow-2xs">
-            Ctrl+K
-          </kbd>
-        </button>
-      </div>
 
-      {/* Right Controls */}
-      <div className="flex items-center gap-2.5">
-        {/* Live Clock (agrandie, visible sur tous les écrans) */}
-        <div className="hud-clock flex items-center gap-3 pl-3 pr-4 py-1.5 rounded-2xl border border-brand/30 bg-gradient-to-r from-brand/10 via-neon-blue/5 to-neon/10">
-          <Clock className="w-6 h-6 text-neon drop-shadow-[0_0_8px_var(--color-neon)]" />
-          <div className="leading-none">
-            <span className="block font-mono font-bold text-2xl tracking-wider tabular-nums text-ink dark:text-white">{currentTime}</span>
-            <span className="block mt-1 whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.18em] text-muted">{currentDate}</span>
-          </div>
-        </div>
+          {/* Langue */}
+          <button
+            onClick={() => setLanguage(language === 'fr' ? 'en' : 'fr')}
+            className="hdr-btn inline-flex h-9 min-w-9 px-2 items-center justify-center gap-1 rounded-full text-[11px] font-bold uppercase"
+            title="Changer de langue (FR / EN)"
+            aria-label="Changer de langue"
+          >
+            <Languages className="h-4 w-4" />
+            {language}
+          </button>
 
+          <ThemeToggle />
 
-        {/* Language Toggle */}
-        <button
-          onClick={() => setLanguage(language === 'fr' ? 'en' : 'fr')}
-          className="p-2 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 text-xs font-bold transition-colors"
-          title="Changer de langue (FR / EN)"
-        >
-          <span className="uppercase text-[11px]">{language}</span>
-        </button>
-
-        {/* Dark / Light Toggle */}
-        <button
-          onClick={toggleTheme}
-          className="p-2 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-          title={theme === 'dark' ? 'Activer le mode clair' : 'Activer le mode sombre'}
-        >
-          {theme === 'dark' ? (
-            <Sun className="w-4 h-4 text-amber-400" />
-          ) : (
-            <Moon className="w-4 h-4 text-gray-600" />
-          )}
-        </button>
-
-        {/* Utilisateur connecté + déconnexion */}
-        <div className="flex items-center gap-2 pl-3 ml-1 border-l border-gray-200 dark:border-gray-800">
-          <span className="text-sm font-bold text-ink dark:text-white whitespace-nowrap">
+          {/* Utilisateur connecté + déconnexion */}
+          <span className="ml-1 hidden sm:block max-w-[180px] truncate text-[13px] font-bold text-slate-900">
             {currentUser?.name}
           </span>
           <button
@@ -137,10 +92,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenQuickPunch, onOpenSearch }
               addAuditLog('DECONNEXION', currentUser?.name || '', 'Fin de session');
               setCurrentUser(null);
             }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-rose-200 dark:border-rose-900 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+            className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-red-200 bg-white px-3 text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors"
             title="Se déconnecter"
           >
-            <LogOut className="w-3.5 h-3.5" />
+            <LogOut className="h-4 w-4" />
             <span>Déconnexion</span>
           </button>
         </div>
