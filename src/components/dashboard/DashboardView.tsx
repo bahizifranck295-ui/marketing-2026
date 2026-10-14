@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
+import { EmployeeAvatar } from '../common/EmployeeAvatar';
 import { StatusBadge } from '../common/Badge';
 import { AttendanceRecord } from '../../types';
 import { 
@@ -424,9 +425,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
                       <td className="py-3 px-3.5">
                         <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600">
-                            {record.employeeName.charAt(0)}
-                          </div>
+                          <EmployeeAvatar matricule={record.employeeId} name={record.employeeName} size={32} />
                           <div>
                             <span className="font-bold text-ink block">
                               {record.employeeName}

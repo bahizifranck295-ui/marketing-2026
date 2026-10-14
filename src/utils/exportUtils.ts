@@ -326,6 +326,7 @@ export const generateEmployeesPdf = (employees: Employee[], company: CompanySett
 
   const tableData = employees.map((e, idx) => [
     (idx + 1).toString(),
+    '',
     e.matricule,
     `${e.nom} ${e.postnom} ${e.prenom}`,
     e.departement,
@@ -339,7 +340,7 @@ export const generateEmployeesPdf = (employees: Employee[], company: CompanySett
 
   autoTable(doc, {
     startY: top + 13,
-    head: [['N°', 'Matricule', 'Nom Complet', 'Département', 'Poste / Fonction', 'Embauche', 'Horaires', 'ID ZKTeco', 'Téléphone', 'Statut']],
+    head: [['N°', 'Photo', 'Matricule', 'Nom Complet', 'Département', 'Poste / Fonction', 'Embauche', 'Horaires', 'ID ZKTeco', 'Téléphone', 'Statut']],
     body: tableData,
     theme: 'grid',
     headStyles: {
@@ -347,7 +348,18 @@ export const generateEmployeesPdf = (employees: Employee[], company: CompanySett
       textColor: [255, 255, 255],
       fontSize: 8
     },
-    bodyStyles: { fontSize: 8 }
+    bodyStyles: { fontSize: 8, minCellHeight: 13, valign: 'middle' },
+    columnStyles: { 1: { cellWidth: 15 } },
+    // Photo de l'employé dans la colonne « Photo »
+    didDrawCell: (data) => {
+      if (data.section !== 'body' || data.column.index !== 1) return;
+      const photo = employees[data.row.index]?.photoUrl;
+      if (!photo) return;
+      const size = Math.min(data.cell.width, data.cell.height) - 2;
+      try {
+        doc.addImage(photo, 'JPEG', data.cell.x + (data.cell.width - size) / 2, data.cell.y + 1, size, size);
+      } catch { /* image illisible : la cellule reste vide */ }
+    }
   });
 
   doc.save(`Registre_Personnel_PREMIDIS_${new Date().toISOString().substring(0, 10)}.pdf`);

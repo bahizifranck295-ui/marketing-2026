@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { EmployeeAvatar } from '../common/EmployeeAvatar';
 import { useApp, AppView } from '../../context/AppContext';
 import { Search, User, Building2, Calendar, FileText, ArrowRight } from 'lucide-react';
 
@@ -75,7 +76,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                     className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-100 text-left transition-colors"
                   >
                     <div className="flex items-center gap-2">
-                      <User className="w-3.5 h-3.5 text-brand" />
+                      <EmployeeAvatar name={`${emp.nom} ${emp.prenom}`} photoUrl={emp.photoUrl || ''} size={32} />
                       <div>
                         <p className="font-bold text-slate-900">{emp.nom} {emp.prenom} ({emp.matricule})</p>
                         <p className="text-[10px] text-slate-500">{emp.poste} · {emp.departement}</p>

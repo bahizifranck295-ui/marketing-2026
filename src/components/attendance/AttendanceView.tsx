@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
+import { EmployeeAvatar } from '../common/EmployeeAvatar';
 import { AttendanceRecord, AttendanceStatus } from '../../types';
 import { StatusBadge, CodeBadge } from '../common/Badge';
 import { 
@@ -335,7 +336,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                       </td>
 
                       <td className="py-3 px-3 font-bold text-ink">
-                        {record.employeeName}
+                        <span className="flex items-center gap-2"><EmployeeAvatar matricule={record.employeeId} name={record.employeeName} size={32} />{record.employeeName}</span>
                       </td>
 
                       <td className="py-3 px-3 text-slate-600">
@@ -474,8 +475,8 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                       <td className="py-2 px-3 font-mono font-bold text-brand border-r border-slate-200">
                         {row.employee.matricule}
                       </td>
-                      <td className="py-2 px-3 font-bold text-slate-900 border-r border-slate-200 truncate max-w-[150px]">
-                        {row.employee.nom} {row.employee.postnom} {row.employee.prenom}
+                      <td className="py-2 px-3 font-bold text-slate-900 border-r border-slate-200 max-w-[190px]">
+                        <span className="flex items-center gap-2 min-w-0"><EmployeeAvatar name={row.employee.nom} photoUrl={row.employee.photoUrl || ''} size={24} /><span className="truncate">{row.employee.nom} {row.employee.postnom} {row.employee.prenom}</span></span>
                       </td>
                       <td className="py-2 px-3 text-slate-600 border-r border-slate-200 truncate max-w-[120px]">
                         {row.employee.departement}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
+import { EmployeeAvatar } from '../common/EmployeeAvatar';
 import { AttendanceRecord } from '../../types';
 import { Edit3, AlertTriangle, Clock, CheckCircle2 } from 'lucide-react';
 import { StatusBadge } from '../common/Badge';
@@ -70,7 +71,7 @@ export const CorrectAttendanceModal: React.FC<CorrectAttendanceModalProps> = ({ 
 
         {/* Record Overview */}
         <div className="p-3 rounded-xl bg-slate-50 space-y-1">
-          <p><span className="text-slate-400">Employé :</span> <b>{record.employeeName}</b> ({record.employeeId})</p>
+          <p className="flex items-center gap-2"><EmployeeAvatar matricule={record.employeeId} name={record.employeeName} size={40} /><span><span className="text-slate-400">Employé :</span> <b>{record.employeeName}</b> ({record.employeeId})</span></p>
           <p><span className="text-slate-400">Date :</span> <span className="font-mono">{record.date}</span></p>
           <p><span className="text-slate-400">Horaire prévu :</span> <span className="font-mono">{record.expectedCheckIn} - {record.expectedCheckOut}</span> (Tolérance: {tolerance}m)</p>
           {record.rawPunchInTime && (

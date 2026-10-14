@@ -1,9 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
+import { EmployeeAvatar, resizePhoto } from '../common/EmployeeAvatar';
 import { Employee, AdministrativeStatus } from '../../types';
 import { 
   Users, Plus, Search, Filter, Download, 
-  FileText, Edit2, Trash2, Eye, Phone, Mail, Clock, Calendar, CheckCircle, ShieldAlert
+  FileText, Edit2, Trash2, Eye, Phone, Mail, Clock, Calendar, CheckCircle, ShieldAlert, Camera
 } from 'lucide-react';
 import { exportToExcel, generateEmployeesPdf } from '../../utils/exportUtils';
 
@@ -47,6 +48,21 @@ export const EmployeesView: React.FC = () => {
     });
   }, [employees, departmentFilter, statusFilter, searchQuery]);
 
+  const [photoError, setPhotoError] = useState('');
+  const handlePhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { setPhotoError('Choisissez une image (JPG, PNG…).'); return; }
+    try {
+      const photoUrl = await resizePhoto(file);
+      setFormData(f => ({ ...f, photoUrl }));
+      setPhotoError('');
+    } catch (err: any) {
+      setPhotoError(err?.message || 'Photo illisible.');
+    }
+  };
+
   const handleOpenAdd = () => {
     setFormData({
       matricule: `PRM-${String(employees.length + 1).padStart(3, '0')}`,
@@ -62,8 +78,10 @@ export const EmployeesView: React.FC = () => {
       heureSortieNormale: companySettings.defaultExpectedCheckOut,
       toleranceMinutes: companySettings.defaultToleranceMinutes,
       zktecoBioId: String(employees.length + 1),
-      statutAdministratif: 'ACTIF'
+      statutAdministratif: 'ACTIF',
+      photoUrl: undefined
     });
+    setPhotoError('');
     setEditingEmployee(null);
     setIsAddModalOpen(true);
   };
@@ -84,8 +102,10 @@ export const EmployeesView: React.FC = () => {
       heureSortieNormale: emp.heureSortieNormale,
       toleranceMinutes: emp.toleranceMinutes,
       zktecoBioId: emp.zktecoBioId,
-      statutAdministratif: emp.statutAdministratif
+      statutAdministratif: emp.statutAdministratif,
+      photoUrl: emp.photoUrl
     });
+    setPhotoError('');
     setIsAddModalOpen(true);
   };
 
@@ -242,9 +262,7 @@ export const EmployeesView: React.FC = () => {
 
                     <td className="py-3 px-3.5">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-purple-100 to-indigo-100 text-brand font-bold flex items-center justify-center text-xs">
-                          {emp.nom.charAt(0)}
-                        </div>
+                        <EmployeeAvatar name={`${emp.nom} ${emp.prenom}`} photoUrl={emp.photoUrl || ''} size={36} />
                         <div>
                           <p className="font-bold text-ink">
                             {emp.nom} {emp.postnom} {emp.prenom}
@@ -335,6 +353,26 @@ export const EmployeesView: React.FC = () => {
             </h2>
 
             <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+              {/* Photo de l'employé : affichée partout où son nom apparaît */}
+              <div className="flex items-center gap-4 p-3 rounded-2xl border border-slate-200 bg-slate-50">
+                <EmployeeAvatar name={`${formData.nom} ${formData.prenom}`} photoUrl={formData.photoUrl || ''} size={72} rounded="xl" />
+                <div className="space-y-1.5">
+                  <p className="font-bold text-slate-700">Photo de l'employé</p>
+                  <div className="flex flex-wrap gap-2">
+                    <label htmlFor="emp-photo" className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand text-white font-semibold hover:bg-brand-strong">
+                      <Camera className="w-3.5 h-3.5" /> {formData.photoUrl ? 'Changer la photo' : 'Importer une photo'}
+                    </label>
+                    <input id="emp-photo" type="file" accept="image/*" capture="user" onChange={handlePhoto} className="hidden" />
+                    {formData.photoUrl && (
+                      <button type="button" onClick={() => setFormData(f => ({ ...f, photoUrl: undefined }))} className="px-3 py-1.5 rounded-xl border border-slate-200 font-semibold text-slate-600 hover:bg-slate-100">
+                        Retirer
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-500">JPG ou PNG, recadrée en carré automatiquement.</p>
+                  {photoError && <p className="text-[11px] font-semibold text-red-600">{photoError}</p>}
+                </div>
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-slate-600 font-bold mb-1">Matricule unique *</label>
@@ -522,9 +560,7 @@ export const EmployeesView: React.FC = () => {
           <div className="glass-card rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 shadow-2xl animate-in fade-in zoom-in-95 space-y-5">
             <div className="flex items-start justify-between pb-4 border-b border-slate-100">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand to-neon text-white flex items-center justify-center text-lg font-black shadow-sm">
-                  {selectedEmployee.nom.charAt(0)}
-                </div>
+                <EmployeeAvatar name={`${selectedEmployee.nom} ${selectedEmployee.prenom}`} photoUrl={selectedEmployee.photoUrl || ''} size={64} rounded="xl" />
                 <div>
                   <h2 className="text-base font-bold text-slate-900">
                     {selectedEmployee.nom} {selectedEmployee.postnom} {selectedEmployee.prenom}

@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
+import { EmployeeAvatar } from '../common/EmployeeAvatar';
 import { AttendanceRecord, AttendanceStatus, Employee } from '../../types';
 import { 
   FileText, Calendar, Users, Clock, AlertTriangle, 
@@ -594,7 +595,7 @@ export const ReportsView: React.FC = () => {
                     <tr key={s.matricule} className="hover:bg-slate-50/60">
                       <td className="py-2.5 px-3 text-slate-400 font-mono text-center">{idx + 1}</td>
                       <td className="py-2.5 px-3 font-mono font-bold text-brand">{s.matricule}</td>
-                      <td className="py-2.5 px-3 font-bold">{s.employeeName}</td>
+                      <td className="py-2.5 px-3 font-bold"><span className="flex items-center gap-2"><EmployeeAvatar matricule={s.matricule} name={s.employeeName} size={28} />{s.employeeName}</span></td>
                       <td className="py-2.5 px-3 text-slate-600">{s.department}</td>
                       <td className="py-2.5 px-3 text-center font-bold text-amber-600">
                         {s.lateCount > 0 ? `${s.lateCount} (${s.totalMinutesLate}m)` : '0'}
@@ -702,8 +703,8 @@ export const ReportsView: React.FC = () => {
                         <td className="py-2 px-3 font-mono font-bold text-brand border-r border-slate-200">
                           {row.employee.matricule}
                         </td>
-                        <td className="py-2 px-3 font-bold text-slate-900 border-r border-slate-200 truncate max-w-[150px]">
-                          {row.employee.nom} {row.employee.postnom} {row.employee.prenom}
+                        <td className="py-2 px-3 font-bold text-slate-900 border-r border-slate-200 max-w-[190px]">
+                          <span className="flex items-center gap-2 min-w-0"><EmployeeAvatar name={row.employee.nom} photoUrl={row.employee.photoUrl || ''} size={24} /><span className="truncate">{row.employee.nom} {row.employee.postnom} {row.employee.prenom}</span></span>
                         </td>
                         <td className="py-2 px-3 text-slate-600 border-r border-slate-200 truncate max-w-[120px]">
                           {row.employee.departement}
@@ -789,7 +790,7 @@ export const ReportsView: React.FC = () => {
                     <tr key={r.id}>
                       <td className="py-2 px-3 text-slate-400 font-mono">{i + 1}</td>
                       <td className="py-2 px-3 font-mono font-bold text-brand">{r.employeeId}</td>
-                      <td className="py-2 px-3 font-bold">{r.employeeName}</td>
+                      <td className="py-2 px-3 font-bold"><span className="flex items-center gap-2"><EmployeeAvatar matricule={r.employeeId} name={r.employeeName} size={28} />{r.employeeName}</span></td>
                       <td className="py-2 px-3 text-slate-600">{r.department}</td>
                       <td className="py-2 px-3 text-center font-mono">{r.date}</td>
                       <td className="py-2 px-3 text-center font-mono font-bold">{r.actualCheckIn || '–'}</td>
