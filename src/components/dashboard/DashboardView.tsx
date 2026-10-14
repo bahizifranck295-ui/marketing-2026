@@ -385,13 +385,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <FileText className="w-3.5 h-3.5 text-rose-600" />
               <span>Exporter PDF du jour</span>
             </button>
-            <button
-              onClick={handleQuickExportExcel}
-              className="p-1.5 rounded-xl text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors"
-              title="Exporter cette liste en Excel"
-            >
-              <Download className="w-4 h-4 text-emerald-600" />
-            </button>
           </div>
         </div>
 
