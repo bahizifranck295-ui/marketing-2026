@@ -9,7 +9,6 @@ import { ReportsView } from './components/reports/ReportsView';
 import { SanctionsView } from './components/sanctions/SanctionsView';
 import { SettingsView } from './components/settings/SettingsView';
 import { LoginView } from './components/auth/LoginView';
-import { QuickPunchModal } from './components/modals/QuickPunchModal';
 import { CorrectAttendanceModal } from './components/modals/CorrectAttendanceModal';
 import { GlobalSearchModal } from './components/modals/GlobalSearchModal';
 import { StartupIntro } from './components/login/StartupIntro';
@@ -92,11 +91,6 @@ function MainApp() {
       </div>
 
       {/* Global Modals */}
-      <QuickPunchModal 
-        isOpen={isQuickPunchOpen}
-        onClose={() => setIsQuickPunchOpen(false)}
-      />
-
       {correctingRecord && (
         <CorrectAttendanceModal 
           record={correctingRecord}

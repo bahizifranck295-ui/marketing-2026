@@ -149,23 +149,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             />
           </div>
 
-          <button
-            onClick={handleSync}
-            disabled={isSyncing}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 text-xs font-semibold shadow-2xs transition-all disabled:opacity-50"
-            title="Interroger la pointeuse ZKTeco via réseau TCP"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 text-brand ${isSyncing ? 'animate-spin' : ''}`} />
-            <span>{isSyncing ? 'Synchronisation...' : 'Sync ZKTeco'}</span>
-          </button>
 
-          <button
-            onClick={onOpenQuickPunch}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-brand text-white hover:bg-brand-deep text-xs font-semibold shadow-sm transition-all"
-          >
-            <Fingerprint className="w-3.5 h-3.5" />
-            <span>Pointer une arrivée</span>
-          </button>
         </div>
       </div>
 

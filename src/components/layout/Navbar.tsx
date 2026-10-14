@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Clock, Search, LogOut, Wifi, WifiOff, Languages } from 'lucide-react';
+import { Clock, Search, LogOut, Languages } from 'lucide-react';
 import { ThemeToggle } from '../common/ThemeToggle';
 import { LOGO_ALT, LOGO_SRC } from '../../app/brand';
 
@@ -11,7 +11,7 @@ interface NavbarProps {
 
 // Barre d'outils au langage visuel PREMIDIS ERP (boutons « hdr-btn », pastilles d'état)
 export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
-  const { language, setLanguage, currentUser, zktecoConfig, setCurrentUser, addAuditLog } = useApp();
+  const { language, setLanguage, currentUser, setCurrentUser, addAuditLog } = useApp();
 
   const [currentTime, setCurrentTime] = useState('');
   const [currentDate, setCurrentDate] = useState('');
@@ -27,7 +27,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
     return () => clearInterval(interval);
   }, []);
 
-  const online = zktecoConfig.status === 'ONLINE';
 
   return (
     <header className="px-4 lg:px-6 pt-4 w-full max-w-[1400px] mx-auto">
@@ -49,16 +48,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
           <kbd className="px-1.5 py-0.5 text-[10px] font-mono rounded border border-slate-200 text-slate-500">Ctrl+K</kbd>
         </button>
 
-        {/* Pointeuse ZKTeco : en ligne / hors ligne */}
-        <span
-          className={`hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium ${
-            online ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'
-          }`}
-          title={zktecoConfig.model}
-        >
-          {online ? <Wifi className="h-3 w-3" /> : <WifiOff className="h-3 w-3" />}
-          {zktecoConfig.model.split(' ')[1] || 'ZKTeco'} · {online ? 'En ligne' : zktecoConfig.status === 'SYNCHRONIZING' ? 'Synchronisation' : 'Hors ligne'}
-        </span>
 
         <div className="ml-auto flex flex-wrap items-center gap-2">
           {/* Horloge en direct (agrandie, visible sur tous les modules) */}
