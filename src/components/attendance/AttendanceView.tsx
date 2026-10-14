@@ -382,7 +382,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                       <td className="py-3 px-3 text-slate-500 text-[11px]">
                         <div>
                           <span className="font-semibold text-slate-700">
-                            {record.source === 'ZKTECO_BIOMETRIC' ? 'Biométrie' : 'Manuel'}
+                            {record.source === 'ZKTECO_BIOMETRIC' ? 'Biométrie' : record.source === 'FILE_IMPORT' ? 'Clé USB' : 'Manuel'}
                           </span>
                           {record.isCorrected && (
                             <span className="block text-amber-600 font-medium">

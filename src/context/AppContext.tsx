@@ -5,6 +5,7 @@ import {
   SyncLogEntry, SanctionStatus, AppModule, PermissionAction, RoleDefinition
 } from '../types';
 import { INITIAL_ROLES } from '../data/permissions';
+import { parseZKTecoText, normalizeUserId } from '../utils/zktecoParser';
 import { useTheme, setThemeUser } from '../theme/theme';
 import { 
   INITIAL_COMPANY_SETTINGS, INITIAL_USERS, INITIAL_DEPARTMENTS, 
@@ -439,17 +440,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       newRecords.forEach(nr => {
         const key = `${nr.employeeId}-${nr.date}`;
         if (map.has(key)) {
-          // Merge punch details
           const cur = map.get(key)!;
-          map.set(key, {
-            ...cur,
-            actualCheckIn: nr.actualCheckIn || cur.actualCheckIn,
-            actualCheckOut: nr.actualCheckOut || cur.actualCheckOut,
-            status: nr.status,
-            lateMinutes: nr.lateMinutes,
-            rawPunchInTime: nr.rawPunchInTime || cur.rawPunchInTime,
-            rawPunchOutTime: nr.rawPunchOutTime || cur.rawPunchOutTime
-          });
+          if (cur.isCorrected) {
+            // Une correction manuelle validée reste prioritaire sur le fichier de la pointeuse
+            map.set(key, { ...cur, notes: `${cur.notes || ''} · Pointeuse : ${nr.rawPunchInTime || ''}`.replace(/^ · /, '') });
+          } else {
+            map.set(key, {
+              ...cur,
+              actualCheckIn: nr.actualCheckIn || cur.actualCheckIn,
+              actualCheckOut: nr.actualCheckOut || cur.actualCheckOut,
+              earlyDepartureMinutes: nr.earlyDepartureMinutes,
+              status: nr.status,
+              lateMinutes: nr.lateMinutes,
+              source: nr.source,
+              notes: nr.notes,
+              rawPunchInTime: nr.rawPunchInTime || cur.rawPunchInTime,
+              rawPunchOutTime: nr.rawPunchOutTime || cur.rawPunchOutTime
+            });
+          }
           updated++;
         } else {
           map.set(key, nr);
@@ -552,50 +560,53 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const importZKTecoFile = async (fileName: string, fileContent: string) => {
-    // Parser for ZKTeco standard export (CSV, DAT, TXT)
-    const lines = fileContent.split('\n').filter(l => l.trim().length > 0);
+    // Fichier exporté sur clé USB par la pointeuse : une ligne par pointage (identifiant, date, heure).
+    // Les pointages d'une même personne le même jour sont regroupés : le premier = entrée, le dernier = sortie.
+    const { punches, ignored } = parseZKTecoText(fileContent);
     const errors: string[] = [];
     const validRecords: AttendanceRecord[] = [];
+    const unknown = new Map<string, number>();
+    const groups = new Map<string, { emp: Employee; date: string; times: string[] }>();
 
-    lines.forEach((line, idx) => {
-      // Can be tab-separated, comma-separated or space-separated
-      const parts = line.split(/[,\t ]+/).map(p => p.trim());
-      if (parts.length >= 2) {
-        // e.g. "1 2026-10-11 08:15:30 1 0" (bioId, date, time, state)
-        // or "PRM-001,2026-10-11,08:15:00,16:30:00"
-        let bioIdOrMatricule = parts[0];
-        let datePart = parts[1];
-        let timePart = parts[2] || '08:30';
+    punches.forEach(p => {
+      const id = normalizeUserId(p.userId);
+      const emp = employees.find(e => normalizeUserId(e.zktecoBioId) === id || e.matricule.toLowerCase() === p.userId.toLowerCase());
+      if (!emp) { unknown.set(p.userId, (unknown.get(p.userId) || 0) + 1); return; }
+      const key = `${emp.matricule}|${p.date}`;
+      const g = groups.get(key) || { emp, date: p.date, times: [] };
+      g.times.push(p.time);
+      groups.set(key, g);
+    });
 
-        // Check if matching employee
-        const emp = employees.find(e => e.zktecoBioId === bioIdOrMatricule || e.matricule.toLowerCase() === bioIdOrMatricule.toLowerCase());
-        if (!emp) {
-          errors.push(`Ligne ${idx + 1}: ID biométrique ou matricule "${bioIdOrMatricule}" inconnu dans la base.`);
-          return;
-        }
+    unknown.forEach((n, id) => errors.push(`Identifiant « ${id} » inconnu dans le registre du personnel (${n} pointage(s)) : renseignez l'ID pointeuse sur la fiche de l'employé.`));
+    if (ignored.length) errors.push(`${ignored.length} ligne(s) sans date ou heure lisible ignorée(s) (ex. ligne d'en-tête) : ligne(s) ${ignored.slice(0, 8).join(', ')}${ignored.length > 8 ? '…' : ''}.`);
 
-        // Validate time format (HH:mm)
-        const cleanTime = timePart.substring(0, 5);
-        const { status, lateMinutes } = calculateStatus(emp.heureEntreeNormale, cleanTime, emp.toleranceMinutes);
-
-        validRecords.push({
-          id: `att-${emp.matricule}-${datePart || '2026-10-11'}`,
-          employeeId: emp.matricule,
-          employeeName: `${emp.nom} ${emp.postnom} ${emp.prenom}`,
-          department: emp.departement,
-          date: datePart || '2026-10-11',
-          expectedCheckIn: emp.heureEntreeNormale,
-          actualCheckIn: cleanTime,
-          lateMinutes,
-          expectedCheckOut: emp.heureSortieNormale,
-          actualCheckOut: '16:30',
-          earlyDepartureMinutes: 0,
-          status, // Strictly PRESENT | RETARD | ABSENT
-          source: 'FILE_IMPORT',
-          rawPunchInTime: `${datePart} ${timePart}`,
-          notes: `Importé depuis le fichier ${fileName}`
-        });
-      }
+    const toMin = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
+    groups.forEach(({ emp, date, times }) => {
+      times.sort();
+      const checkIn = times[0];
+      const last = times[times.length - 1];
+      // Un second pointage moins de 30 minutes après l'entrée est un doublon, pas une sortie
+      const checkOut = times.length > 1 && toMin(last) - toMin(checkIn) >= 30 ? last : null;
+      const { status, lateMinutes } = calculateStatus(emp.heureEntreeNormale, checkIn, emp.toleranceMinutes);
+      const early = checkOut ? Math.max(0, toMin(emp.heureSortieNormale) - toMin(checkOut)) : 0;
+      validRecords.push({
+        id: `att-${emp.matricule}-${date}`,
+        employeeId: emp.matricule,
+        employeeName: `${emp.nom} ${emp.postnom} ${emp.prenom}`,
+        department: emp.departement,
+        date,
+        expectedCheckIn: emp.heureEntreeNormale,
+        actualCheckIn: checkIn,
+        lateMinutes,
+        expectedCheckOut: emp.heureSortieNormale,
+        actualCheckOut: checkOut,
+        earlyDepartureMinutes: early,
+        status, // Strictly PRESENT | RETARD | ABSENT
+        source: 'FILE_IMPORT',
+        rawPunchInTime: `${date} ${times.join(' / ')}`,
+        notes: `Importé depuis le fichier ${fileName} (${times.length} pointage(s))`
+      });
     });
 
     if (validRecords.length > 0) {
@@ -609,7 +620,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         newPunches: validRecords.length,
         duplicatesSkipped: 0,
         status: errors.length > 0 ? 'WARNING' : 'SUCCESS',
-        message: `Import du fichier "${fileName}" terminé: ${validRecords.length} pointages valides, ${errors.length} rejets.`,
+        message: `Import du fichier "${fileName}" terminé : ${punches.length} pointages lus, ${validRecords.length} présences journalières, ${errors.length} avertissement(s).`,
         operatorName: currentUser?.name
       };
 

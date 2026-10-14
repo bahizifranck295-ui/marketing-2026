@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import * as XLSX from 'xlsx';
 import { useApp } from '../../context/AppContext';
 import { UsersRolesPanel } from './UsersRolesPanel';
 import { 
@@ -62,12 +63,20 @@ export const SettingsView: React.FC = () => {
     if (!file) return;
 
     setImportedFileName(file.name);
+    setFileImportResult(null);
     const reader = new FileReader();
-    reader.onload = (event) => {
-      const content = event.target?.result as string;
-      setImportedFileContent(content);
-    };
-    reader.readAsText(file);
+    if (/\.xlsx?$/i.test(file.name)) {
+      // Liste Excel exportée par la pointeuse : chaque feuille est convertie en lignes de texte
+      reader.onload = (event) => {
+        const wb = XLSX.read(event.target?.result as ArrayBuffer, { type: 'array', cellDates: true, dateNF: 'yyyy-mm-dd hh:mm:ss' });
+        const text = wb.SheetNames.map(n => XLSX.utils.sheet_to_csv(wb.Sheets[n], { dateNF: 'yyyy-mm-dd hh:mm:ss' })).join('\n');
+        setImportedFileContent(text);
+      };
+      reader.readAsArrayBuffer(file);
+    } else {
+      reader.onload = (event) => setImportedFileContent(event.target?.result as string);
+      reader.readAsText(file);
+    }
   };
 
   const handleProcessFileImport = async () => {
@@ -80,15 +89,19 @@ export const SettingsView: React.FC = () => {
 
   const loadSampleZKTecoFile = () => {
     // Generate standard ZKTeco AttLog sample content
-    const sample = `1\t2026-10-11 08:12:15\t1\t0
-2\t2026-10-11 08:25:40\t1\t0
-3\t2026-10-11 08:29:10\t1\t0
-4\t2026-10-11 08:48:22\t1\t0
-7\t2026-10-11 07:54:10\t1\t0
-8\t2026-10-11 08:05:30\t1\t0
-14\t2026-10-11 08:35:12\t1\t0
-17\t2026-10-11 08:52:45\t1\t0
-19\t2026-10-11 08:47:05\t1\t0`;
+    // Même forme que le fichier AttLog écrit sur la clé USB par la pointeuse (identifiant aligné à droite)
+    const sample = `        1\t2026-10-11 08:12:15\t1\t0\t1\t0
+        2\t2026-10-11 08:25:40\t1\t0\t1\t0
+        3\t2026-10-11 08:29:10\t1\t0\t1\t0
+        4\t2026-10-11 08:48:22\t1\t0\t1\t0
+        7\t2026-10-11 07:54:10\t1\t0\t1\t0
+        8\t2026-10-11 08:05:30\t1\t0\t1\t0
+       14\t2026-10-11 08:35:12\t1\t0\t1\t0
+       17\t2026-10-11 08:52:45\t1\t0\t1\t0
+       19\t2026-10-11 08:47:05\t1\t0\t1\t0
+        1\t2026-10-11 16:34:02\t1\t1\t1\t0
+        7\t2026-10-11 16:02:48\t1\t1\t1\t0
+       14\t2026-10-11 16:05:10\t1\t1\t1\t0`;
     setImportedFileName('AttLog_sample_ZKTeco.dat');
     setImportedFileContent(sample);
   };
@@ -310,7 +323,7 @@ export const SettingsView: React.FC = () => {
                   Importateur de Fichiers de Pointage ZKTeco (USB / DAT / CSV)
                 </h3>
                 <p className="text-xs text-slate-500">
-                  Importez les fichiers extraits par clé USB sur la machine (formats ZKTeco `AttLog.dat`, `attendance.csv`, etc.)
+                  Sur la pointeuse : Menu › Clé USB › Télécharger les présences, puis importez ici le fichier copié sur la clé. Plusieurs pointages d'un même jour : le premier est l'entrée, le dernier la sortie.
                 </p>
               </div>
 
@@ -327,7 +340,7 @@ export const SettingsView: React.FC = () => {
             <div className="p-4 rounded-xl border-2 border-dashed border-slate-300 text-center space-y-2">
               <input
                 type="file"
-                accept=".dat,.csv,.txt,.log"
+                accept=".dat,.csv,.txt,.log,.xls,.xlsx"
                 onChange={handleFileDrop}
                 id="zk-file-upload"
                 className="hidden"
@@ -337,7 +350,7 @@ export const SettingsView: React.FC = () => {
                 className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-50 text-brand font-bold text-xs hover:bg-purple-100 transition-colors"
               >
                 <Upload className="w-3.5 h-3.5" />
-                Choisir un fichier USB ZKTeco (AttLog.dat ou .csv)
+                Choisir le fichier de la clé USB (AttLog.dat, .txt, .csv, .xls)
               </label>
 
               {importedFileName && (

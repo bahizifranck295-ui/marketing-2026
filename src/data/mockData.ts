@@ -827,11 +827,11 @@ export const INITIAL_SANCTION_CASES: SanctionCase[] = [
 
 export const INITIAL_ZKTECO_CONFIG: ZKTecoDeviceConfig = {
   brand: "ZKTeco",
-  model: "ZKTeco uFace800 Plus (Biométrie Empreinte & Facial)",
+  model: "ZKTeco F19 (empreinte digitale, clavier, export clé USB)",
   ipAddress: "192.168.1.201",
   port: 4370,
   commKey: "0",
-  connectionType: "DIRECT_TCP",
+  connectionType: "USB_FILE",
   status: "ONLINE",
   lastSyncTime: "2026-10-11 08:35:12",
   lastPunchImportedTime: "2026-10-11 08:34:45",
