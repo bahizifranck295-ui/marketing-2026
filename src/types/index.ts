@@ -121,7 +121,8 @@ export type SanctionLevel =
   | 'AVERTISSEMENT_ECRIT'
   | 'BLAME'
   | 'MISE_A_PIED_PROPOSEE'
-  | 'RETENUE_SALARIALE_PROPOSEE';
+  | 'RETENUE_SALARIALE_PROPOSEE'
+  | 'EXCLUSION_TEMPORAIRE';
 
 export type SanctionTargetType = 'RETARD' | 'ABSENCE' | 'COMBINE';
 
@@ -136,6 +137,7 @@ export interface SanctionRule {
   sanctionType: SanctionLevel;
   deductionAmount: number; // Somme d'argent retirable / déductible
   currency: 'USD' | 'CDF';
+  exclusionDays?: number; // Exclusion temporaire du travail : nombre de jours
   isActive: boolean;
   effectiveDate: string;
   description: string;

@@ -120,6 +120,7 @@ export const SanctionsView: React.FC = () => {
       sanctionType: rule.sanctionType,
       deductionAmount: rule.deductionAmount,
       currency: rule.currency,
+      exclusionDays: rule.exclusionDays,
       isActive: rule.isActive,
       effectiveDate: rule.effectiveDate,
       description: rule.description
@@ -389,7 +390,9 @@ export const SanctionsView: React.FC = () => {
                 {/* Sanction Status Info */}
                 <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
                   <span className="text-slate-400 font-medium">
-                    Sanction : <b>{rule.sanctionType.replace(/_/g, ' ')}</b>
+                    Sanction : <b>{rule.sanctionType === 'EXCLUSION_TEMPORAIRE'
+                      ? `Exclusion temporaire · ${rule.exclusionDays || 1} jour${(rule.exclusionDays || 1) > 1 ? 's' : ''}`
+                      : rule.sanctionType.replace(/_/g, ' ')}</b>
                   </span>
                   
                   {rule.isActive ? (
@@ -604,14 +607,36 @@ export const SanctionsView: React.FC = () => {
                 <label className="block text-slate-600 font-bold mb-1">Sanction statutaire associée</label>
                 <select
                   value={ruleForm.sanctionType}
-                  onChange={(e) => setRuleForm({ ...ruleForm, sanctionType: e.target.value as any })}
+                  onChange={(e) => {
+                    const sanctionType = e.target.value as SanctionRule['sanctionType'];
+                    setRuleForm({ ...ruleForm, sanctionType, exclusionDays: sanctionType === 'EXCLUSION_TEMPORAIRE' ? (ruleForm.exclusionDays || 3) : undefined });
+                  }}
                   className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900"
                 >
+                  <option value="EXCLUSION_TEMPORAIRE">Exclusion temporaire du travail (mise à pied)</option>
                   <option value="RETENUE_SALARIALE_PROPOSEE">Retenue Compensatoire sur Salaire</option>
                   <option value="AVERTISSEMENT_ECRIT">Avertissement Écrit avec Retenue</option>
                   <option value="BLAME">Blâme au Dossier avec Retenue</option>
                   <option value="AVERTISSEMENT_VERBAL">Avertissement Verbal (Sans retenue)</option>
                 </select>
+                {ruleForm.sanctionType === 'EXCLUSION_TEMPORAIRE' && (
+                  <div className="mt-2 p-3 rounded-xl bg-rose-50/60 border border-rose-200 space-y-1">
+                    <label htmlFor="rule-exclusion-days" className="block text-rose-900 font-bold">Durée de l'exclusion (jours ouvrables)</label>
+                    <input
+                      id="rule-exclusion-days"
+                      type="number"
+                      min={1}
+                      max={30}
+                      required
+                      value={ruleForm.exclusionDays ?? 3}
+                      onChange={(e) => setRuleForm({ ...ruleForm, exclusionDays: Math.max(1, parseInt(e.target.value) || 1) })}
+                      className="w-32 px-3 py-2 rounded-xl bg-white border border-rose-300 font-mono font-bold text-xs outline-none"
+                    />
+                    <p className="text-[11px] text-rose-700/80">
+                      L'employé est écarté du travail pendant cette durée. Une retenue n'est pas obligatoire : laissez le montant à 0.
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div>

@@ -16,9 +16,13 @@ const SANCTION_LABEL: Record<string, string> = {
   BLAME: 'Blâme',
   MISE_A_PIED_PROPOSEE: 'Mise à pied proposée',
   RETENUE_SALARIALE_PROPOSEE: 'Retenue salariale proposée',
+  EXCLUSION_TEMPORAIRE: 'Exclusion temporaire',
 };
+/** Poids d'une règle : l'exclusion temporaire d'abord (et sa durée), puis la retenue, puis le niveau */
+const weight = (r: { sanctionType: string; deductionAmount: number; exclusionDays?: number }) =>
+  (r.sanctionType === 'EXCLUSION_TEMPORAIRE' ? 100000 + (r.exclusionDays || 1) * 1000 : 0) + r.deductionAmount * 10 + SANCTION_ORDER.indexOf(r.sanctionType);
 /** Du moins lourd au plus lourd */
-const SANCTION_ORDER = ['AVERTISSEMENT_VERBAL', 'AVERTISSEMENT_ECRIT', 'BLAME', 'RETENUE_SALARIALE_PROPOSEE', 'MISE_A_PIED_PROPOSEE'];
+const SANCTION_ORDER = ['AVERTISSEMENT_VERBAL', 'AVERTISSEMENT_ECRIT', 'BLAME', 'RETENUE_SALARIALE_PROPOSEE', 'MISE_A_PIED_PROPOSEE', 'EXCLUSION_TEMPORAIRE'];
 
 interface DashboardViewProps {
   onOpenQuickPunch: () => void;
@@ -113,13 +117,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         return rule.targetType === 'RETARD' ? lateOk : rule.targetType === 'ABSENCE' ? absOk : lateOk && absOk;
       });
       if (!hits.length) return [];
-      const rule = hits.sort((a, b) => b.deductionAmount - a.deductionAmount || SANCTION_ORDER.indexOf(b.sanctionType) - SANCTION_ORDER.indexOf(a.sanctionType))[0];
+      const rule = hits.sort((a, b) => weight(b) - weight(a))[0];
       return [{ emp, lateCount, lateMinutes, absences, rule }];
     });
-    reached.sort((a, b) =>
-      b.rule.deductionAmount - a.rule.deductionAmount ||
-      SANCTION_ORDER.indexOf(b.rule.sanctionType) - SANCTION_ORDER.indexOf(a.rule.sanctionType) ||
-      b.lateMinutes - a.lateMinutes);
+    reached.sort((a, b) => weight(b.rule) - weight(a.rule) || b.lateMinutes - a.lateMinutes);
     return { total: reached.length, rows: reached.slice(0, 5) };
   }, [attendanceRecords, employees, sanctionRules, selectedDate]);
 
@@ -390,6 +391,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                         <td className="py-2 px-3">
                           <span className="inline-block px-2 py-0.5 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 font-bold text-[11px] leading-snug">
                             {SANCTION_LABEL[rule.sanctionType] ?? rule.sanctionType}
+                            {rule.sanctionType === 'EXCLUSION_TEMPORAIRE' && ` · ${rule.exclusionDays || 1} j`}
                           </span>
                           {rule.deductionAmount > 0 && (
                             <p className="text-[10px] text-rose-600 font-semibold mt-0.5">Retenue {rule.deductionAmount} {rule.currency}</p>
