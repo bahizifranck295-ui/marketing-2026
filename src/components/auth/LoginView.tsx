@@ -1,13 +1,34 @@
 import React, { useCallback, useRef, useState } from 'react';
-import { ArrowRight, Eye, EyeOff, Loader2, Lock, User } from 'lucide-react';
+import {
+  ArrowRight, ChevronDown, ChevronUp, ClipboardList, Crown, Eye, EyeOff,
+  Loader2, Lock, ShieldCheck, User, UserCog, Users,
+} from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { ThemeToggle } from '../common/ThemeToggle';
 import { LOGO_ALT, LOGO_SRC } from '../../app/brand';
 import { LoginIntro, shouldPlayIntro } from '../login/LoginIntro';
-import { checkPassword } from '../../utils/password';
+import { checkPassword, INITIAL_PASSWORD } from '../../utils/password';
+import { User as AppUser } from '../../types';
 
-// Même parcours que PREMIDIS ERP : introduction du logo, puis formulaire de connexion.
-// Seuls les comptes créés dans Paramètres › Utilisateurs & Rôles, avec leur mot de passe, donnent accès.
+// Même parcours que PREMIDIS ERP : introduction du logo, puis formulaire et comptes de démonstration.
+// La page de connexion s'affiche à chaque ouverture ; un compte de démonstration remplit seulement le
+// formulaire, l'accès passe toujours par « Se connecter » et la vérification du mot de passe.
+const DEMO_PASSWORD = INITIAL_PASSWORD;
+
+const ROLE_ICON: Record<string, React.ElementType> = {
+  ADMIN: ShieldCheck,
+  DIRECTEUR: Crown,
+  RH: UserCog,
+  SECRETAIRE: ClipboardList,
+};
+const ROLE_HINT: Record<string, string> = {
+  ADMIN: 'Administration système',
+  DIRECTEUR: 'Accès complet en lecture',
+  RH: 'Personnel, pointages, sanctions',
+  SECRETAIRE: 'Pointages du jour',
+};
+/** Comptes visibles par défaut ; les autres apparaissent avec « Voir tous les comptes de démonstration » */
+const MAIN_ROLES = ['ADMIN', 'DIRECTEUR'];
 
 export const LoginView: React.FC = () => {
   const { setCurrentUser, allUsers, companySettings, getRoleLabel, addAuditLog } = useApp();
@@ -17,6 +38,7 @@ export const LoginView: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [showAll, setShowAll] = useState(false);
   const [forgotModal, setForgotModal] = useState(false);
   // Introduction : « playing » (page cachée) → « revealing » (le logo rejoint sa place) → « done »
   const [phase, setPhase] = useState<'playing' | 'revealing' | 'done'>(() => (shouldPlayIntro() ? 'playing' : 'done'));
@@ -48,6 +70,36 @@ export const LoginView: React.FC = () => {
   const onReveal = useCallback(() => setPhase(p => (p === 'playing' ? 'revealing' : p)), []);
   const onDone = useCallback(() => setPhase('done'), []);
   const hidden = phase === 'playing';
+
+  const activeUsers = allUsers.filter(u => u.active !== false && !u.passwordHash);
+  const mainDemos = MAIN_ROLES.map(r => activeUsers.find(u => u.role === r)).filter(Boolean) as AppUser[];
+  const moreDemos = activeUsers.filter(u => !mainDemos.includes(u));
+
+  const demoCard = (u: AppUser, i: number) => {
+    const Icon = ROLE_ICON[u.role] || Users;
+    const active = email.toLowerCase() === u.email.toLowerCase();
+    return (
+      <button
+        key={u.id}
+        type="button"
+        data-demo-account={u.role}
+        onClick={() => { setEmail(u.email); setPassword(DEMO_PASSWORD); setErrorMsg(''); }}
+        style={{ transitionDelay: `${i * 60}ms` }}
+        className={`group flex min-w-0 items-center gap-3 rounded-2xl border p-3 text-left transition-colors ${
+          active ? 'border-brand bg-brand/10' : 'border-slate-200 bg-white/60 hover:border-brand/60 hover:bg-brand/5'
+        }`}
+      >
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#087bff] to-[#8200ff] text-white shadow-md">
+          <Icon className="h-5 w-5" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-bold text-ink">{getRoleLabel(u.role)}</span>
+          <span className="block truncate text-[11px] text-slate-500">{u.email}</span>
+          <span className="block truncate text-[11px] font-semibold text-brand">{ROLE_HINT[u.role] || u.name}</span>
+        </span>
+      </button>
+    );
+  };
 
   return (
     <div className={`relative min-h-screen overflow-hidden ${hidden ? 'login-hidden' : ''}`} data-login-phase={phase}>
@@ -153,6 +205,36 @@ export const LoginView: React.FC = () => {
               {!loading && <ArrowRight className="h-4 w-4" />}
             </button>
           </form>
+
+          {/* Comptes de démonstration (comptes qui ont encore le mot de passe initial) */}
+          {mainDemos.length + moreDemos.length > 0 && (
+          <div className="space-y-3" data-demo-accounts>
+            <div className="flex items-center gap-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+              <span className="h-px flex-1 bg-slate-200" />
+              Comptes de démonstration
+              <span className="h-px flex-1 bg-slate-200" />
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2">{mainDemos.map(demoCard)}</div>
+            {showAll && moreDemos.length > 0 && (
+              <div className="grid gap-2 sm:grid-cols-2" data-demo-more>{moreDemos.map(demoCard)}</div>
+            )}
+            {moreDemos.length > 0 && (
+              <button
+                type="button"
+                data-demo-toggle
+                aria-expanded={showAll}
+                onClick={() => setShowAll(v => !v)}
+                className="flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 transition hover:border-brand/60 hover:text-brand"
+              >
+                {showAll ? 'Masquer les autres comptes' : 'Voir tous les comptes de démonstration'}
+                {showAll ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </button>
+            )}
+            <p className="text-center text-[11px] text-slate-500">
+              Mot de passe de démonstration : <span className="font-semibold">{DEMO_PASSWORD}</span>
+            </p>
+          </div>
+          )}
         </div>
       </div>
 
