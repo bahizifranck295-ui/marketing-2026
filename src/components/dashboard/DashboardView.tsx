@@ -352,10 +352,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className="mt-3 pt-3 border-t border-white/20 flex items-center justify-between relative">
             <span className="text-[11px] text-white/80">{employees.length} collaborateurs suivis</span>
             <button
-              onClick={() => setCurrentView('sanctions')}
+              onClick={() => setCurrentView('employees')}
               className="px-3 py-1 rounded-lg bg-white/15 hover:bg-white/25 ring-1 ring-white/25 text-white text-xs font-bold transition-colors"
             >
-              Voir les dossiers
+              Voir les employés
             </button>
           </div>
         </div>
