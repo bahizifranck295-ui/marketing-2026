@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
-import { SanctionRule } from '../../types';
+import { SanctionRule, SANCTION_LABELS } from '../../types';
 import { 
   ShieldAlert, Plus, AlertTriangle,
   Banknote, Snowflake, Flame, Trash2, Edit3, CheckCircle2,
@@ -392,7 +392,7 @@ export const SanctionsView: React.FC = () => {
                   <span className="text-slate-400 font-medium">
                     Sanction : <b>{rule.sanctionType === 'EXCLUSION_TEMPORAIRE'
                       ? `Exclusion temporaire · ${rule.exclusionDays || 1} jour${(rule.exclusionDays || 1) > 1 ? 's' : ''}`
-                      : rule.sanctionType.replace(/_/g, ' ')}</b>
+                      : SANCTION_LABELS[rule.sanctionType] ?? rule.sanctionType}</b>
                   </span>
                   
                   {rule.isActive ? (
@@ -613,11 +613,9 @@ export const SanctionsView: React.FC = () => {
                   }}
                   className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 outline-none text-slate-900"
                 >
-                  <option value="EXCLUSION_TEMPORAIRE">Exclusion temporaire du travail (mise à pied)</option>
                   <option value="RETENUE_SALARIALE_PROPOSEE">Retenue Compensatoire sur Salaire</option>
-                  <option value="AVERTISSEMENT_ECRIT">Avertissement Écrit avec Retenue</option>
-                  <option value="BLAME">Blâme au Dossier avec Retenue</option>
                   <option value="AVERTISSEMENT_VERBAL">Avertissement Verbal (Sans retenue)</option>
+                  <option value="EXCLUSION_TEMPORAIRE">Exclusion temporaire du travail (mise à pied)</option>
                 </select>
                 {ruleForm.sanctionType === 'EXCLUSION_TEMPORAIRE' && (
                   <div className="mt-2 p-3 rounded-xl bg-rose-50/60 border border-rose-200 space-y-1">

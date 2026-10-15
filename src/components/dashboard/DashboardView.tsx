@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
 import { EmployeeAvatar } from '../common/EmployeeAvatar';
 import { StatusBadge } from '../common/Badge';
-import { AttendanceRecord } from '../../types';
+import { AttendanceRecord, SANCTION_LABELS } from '../../types';
 import { 
   Users, CheckCircle2, Clock, AlertTriangle, XCircle, 
   RefreshCw, Download, ArrowUpRight, ArrowDownRight, 
@@ -10,19 +10,12 @@ import {
 } from 'lucide-react';
 import { exportToExcel, generateAttendancePdf } from '../../utils/exportUtils';
 
-const SANCTION_LABEL: Record<string, string> = {
-  AVERTISSEMENT_VERBAL: 'Avertissement verbal',
-  AVERTISSEMENT_ECRIT: 'Avertissement écrit',
-  BLAME: 'Blâme',
-  MISE_A_PIED_PROPOSEE: 'Mise à pied proposée',
-  RETENUE_SALARIALE_PROPOSEE: 'Retenue salariale proposée',
-  EXCLUSION_TEMPORAIRE: 'Exclusion temporaire',
-};
+const SANCTION_LABEL: Record<string, string> = SANCTION_LABELS;
 /** Poids d'une règle : l'exclusion temporaire d'abord (et sa durée), puis la retenue, puis le niveau */
 const weight = (r: { sanctionType: string; deductionAmount: number; exclusionDays?: number }) =>
   (r.sanctionType === 'EXCLUSION_TEMPORAIRE' ? 100000 + (r.exclusionDays || 1) * 1000 : 0) + r.deductionAmount * 10 + SANCTION_ORDER.indexOf(r.sanctionType);
 /** Du moins lourd au plus lourd */
-const SANCTION_ORDER = ['AVERTISSEMENT_VERBAL', 'AVERTISSEMENT_ECRIT', 'BLAME', 'RETENUE_SALARIALE_PROPOSEE', 'MISE_A_PIED_PROPOSEE', 'EXCLUSION_TEMPORAIRE'];
+const SANCTION_ORDER = ['AVERTISSEMENT_VERBAL', 'RETENUE_SALARIALE_PROPOSEE', 'EXCLUSION_TEMPORAIRE'];
 
 interface DashboardViewProps {
   onOpenQuickPunch: () => void;

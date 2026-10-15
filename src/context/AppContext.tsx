@@ -4,6 +4,7 @@ import {
   ZKTecoDeviceConfig, SanctionRule, SanctionCase, AuditLog, CompanySettings,
   SyncLogEntry, SanctionStatus, AppModule, PermissionAction, RoleDefinition
 } from '../types';
+import { normalizeSanctionLevel } from '../types';
 import { INITIAL_ROLES } from '../data/permissions';
 import { readAttendanceRows, groupByDay, textToRows, type DayAttendance } from '../utils/attendanceReader';
 import { useTheme, setThemeUser } from '../theme/theme';
@@ -257,12 +258,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [sanctionRules, setSanctionRules] = useState<SanctionRule[]>(() => {
     const saved = localStorage.getItem('premidis_sanction_rules');
-    return saved ? JSON.parse(saved) : INITIAL_SANCTION_RULES;
+    if (!saved) return INITIAL_SANCTION_RULES;
+    return (JSON.parse(saved) as SanctionRule[]).map(r => ({ ...r, sanctionType: normalizeSanctionLevel(r.sanctionType, r.deductionAmount) }));
   });
 
   const [sanctionCases, setSanctionCases] = useState<SanctionCase[]>(() => {
     const saved = localStorage.getItem('premidis_sanction_cases');
-    return saved ? JSON.parse(saved) : INITIAL_SANCTION_CASES;
+    if (!saved) return INITIAL_SANCTION_CASES;
+    return (JSON.parse(saved) as SanctionCase[]).map(c => ({ ...c, proposedSanction: normalizeSanctionLevel(c.proposedSanction, c.deductionAmount) }));
   });
 
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>(() => {

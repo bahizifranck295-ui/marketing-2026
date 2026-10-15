@@ -2,7 +2,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { exportPreviewToPdf } from '../../utils/previewPdf';
 import { useApp } from '../../context/AppContext';
 import { EmployeeAvatar } from '../common/EmployeeAvatar';
-import { AttendanceRecord, AttendanceStatus, Employee } from '../../types';
+import { AttendanceRecord, AttendanceStatus, Employee, SANCTION_LABELS, SanctionLevel } from '../../types';
 import { 
   FileText, Calendar, Users, Clock, AlertTriangle, 
   AlertOctagon, Filter, CheckCircle2, Building2
@@ -211,7 +211,7 @@ export const ReportsView: React.FC<{
       if (!existing && (lateCount >= 3 || absenceCount >= 1)) {
         if (absenceCount >= 2) {
           deductionAmount = 45;
-          sanctionType = 'BLAME';
+          sanctionType = 'RETENUE_SALARIALE_PROPOSEE';
         } else if (absenceCount >= 1) {
           deductionAmount = 20;
           sanctionType = 'RETENUE_SALARIALE_PROPOSEE';
@@ -558,7 +558,7 @@ export const ReportsView: React.FC<{
                         {s.absenceCount > 0 ? `${s.absenceCount} j` : '0'}
                       </td>
                       <td className="py-2.5 px-3 font-semibold text-slate-700">
-                        {s.proposedSanction.replace(/_/g, ' ')}
+                        {SANCTION_LABELS[s.proposedSanction as SanctionLevel] ?? s.proposedSanction.replace(/_/g, ' ')}
                       </td>
                       <td className="py-2.5 px-3 text-center font-mono font-bold">
                         {s.deductionAmount > 0 ? (

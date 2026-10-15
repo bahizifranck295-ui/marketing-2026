@@ -116,13 +116,24 @@ export interface ZKTecoDeviceConfig {
   syncLogs: SyncLogEntry[];
 }
 
-export type SanctionLevel = 
+// Trois sanctions seulement : avertissement verbal, retenue compensatoire sur salaire, exclusion temporaire
+export type SanctionLevel =
   | 'AVERTISSEMENT_VERBAL'
-  | 'AVERTISSEMENT_ECRIT'
-  | 'BLAME'
-  | 'MISE_A_PIED_PROPOSEE'
   | 'RETENUE_SALARIALE_PROPOSEE'
   | 'EXCLUSION_TEMPORAIRE';
+
+export const SANCTION_LABELS: Record<SanctionLevel, string> = {
+  RETENUE_SALARIALE_PROPOSEE: 'Retenue compensatoire sur salaire',
+  AVERTISSEMENT_VERBAL: 'Avertissement verbal',
+  EXCLUSION_TEMPORAIRE: 'Exclusion temporaire du travail',
+};
+
+/** Anciennes sanctions (blâme, avertissement écrit, mise à pied) ramenées aux trois sanctions retenues */
+export function normalizeSanctionLevel(level: string, deductionAmount = 0): SanctionLevel {
+  if (level === 'AVERTISSEMENT_VERBAL' || level === 'RETENUE_SALARIALE_PROPOSEE' || level === 'EXCLUSION_TEMPORAIRE') return level;
+  if (level === 'MISE_A_PIED_PROPOSEE') return 'EXCLUSION_TEMPORAIRE';
+  return deductionAmount > 0 ? 'RETENUE_SALARIALE_PROPOSEE' : 'AVERTISSEMENT_VERBAL';
+}
 
 export type SanctionTargetType = 'RETARD' | 'ABSENCE' | 'COMBINE';
 
