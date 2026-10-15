@@ -4,7 +4,7 @@
 //   détection  : configs/det/dbnet/repvit_db.yml (DetResizeForTest 960, NormalizeImage BGR, DBPostProcess)
 //   lecture    : configs/rec/svtrv2/repsvtr_ch.yml (RecDynamicResize 48×320, CTCLabelDecode, ppocr_keys_v1)
 // Les fichiers sont servis depuis public/ocr et public/ort ; le modèle de lecture est découpé en deux
-// morceaux pour respecter la taille maximale d'un fichier publié, puis recollé ici.
+// morceaux pour respecter la taille maximale d'un fichier publié, puis recollé ici (voir ocr/manifest.json).
 import * as ort from 'onnxruntime-web/wasm';
 
 export interface OcrBox { x: number; y: number; w: number; h: number; text: string; score: number }
@@ -20,6 +20,28 @@ async function fetchBytes(path: string): Promise<Uint8Array> {
   return new Uint8Array(await r.arrayBuffer());
 }
 
+/** Morceau publié en texte base64 (hébergements qui ne servent pas les fichiers binaires .onnx) */
+async function fetchBase64(path: string): Promise<Uint8Array> {
+  const r = await fetch(`${BASE}${path}`);
+  if (!r.ok) throw new Error(`Fichier du moteur OCR introuvable : ${path}`);
+  const bin = atob((await r.text()).trim());
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+/**
+ * Un modèle peut être découpé en plusieurs morceaux, binaires ou base64 ; ocr/manifest.json les liste :
+ * { "encoding": "raw" | "base64", "det": ["det.onnx"], "rec": ["rec.onnx.part0", "rec.onnx.part1"] }
+ */
+async function fetchModel(files: string[], encoding: 'raw' | 'base64'): Promise<Uint8Array> {
+  const parts = await Promise.all(files.map(f => (encoding === 'base64' ? fetchBase64 : fetchBytes)(`ocr/${f}`)));
+  const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
+  let at = 0;
+  parts.forEach(p => { out.set(p, at); at += p.length; });
+  return out;
+}
+
 /** Charge le moteur une seule fois (≈ 49 Mo, gardés ensuite en cache par le navigateur) */
 function loadEngine(progress?: OcrProgress) {
   if (!engine) {
@@ -31,12 +53,11 @@ function loadEngine(progress?: OcrProgress) {
         : { wasm: `${BASE}ort/ort-wasm-simd-threaded.wasm` };
       ort.env.wasm.numThreads = 1;
       progress?.('Chargement du moteur OpenOCR (une seule fois)…');
-      const [det, rec0, rec1, keys] = await Promise.all([
-        fetchBytes('ocr/det.onnx'), fetchBytes('ocr/rec.onnx.part0'), fetchBytes('ocr/rec.onnx.part1'),
+      const manifest: { encoding: 'raw' | 'base64'; det: string[]; rec: string[] } = await fetch(`${BASE}ocr/manifest.json`).then(r => r.json());
+      const [det, recBytes, keys] = await Promise.all([
+        fetchModel(manifest.det, manifest.encoding), fetchModel(manifest.rec, manifest.encoding),
         fetch(`${BASE}ocr/keys.txt`).then(r => r.text()),
       ]);
-      const recBytes = new Uint8Array(rec0.length + rec1.length);
-      recBytes.set(rec0); recBytes.set(rec1, rec0.length);
       const opts: ort.InferenceSession.SessionOptions = { executionProviders: ['wasm'] };
       const [detS, recS] = await Promise.all([ort.InferenceSession.create(det, opts), ort.InferenceSession.create(recBytes, opts)]);
       // CTCLabelDecode : index 0 = blanc, puis le dictionnaire, puis l'espace (use_space_char)

@@ -1,0 +1,1 @@
+{ "encoding": "raw", "det": ["det.onnx"], "rec": ["rec.onnx.part0", "rec.onnx.part1"] }

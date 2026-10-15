@@ -34,6 +34,7 @@ Fichiers du moteur OCR (servis tels quels) :
 - `public/ocr/det.onnx` : modèle de détection `openocr_det_model.onnx` ;
 - `public/ocr/rec.onnx.part0` et `part1` : modèle de lecture `openocr_rec_model.onnx`, découpé en deux ;
 - `public/ocr/keys.txt` : dictionnaire `ppocr_keys_v1.txt` ;
+- `public/ocr/manifest.json` : liste des morceaux de chaque modèle, en binaire (`raw`) ou en texte `base64` pour un hébergement qui ne sert pas les fichiers `.onnx` ;
 - `public/ort/` : moteur WebAssembly d'onnxruntime-web.
 
 Les modèles viennent de la version `develop0.0.1` d'OpenOCR. Pour les remplacer :
