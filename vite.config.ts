@@ -5,6 +5,8 @@ import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
   return {
+    // Chemins relatifs : l'application fonctionne aussi hors de la racine du site (aperçu publié)
+    base: './',
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
