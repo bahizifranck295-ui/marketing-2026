@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import * as XLSX from 'xlsx';
 import { useApp } from '../../context/AppContext';
 import { UsersRolesPanel } from './UsersRolesPanel';
+import { UsbImportPanel } from './UsbImportPanel';
 import { 
   Settings, Cpu, Building2, Users, ShieldCheck, 
   History, RefreshCw, CheckCircle2, AlertTriangle, 
@@ -12,7 +12,7 @@ export const SettingsView: React.FC = () => {
   const { 
     companySettings, updateCompanySettings,
     departments, addDepartment, updateDepartment,
-    zktecoConfig, updateZKTecoConfig, testZKTecoConnection, syncZKTecoNow, importZKTecoFile,
+    zktecoConfig, updateZKTecoConfig, testZKTecoConnection, syncZKTecoNow,
     auditLogs, allUsers, switchUserRole, currentUser 
   } = useApp();
 
@@ -25,12 +25,6 @@ export const SettingsView: React.FC = () => {
   // ZKTeco sync state
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState<string | null>(null);
-
-  // File import state
-  const [importedFileName, setImportedFileName] = useState<string | null>(null);
-  const [importedFileContent, setImportedFileContent] = useState<string>('');
-  const [fileImportResult, setFileImportResult] = useState<{ success: boolean; count: number; errors: string[] } | null>(null);
-  const [isProcessingFile, setIsProcessingFile] = useState(false);
 
   // New Department state
   const [newDepName, setNewDepName] = useState('');
@@ -56,54 +50,6 @@ export const SettingsView: React.FC = () => {
     } finally {
       setSyncing(false);
     }
-  };
-
-  const handleFileDrop = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setImportedFileName(file.name);
-    setFileImportResult(null);
-    const reader = new FileReader();
-    if (/\.xlsx?$/i.test(file.name)) {
-      // Liste Excel exportée par la pointeuse : chaque feuille est convertie en lignes de texte
-      reader.onload = (event) => {
-        const wb = XLSX.read(event.target?.result as ArrayBuffer, { type: 'array', cellDates: true, dateNF: 'yyyy-mm-dd hh:mm:ss' });
-        const text = wb.SheetNames.map(n => XLSX.utils.sheet_to_csv(wb.Sheets[n], { dateNF: 'yyyy-mm-dd hh:mm:ss' })).join('\n');
-        setImportedFileContent(text);
-      };
-      reader.readAsArrayBuffer(file);
-    } else {
-      reader.onload = (event) => setImportedFileContent(event.target?.result as string);
-      reader.readAsText(file);
-    }
-  };
-
-  const handleProcessFileImport = async () => {
-    if (!importedFileContent || !importedFileName) return;
-    setIsProcessingFile(true);
-    const res = await importZKTecoFile(importedFileName, importedFileContent);
-    setFileImportResult(res);
-    setIsProcessingFile(false);
-  };
-
-  const loadSampleZKTecoFile = () => {
-    // Generate standard ZKTeco AttLog sample content
-    // Même forme que le fichier AttLog écrit sur la clé USB par la pointeuse (identifiant aligné à droite)
-    const sample = `        1\t2026-10-11 08:12:15\t1\t0\t1\t0
-        2\t2026-10-11 08:25:40\t1\t0\t1\t0
-        3\t2026-10-11 08:29:10\t1\t0\t1\t0
-        4\t2026-10-11 08:48:22\t1\t0\t1\t0
-        7\t2026-10-11 07:54:10\t1\t0\t1\t0
-        8\t2026-10-11 08:05:30\t1\t0\t1\t0
-       14\t2026-10-11 08:35:12\t1\t0\t1\t0
-       17\t2026-10-11 08:52:45\t1\t0\t1\t0
-       19\t2026-10-11 08:47:05\t1\t0\t1\t0
-        1\t2026-10-11 16:34:02\t1\t1\t1\t0
-        7\t2026-10-11 16:02:48\t1\t1\t1\t0
-       14\t2026-10-11 16:05:10\t1\t1\t1\t0`;
-    setImportedFileName('AttLog_sample_ZKTeco.dat');
-    setImportedFileContent(sample);
   };
 
   const handleAddDepartment = (e: React.FormEvent) => {
@@ -314,93 +260,7 @@ export const SettingsView: React.FC = () => {
             )}
           </div>
 
-          {/* USB / FILE IMPORTER FOR ZKTECO (Crucial fallback when device is not reachable via LAN) */}
-          <div className="glass-card rounded-2xl p-6 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div>
-                <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                  <Upload className="w-4 h-4 text-brand" />
-                  Importateur de Fichiers de Pointage ZKTeco (USB / DAT / CSV)
-                </h3>
-                <p className="text-xs text-slate-500">
-                  Sur la pointeuse : Menu › Clé USB › Télécharger les présences, puis importez ici le fichier copié sur la clé. Plusieurs pointages d'un même jour : le premier est l'entrée, le dernier la sortie.
-                </p>
-              </div>
-
-              <button
-                onClick={loadSampleZKTecoFile}
-                className="px-3 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-semibold text-slate-700 transition-colors"
-                title="Charger un échantillon réel de pointages ZKTeco pour démonstration"
-              >
-                Charger échantillon ZKTeco
-              </button>
-            </div>
-
-            {/* Drop / Select zone */}
-            <div className="p-4 rounded-xl border-2 border-dashed border-slate-300 text-center space-y-2">
-              <input
-                type="file"
-                accept=".dat,.csv,.txt,.log,.xls,.xlsx"
-                onChange={handleFileDrop}
-                id="zk-file-upload"
-                className="hidden"
-              />
-              <label 
-                htmlFor="zk-file-upload" 
-                className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-50 text-brand font-bold text-xs hover:bg-purple-100 transition-colors"
-              >
-                <Upload className="w-3.5 h-3.5" />
-                Choisir le fichier de la clé USB (AttLog.dat, .txt, .csv, .xls)
-              </label>
-
-              {importedFileName && (
-                <div className="pt-2 text-xs font-mono text-slate-600">
-                  Fichier sélectionné : <b className="text-brand">{importedFileName}</b> ({importedFileContent.split('\n').length} lignes)
-                </div>
-              )}
-            </div>
-
-            {/* Preview of file content if loaded */}
-            {importedFileContent && (
-              <div className="space-y-2">
-                <p className="text-xs font-bold text-slate-700">Aperçu du contenu brut de la pointeuse :</p>
-                <pre className="p-3 rounded-xl bg-slate-900 text-green-400 font-mono text-[11px] max-h-32 overflow-y-auto">
-                  {importedFileContent}
-                </pre>
-
-                <div className="flex justify-end pt-2">
-                  <button
-                    onClick={handleProcessFileImport}
-                    disabled={isProcessingFile}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 shadow-sm transition-colors"
-                  >
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>Valider et importer les pointages dans le carnet</span>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {fileImportResult && (
-              <div className={`p-4 rounded-xl text-xs space-y-2 ${
-                fileImportResult.success ? 'bg-emerald-50 text-emerald-800' : 'bg-rose-50 text-rose-800'
-              }`}>
-                <p className="font-bold">
-                  {fileImportResult.count} pointages insérés avec succès dans le registre !
-                </p>
-                {fileImportResult.errors.length > 0 && (
-                  <div className="text-[11px] space-y-1">
-                    <p className="font-semibold text-rose-700">Avertissements ({fileImportResult.errors.length}) :</p>
-                    <ul className="list-disc pl-4 space-y-0.5">
-                      {fileImportResult.errors.slice(0, 4).map((err, i) => (
-                        <li key={i}>{err}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+          <UsbImportPanel />
 
           {/* Sync History Logs */}
           <div className="glass-card rounded-2xl p-6 space-y-4">

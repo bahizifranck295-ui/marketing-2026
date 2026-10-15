@@ -18,10 +18,10 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
   onOpenQuickPunch,
   onOpenCorrectModal
 }) => {
-  const { attendanceRecords, employees, departments, companySettings } = useApp();
+  const { attendanceRecords, employees, departments, companySettings, workingDate } = useApp();
 
   const [activeTab, setActiveTab] = useState<'DAILY' | 'MONTHLY_GRID'>('DAILY');
-  const [selectedDate, setSelectedDate] = useState('2026-10-11');
+  const [selectedDate, setSelectedDate] = useState(workingDate);
   const [selectedMonth, setSelectedMonth] = useState('2026-10'); // YYYY-MM
   const [selectedDepartment, setSelectedDepartment] = useState('ALL');
   const [selectedStatus, setSelectedStatus] = useState<'ALL' | AttendanceStatus>('ALL');

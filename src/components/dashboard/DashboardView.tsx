@@ -21,10 +21,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 }) => {
   const { 
     attendanceRecords, employees, departments, 
-    zktecoConfig, syncZKTecoNow, companySettings, setCurrentView 
+    zktecoConfig, syncZKTecoNow, companySettings, setCurrentView, workingDate 
   } = useApp();
 
-  const [selectedDate, setSelectedDate] = useState('2026-10-11'); // Default today
+  const [selectedDate, setSelectedDate] = useState(workingDate);
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'PRESENT' | 'RETARD' | 'ABSENT'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState('ALL');
@@ -61,9 +61,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     });
   }, [dayRecords, statusFilter, selectedDepartment, searchQuery]);
 
-  // Historical trend for 7 days
+  // Les 7 jours qui se terminent au jour affiché (le dernier jour importé depuis la pointeuse)
   const historyTrends = useMemo(() => {
-    const dates = ['2026-10-05', '2026-10-06', '2026-10-07', '2026-10-08', '2026-10-09', '2026-10-10', '2026-10-11'];
+    const dates = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(`${selectedDate}T12:00:00`);
+      d.setDate(d.getDate() - 6 + i);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    });
     return dates.map(d => {
       const recs = attendanceRecords.filter(r => r.date === d);
       const p = recs.filter(r => r.status === 'PRESENT').length;
@@ -75,10 +79,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         present: p,
         retard: r,
         absent: a,
-        rate: Math.round((p / total) * 100)
+        rate: Math.round((p / total) * 100),
+        empty: recs.length === 0
       };
     });
-  }, [attendanceRecords]);
+  }, [attendanceRecords, selectedDate]);
 
   const handleSync = async () => {
     setIsSyncing(true);
@@ -229,15 +234,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className="h-44 w-full pt-4">
             <div className="flex h-32 items-end gap-3 sm:gap-6 justify-between px-2 border-b border-slate-200">
               {historyTrends.map((t, idx) => {
-                const heightPct = Math.max(15, t.rate);
+                const heightPct = t.empty ? 0 : Math.max(15, t.rate);
                 return (
-                  <div key={idx} className="flex-1 flex flex-col items-center gap-1 group relative">
+                  <div key={idx} className="flex-1 h-full flex flex-col items-center gap-1 group relative">
                     {/* Hover tooltip */}
                     <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-12 bg-slate-900 text-white text-[10px] px-2 py-1 rounded shadow-lg whitespace-nowrap pointer-events-none z-20">
-                      {t.present} Présents · {t.retard} Retards · {t.rate}% à l'heure
+                      {t.empty ? 'Aucune donnée importée' : `${t.present} Présents · ${t.retard} Retards · ${t.rate}% à l'heure`}
                     </div>
 
-                    <div className="w-full max-w-[28px] bg-slate-100 rounded-t-lg h-full flex items-end overflow-hidden">
+                    <div className="w-full max-w-[28px] bg-slate-100 rounded-t-lg flex-1 flex items-end overflow-hidden">
                       <div 
                         style={{ height: `${heightPct}%` }}
                         className="w-full bg-gradient-to-t from-brand to-neon rounded-t-lg transition-all duration-300"

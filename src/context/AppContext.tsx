@@ -5,7 +5,7 @@ import {
   SyncLogEntry, SanctionStatus, AppModule, PermissionAction, RoleDefinition
 } from '../types';
 import { INITIAL_ROLES } from '../data/permissions';
-import { parseZKTecoText, normalizeUserId } from '../utils/zktecoParser';
+import { readAttendanceRows, groupByDay, textToRows, type DayAttendance } from '../utils/attendanceReader';
 import { useTheme, setThemeUser } from '../theme/theme';
 import { 
   INITIAL_COMPANY_SETTINGS, INITIAL_USERS, INITIAL_DEPARTMENTS, 
@@ -64,6 +64,10 @@ interface AppContextType {
   testZKTecoConnection: () => Promise<{ success: boolean; message: string; latencyMs: number }>;
   syncZKTecoNow: () => Promise<{ success: boolean; punchesImported: number; message: string }>;
   importZKTecoFile: (fileName: string, fileContent: string) => Promise<{ success: boolean; count: number; errors: string[] }>;
+  /** Importe des journées déjà lues et vérifiées (aperçu de l'import) */
+  applyAttendanceImport: (fileName: string, days: DayAttendance[], warnings?: string[]) => { count: number; absents: number; dates: string[] };
+  /** Jour affiché par défaut : le dernier jour importé depuis la pointeuse */
+  workingDate: string;
 
   // Sanctions
   sanctionRules: SanctionRule[];
@@ -203,6 +207,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const saved = localStorage.getItem('premidis_employees');
     return saved ? JSON.parse(saved) : INITIAL_EMPLOYEES;
   });
+
+  const [workingDate, setWorkingDate] = useState<string>(() => {
+    try { return localStorage.getItem('premidis_working_date') || '2026-10-11'; } catch { return '2026-10-11'; }
+  });
+  useEffect(() => { try { localStorage.setItem('premidis_working_date', workingDate); } catch { /* stockage indisponible */ } }, [workingDate]);
 
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>(() => {
     const saved = localStorage.getItem('premidis_attendance');
@@ -559,38 +568,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return { success: true, punchesImported: imported > 0 ? imported : 12, message: 'Synchronisation ZKTeco achevée avec succès.' };
   };
 
-  const importZKTecoFile = async (fileName: string, fileContent: string) => {
-    // Fichier exporté sur clé USB par la pointeuse : une ligne par pointage (identifiant, date, heure).
-    // Les pointages d'une même personne le même jour sont regroupés : le premier = entrée, le dernier = sortie.
-    const { punches, ignored } = parseZKTecoText(fileContent);
-    const errors: string[] = [];
-    const validRecords: AttendanceRecord[] = [];
-    const unknown = new Map<string, number>();
-    const groups = new Map<string, { emp: Employee; date: string; times: string[] }>();
-
-    punches.forEach(p => {
-      const id = normalizeUserId(p.userId);
-      const emp = employees.find(e => normalizeUserId(e.zktecoBioId) === id || e.matricule.toLowerCase() === p.userId.toLowerCase());
-      if (!emp) { unknown.set(p.userId, (unknown.get(p.userId) || 0) + 1); return; }
-      const key = `${emp.matricule}|${p.date}`;
-      const g = groups.get(key) || { emp, date: p.date, times: [] };
-      g.times.push(p.time);
-      groups.set(key, g);
-    });
-
-    unknown.forEach((n, id) => errors.push(`Identifiant « ${id} » inconnu dans le registre du personnel (${n} pointage(s)) : renseignez l'ID pointeuse sur la fiche de l'employé.`));
-    if (ignored.length) errors.push(`${ignored.length} ligne(s) sans date ou heure lisible ignorée(s) (ex. ligne d'en-tête) : ligne(s) ${ignored.slice(0, 8).join(', ')}${ignored.length > 8 ? '…' : ''}.`);
-
+  const applyAttendanceImport = (fileName: string, days: DayAttendance[], warnings: string[] = []) => {
+    // Une journée par agent : premier pointage = entrée, dernier = sortie. Les agents actifs sans aucun
+    // pointage ces jours-là sont marqués absents (sauf s'ils ont déjà une ligne dans le carnet).
     const toMin = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
-    groups.forEach(({ emp, date, times }) => {
-      times.sort();
-      const checkIn = times[0];
-      const last = times[times.length - 1];
-      // Un second pointage moins de 30 minutes après l'entrée est un doublon, pas une sortie
-      const checkOut = times.length > 1 && toMin(last) - toMin(checkIn) >= 30 ? last : null;
+    const records: AttendanceRecord[] = days.map(({ emp, date, checkIn, checkOut, punches }) => {
       const { status, lateMinutes } = calculateStatus(emp.heureEntreeNormale, checkIn, emp.toleranceMinutes);
-      const early = checkOut ? Math.max(0, toMin(emp.heureSortieNormale) - toMin(checkOut)) : 0;
-      validRecords.push({
+      return {
         id: `att-${emp.matricule}-${date}`,
         employeeId: emp.matricule,
         employeeName: `${emp.nom} ${emp.postnom} ${emp.prenom}`,
@@ -601,40 +585,63 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         lateMinutes,
         expectedCheckOut: emp.heureSortieNormale,
         actualCheckOut: checkOut,
-        earlyDepartureMinutes: early,
-        status, // Strictly PRESENT | RETARD | ABSENT
+        earlyDepartureMinutes: checkOut ? Math.max(0, toMin(emp.heureSortieNormale) - toMin(checkOut)) : 0,
+        status,
         source: 'FILE_IMPORT',
-        rawPunchInTime: `${date} ${times.join(' / ')}`,
-        notes: `Importé depuis le fichier ${fileName} (${times.length} pointage(s))`
-      });
-    });
-
-    if (validRecords.length > 0) {
-      bulkImportAttendance(validRecords, `Fichier USB/CSV importé: ${fileName}`);
-      
-      const newLog: SyncLogEntry = {
-        id: `file-${Date.now()}`,
-        timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
-        type: 'USB_FILE_IMPORT',
-        punchesImported: validRecords.length,
-        newPunches: validRecords.length,
-        duplicatesSkipped: 0,
-        status: errors.length > 0 ? 'WARNING' : 'SUCCESS',
-        message: `Import du fichier "${fileName}" terminé : ${punches.length} pointages lus, ${validRecords.length} présences journalières, ${errors.length} avertissement(s).`,
-        operatorName: currentUser?.name
+        rawPunchInTime: `${date} ${punches.join(' / ')}`,
+        notes: `Importé depuis ${fileName} (${punches.length} pointage(s))`
       };
+    });
+    const dates = [...new Set(days.map(d => d.date))];
+    const seen = new Set([...attendanceRecords.map(r => `${r.employeeId}|${r.date}`), ...records.map(r => `${r.employeeId}|${r.date}`)]);
+    const absents: AttendanceRecord[] = [];
+    dates.forEach(date => employees.filter(e => e.statutAdministratif === 'ACTIF' && !seen.has(`${e.matricule}|${date}`)).forEach(emp => absents.push({
+      id: `att-${emp.matricule}-${date}`,
+      employeeId: emp.matricule,
+      employeeName: `${emp.nom} ${emp.postnom} ${emp.prenom}`,
+      department: emp.departement,
+      date,
+      expectedCheckIn: emp.heureEntreeNormale,
+      actualCheckIn: null,
+      lateMinutes: 0,
+      expectedCheckOut: emp.heureSortieNormale,
+      actualCheckOut: null,
+      earlyDepartureMinutes: 0,
+      status: 'ABSENT',
+      source: 'FILE_IMPORT',
+      notes: `Aucun pointage dans ${fileName}`
+    })));
+    if (!records.length) return { count: 0, absents: 0, dates };
 
-      setZKTecoConfig(prev => ({
-        ...prev,
-        lastPunchImportedTime: new Date().toISOString().replace('T', ' ').substring(0, 19),
-        importedPunchesCount: prev.importedPunchesCount + validRecords.length,
-        syncLogs: [newLog, ...prev.syncLogs]
-      }));
+    bulkImportAttendance([...records, ...absents], `Fichier de la pointeuse importé : ${fileName}`);
+    // Le tableau de bord, le carnet et les rapports s'ouvrent ensuite sur le dernier jour importé
+    setWorkingDate(dates.sort()[dates.length - 1]);
+    const newLog: SyncLogEntry = {
+      id: `file-${Date.now()}`,
+      timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
+      type: 'USB_FILE_IMPORT',
+      punchesImported: records.length,
+      newPunches: records.length,
+      duplicatesSkipped: 0,
+      status: warnings.length > 0 ? 'WARNING' : 'SUCCESS',
+      message: `Import de « ${fileName} » : ${records.length} présence(s), ${absents.length} absence(s), ${warnings.length} avertissement(s).`,
+      operatorName: currentUser?.name
+    };
+    setZKTecoConfig(prev => ({
+      ...prev,
+      lastPunchImportedTime: newLog.timestamp,
+      importedPunchesCount: prev.importedPunchesCount + records.length,
+      syncLogs: [newLog, ...prev.syncLogs]
+    }));
+    return { count: records.length, absents: absents.length, dates };
+  };
 
-      return { success: true, count: validRecords.length, errors };
-    }
-
-    return { success: false, count: 0, errors };
+  const importZKTecoFile = async (fileName: string, fileContent: string) => {
+    // Fichier texte de la clé USB (AttLog.dat, CSV) : lecture, regroupement par jour, import
+    const read = readAttendanceRows(textToRows(fileContent), employees);
+    const errors = read.unknown.map(u => `Ligne ${u.line} : ${u.hint} — « ${u.raw.slice(0, 60)} »`);
+    const res = applyAttendanceImport(fileName, groupByDay(read.rows), errors);
+    return { success: res.count > 0, count: res.count, errors };
   };
 
   // Sanctions Actions
@@ -755,6 +762,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       testZKTecoConnection,
       syncZKTecoNow,
       importZKTecoFile,
+      applyAttendanceImport,
+      workingDate,
       sanctionRules,
       addSanctionRule,
       updateSanctionRule,

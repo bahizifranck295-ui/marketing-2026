@@ -7,6 +7,8 @@ export default defineConfig(() => {
   return {
     // Chemins relatifs : l'application fonctionne aussi hors de la racine du site (aperçu publié)
     base: './',
+    // onnxruntime-web charge son module WebAssembly à côté de lui-même : pas de pré-bundling en dev
+    optimizeDeps: { exclude: ['onnxruntime-web'] },
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
