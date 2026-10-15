@@ -10,6 +10,16 @@ import {
 } from 'lucide-react';
 import { exportToExcel, generateAttendancePdf } from '../../utils/exportUtils';
 
+const SANCTION_LABEL: Record<string, string> = {
+  AVERTISSEMENT_VERBAL: 'Avertissement verbal',
+  AVERTISSEMENT_ECRIT: 'Avertissement écrit',
+  BLAME: 'Blâme',
+  MISE_A_PIED_PROPOSEE: 'Mise à pied proposée',
+  RETENUE_SALARIALE_PROPOSEE: 'Retenue salariale proposée',
+};
+/** Du moins lourd au plus lourd */
+const SANCTION_ORDER = ['AVERTISSEMENT_VERBAL', 'AVERTISSEMENT_ECRIT', 'BLAME', 'RETENUE_SALARIALE_PROPOSEE', 'MISE_A_PIED_PROPOSEE'];
+
 interface DashboardViewProps {
   onOpenQuickPunch: () => void;
   onOpenCorrectModal: (record: AttendanceRecord) => void;
@@ -21,7 +31,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 }) => {
   const { 
     attendanceRecords, employees, departments, 
-    zktecoConfig, syncZKTecoNow, companySettings, setCurrentView, workingDate, openEmployeeCarnet 
+    zktecoConfig, syncZKTecoNow, companySettings, setCurrentView, workingDate, openEmployeeCarnet, sanctionRules 
   } = useApp();
 
   const [selectedDate, setSelectedDate] = useState(workingDate);
@@ -84,6 +94,34 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     const label = new Date(`${selectedDate}T12:00:00`).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
     return label.charAt(0).toUpperCase() + label.slice(1);
   }, [selectedDate]);
+
+  // Employés ayant atteint un seuil de sanction : règles actives appliquées du 1er du mois au jour affiché.
+  // Pour chacun, la règle la plus lourde atteinte (retenue la plus forte, puis niveau de sanction).
+  const sanctionReached = useMemo(() => {
+    const monthStart = `${selectedDate.slice(0, 7)}-01`;
+    const recs = attendanceRecords.filter(r => r.date >= monthStart && r.date <= selectedDate);
+    const rules = sanctionRules.filter(r => r.isActive && r.period === 'MONTH');
+    const reached = employees.flatMap(emp => {
+      const mine = recs.filter(r => r.employeeId === emp.matricule);
+      const late = mine.filter(r => r.status === 'RETARD');
+      const lateCount = late.length;
+      const lateMinutes = late.reduce((n, r) => n + r.lateMinutes, 0);
+      const absences = mine.filter(r => r.status === 'ABSENT').length;
+      const hits = rules.filter(rule => {
+        const lateOk = lateCount >= Math.max(1, rule.thresholdLateCount) && lateMinutes >= rule.thresholdLateMinutes;
+        const absOk = absences >= Math.max(1, rule.thresholdAbsenceCount);
+        return rule.targetType === 'RETARD' ? lateOk : rule.targetType === 'ABSENCE' ? absOk : lateOk && absOk;
+      });
+      if (!hits.length) return [];
+      const rule = hits.sort((a, b) => b.deductionAmount - a.deductionAmount || SANCTION_ORDER.indexOf(b.sanctionType) - SANCTION_ORDER.indexOf(a.sanctionType))[0];
+      return [{ emp, lateCount, lateMinutes, absences, rule }];
+    });
+    reached.sort((a, b) =>
+      b.rule.deductionAmount - a.rule.deductionAmount ||
+      SANCTION_ORDER.indexOf(b.rule.sanctionType) - SANCTION_ORDER.indexOf(a.rule.sanctionType) ||
+      b.lateMinutes - a.lateMinutes);
+    return { total: reached.length, rows: reached.slice(0, 5) };
+  }, [attendanceRecords, employees, sanctionRules, selectedDate]);
 
   // Les 7 jours qui se terminent au jour affiché (le dernier jour importé depuis la pointeuse)
   const historyTrends = useMemo(() => {
@@ -294,6 +332,75 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <span className="text-[11px] font-mono text-slate-400">
               Heure de référence : 08h30
             </span>
+          </div>
+
+          {/* Employés ayant atteint un seuil de sanction (règles actives du module Sanctions) */}
+          <div className="mt-4 pt-4 border-t border-slate-100">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+                  <AlertTriangle className="w-4 h-4 text-rose-600" /> Seuil de sanction atteint
+                </h3>
+                <p className="text-[11px] text-slate-500">
+                  {topLateLabel} jusqu'au {selectedDate.split('-').reverse().join('/')} · {sanctionReached.total} employé{sanctionReached.total > 1 ? 's' : ''} concerné{sanctionReached.total > 1 ? 's' : ''}
+                  {sanctionReached.total > 5 ? ' · les 5 cas les plus lourds' : ''}
+                </p>
+              </div>
+              <button onClick={() => setCurrentView('sanctions')} className="text-xs font-bold text-brand hover:underline">
+                Gérer les sanctions →
+              </button>
+            </div>
+
+            {sanctionReached.rows.length === 0 ? (
+              <p className="py-4 text-center text-xs text-slate-400">Aucun employé n'a atteint un seuil de sanction ce mois-ci.</p>
+            ) : (
+              <div className="overflow-x-auto rounded-xl border border-slate-100">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 text-slate-500 font-bold border-b border-slate-100">
+                    <tr>
+                      <th className="py-2 px-3">Employé</th>
+                      <th className="py-2 px-3 text-center">Retards</th>
+                      <th className="py-2 px-3 text-center">Absences</th>
+                      <th className="py-2 px-3">Seuil atteint</th>
+                      <th className="py-2 px-3">Sanction</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {sanctionReached.rows.map(({ emp, lateCount, lateMinutes, absences, rule }) => (
+                      <tr key={emp.matricule} className="hover:bg-slate-50/60">
+                        <td className="py-2 px-3 min-w-[270px]">
+                          <div className="flex items-center gap-2">
+                            <EmployeeAvatar matricule={emp.matricule} size={36} />
+                            <div className="min-w-0">
+                              <button
+                                onClick={() => openEmployeeCarnet(emp.matricule)}
+                                className="block text-left font-bold text-slate-900 hover:text-brand hover:underline underline-offset-2"
+                                title={`Ouvrir le carnet de présence de ${emp.nom} ${emp.postnom} ${emp.prenom}`}
+                              >
+                                {emp.nom} {emp.postnom} {emp.prenom}
+                              </button>
+                              <p className="text-[10px] text-slate-500">{emp.departement} · {emp.poste}</p>
+                              <p className="font-mono text-[10px] text-slate-400 whitespace-nowrap">{emp.matricule} · {emp.telephone}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-2 px-3 text-center font-bold text-amber-600 whitespace-nowrap">{lateCount ? `${lateCount} · ${lateMinutes} min` : '—'}</td>
+                        <td className="py-2 px-3 text-center font-bold text-rose-600">{absences || '—'}</td>
+                        <td className="py-2 px-3 text-[11px] leading-snug text-slate-600 min-w-[140px]">{rule.name}</td>
+                        <td className="py-2 px-3">
+                          <span className="inline-block px-2 py-0.5 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 font-bold text-[11px] leading-snug">
+                            {SANCTION_LABEL[rule.sanctionType] ?? rule.sanctionType}
+                          </span>
+                          {rule.deductionAmount > 0 && (
+                            <p className="text-[10px] text-rose-600 font-semibold mt-0.5">Retenue {rule.deductionAmount} {rule.currency}</p>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
 
