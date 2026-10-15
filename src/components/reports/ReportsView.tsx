@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
+import { exportPreviewToPdf } from '../../utils/previewPdf';
 import { useApp } from '../../context/AppContext';
 import { EmployeeAvatar } from '../common/EmployeeAvatar';
 import { AttendanceRecord, AttendanceStatus, Employee } from '../../types';
@@ -6,13 +7,7 @@ import {
   FileText, Calendar, Users, Clock, AlertTriangle, 
   AlertOctagon, Filter, CheckCircle2, Building2
 } from 'lucide-react';
-import { 
-  generateAttendancePdf, 
-  generateSanctionsPdf, 
-  generateMonthlyGridPdf,
-  SanctionPdfRow,
-  MonthlyGridRow
-} from '../../utils/exportUtils';
+import type { SanctionPdfRow, MonthlyGridRow } from '../../utils/exportUtils';
 import { Letterhead } from '../common/Letterhead';
 import { StatusBadge, CodeBadge } from '../common/Badge';
 
@@ -31,7 +26,6 @@ export const ReportsView: React.FC = () => {
   const [selectedDepartment, setSelectedDepartment] = useState('ALL');
   const [selectedEmployeeId, setSelectedEmployeeId] = useState('ALL');
   const [selectedStatus, setSelectedStatus] = useState<'ALL' | AttendanceStatus>('ALL');
-  const [sanctionFilterMode, setSanctionFilterMode] = useState<'ALL' | 'ENCAISSEE' | 'A_PRELEVER'>('ALL');
 
   const isDaily = periodType === 'JOUR';
 
@@ -46,13 +40,7 @@ export const ReportsView: React.FC = () => {
     if (activeTab === 'SANCTIONS') {
       const monthLabel = new Date(`${selectedMonth}-01`).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
       const capMonth = monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1);
-      if (sanctionFilterMode === 'ENCAISSEE') {
-        return `Rapport des Sanctions Déjà Encaissées & Prélevées – ${capMonth}`;
-      }
-      if (sanctionFilterMode === 'A_PRELEVER') {
-        return `Rapport des Sanctions en Cours d'Encaissement (À Prélever) – ${capMonth}`;
-      }
-      return `Rapport Mensuel des Sanctions Disciplinaires & Retenues Encaissées – ${capMonth}`;
+      return `Rapport Mensuel des Sanctions Disciplinaires – ${capMonth}`;
     }
 
     if (!isDaily) {
@@ -249,50 +237,21 @@ export const ReportsView: React.FC = () => {
       // Filter by employee
       if (selectedEmployeeId !== 'ALL' && s.matricule !== selectedEmployeeId) return false;
 
-      // Filter by encaissement status: already collected vs pending
-      if (sanctionFilterMode === 'ENCAISSEE' && (s.status !== 'APPROUVEE' || s.deductionAmount === 0)) return false;
-      if (sanctionFilterMode === 'A_PRELEVER' && s.status === 'APPROUVEE') return false;
-
       return true;
     });
-  }, [activeTab, employees, attendanceRecords, sanctionCases, selectedMonth, selectedDepartment, selectedEmployeeId, sanctionFilterMode]);
+  }, [activeTab, employees, attendanceRecords, sanctionCases, selectedMonth, selectedDepartment, selectedEmployeeId]);
 
-  // Export to PDF handler (only action button requested)
-  const handleExportPdf = () => {
-    if (activeTab === 'SANCTIONS') {
-      const depInfo = selectedDepartment !== 'ALL' ? ` · Département : ${selectedDepartment}` : ' · Tous départements';
-      const encaissementInfo = sanctionFilterMode === 'ENCAISSEE' ? ' · Sanctions déjà encaissées' : sanctionFilterMode === 'A_PRELEVER' ? ' · En cours d\'encaissement' : '';
-      
-      generateSanctionsPdf(
-        dynamicReportTitle,
-        monthlySanctionsData,
-        companySettings,
-        `Période mensuelle : ${selectedMonth}${depInfo}${encaissementInfo} · Siège de Goma, Commune de Karisimbi · Dossiers : ${monthlySanctionsData.length}`
-      );
-      return;
+  // Le PDF reprend exactement l'aperçu affiché ci-dessous (en-tête, titre, bilan et tableau)
+  const previewRef = useRef<HTMLDivElement>(null);
+  const [exporting, setExporting] = useState(false);
+  const handleExportPdf = async () => {
+    if (!previewRef.current || exporting) return;
+    setExporting(true);
+    try {
+      await exportPreviewToPdf(previewRef.current, dynamicReportTitle);
+    } finally {
+      setExporting(false);
     }
-
-    if (!isDaily) {
-      const depInfo = selectedDepartment !== 'ALL' ? ` · Service : ${selectedDepartment}` : ' · Tous départements';
-      const statusInfo = selectedStatus !== 'ALL' ? ` · Filtre statut : ${selectedStatus}` : '';
-      generateMonthlyGridPdf(
-        selectedMonth,
-        monthlySynthesis,
-        companySettings,
-        `Carnet officiel de synthèse mensuelle (J1 à J${daysInMonth})${depInfo}${statusInfo} · Commune de Karisimbi, Goma`
-      );
-      return;
-    }
-
-    const filterStatusText = selectedStatus !== 'ALL' ? ` · Statut filtré : ${selectedStatus}` : '';
-    const filterDepText = selectedDepartment !== 'ALL' ? ` · Service : ${selectedDepartment}` : ' · Tous départements';
-
-    generateAttendancePdf(
-      dynamicReportTitle,
-      filteredAttendanceData,
-      companySettings,
-      `Période : ${selectedDate}${filterDepText}${filterStatusText} · Commune de Karisimbi, Goma`
-    );
   };
 
   return (
@@ -312,11 +271,12 @@ export const ReportsView: React.FC = () => {
         <div className="flex items-center gap-2.5">
           <button
             onClick={handleExportPdf}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-600 text-white hover:bg-rose-700 text-xs font-bold shadow-xs transition-colors"
+            disabled={exporting}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-600 text-white hover:bg-rose-700 text-xs font-bold shadow-xs transition-colors disabled:opacity-60"
             title="Télécharger le rapport officiel au format PDF"
           >
             <FileText className="w-4 h-4" />
-            <span>Télécharger PDF</span>
+            <span>{exporting ? 'Préparation du PDF…' : 'Télécharger PDF'}</span>
           </button>
         </div>
       </div>
@@ -460,7 +420,7 @@ export const ReportsView: React.FC = () => {
             </select>
           </div>
 
-          {/* 4. Filter for Status in Attendance, or Encaissement in Sanctions */}
+          {/* 4. Filtre par statut (présences uniquement) */}
           {activeTab === 'ATTENDANCE' ? (
             <div>
               <label className="block text-slate-500 font-bold mb-1">
@@ -477,27 +437,12 @@ export const ReportsView: React.FC = () => {
                 <option value="ABSENT">🔴 Absent (A)</option>
               </select>
             </div>
-          ) : (
-            <div>
-              <label className="block text-slate-500 font-bold mb-1">
-                Filtre Sanction / Encaissement
-              </label>
-              <select
-                value={sanctionFilterMode}
-                onChange={(e) => setSanctionFilterMode(e.target.value as any)}
-                className="w-full px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200 font-bold text-slate-900 outline-none cursor-pointer"
-              >
-                <option value="ALL">📋 Toutes les sanctions à écoper</option>
-                <option value="ENCAISSEE">🟢 Déjà encaissée / Validée</option>
-                <option value="A_PRELEVER">⏳ En cours d'encaissement (À prélever)</option>
-              </select>
-            </div>
-          )}
+          ) : null}
         </div>
       </div>
 
       {/* DOCUMENT PREVIEW CARD (A4 Print Preview Layout) */}
-      <div className="glass-card rounded-2xl p-6 sm:p-8 space-y-6 bg-white shadow-md">
+      <div ref={previewRef} className="glass-card rounded-2xl p-6 sm:p-8 space-y-6 bg-white shadow-md">
         {/* En-tête officiel PREMIDIS SARL */}
         <div className="-mx-2 sm:-mx-4 rounded-xl overflow-hidden bg-white">
           <Letterhead />
@@ -524,7 +469,6 @@ export const ReportsView: React.FC = () => {
           <p className="text-xs text-slate-500">
             Période : {activeTab === 'SANCTIONS' || !isDaily ? selectedMonth : selectedDate} · Service : {selectedDepartment === 'ALL' ? 'Tous départements' : selectedDepartment}
             {activeTab === 'ATTENDANCE' && selectedStatus !== 'ALL' && ` · Statut : ${selectedStatus}`}
-            {activeTab === 'SANCTIONS' && sanctionFilterMode !== 'ALL' && ` · Filtre : ${sanctionFilterMode === 'ENCAISSEE' ? 'Déjà encaissées' : 'À prélever'}`}
           </p>
         </div>
 
@@ -534,14 +478,8 @@ export const ReportsView: React.FC = () => {
             <span className="text-rose-900 font-extrabold">
               Dossiers à sanctionner : {monthlySanctionsData.length}
             </span>
-            <span className="text-emerald-700">
-              Déjà encaissées / prélevées : {monthlySanctionsData.filter(s => s.status === 'APPROUVEE').length} ({monthlySanctionsData.filter(s => s.status === 'APPROUVEE').reduce((a, b) => a + b.deductionAmount, 0)} USD)
-            </span>
-            <span className="text-amber-700">
-              En attente d'encaissement : {monthlySanctionsData.filter(s => s.status === 'EN_EXAMEN').length} ({monthlySanctionsData.filter(s => s.status === 'EN_EXAMEN').reduce((a, b) => a + b.deductionAmount, 0)} USD)
-            </span>
             <span className="text-slate-700">
-              Total retenues : {monthlySanctionsData.reduce((a, b) => a + b.deductionAmount, 0)} USD
+              Sommes retirables : {monthlySanctionsData.reduce((a, b) => a + b.deductionAmount, 0)} USD
             </span>
           </div>
         )}
@@ -577,17 +515,14 @@ export const ReportsView: React.FC = () => {
                   <th className="py-2.5 px-3 text-center">Absences</th>
                   <th className="py-2.5 px-3">Sanction Statutaire</th>
                   <th className="py-2.5 px-3 text-center">Somme Retirable</th>
-                  <th className="py-2.5 px-3 text-center">Statut / Encaissement</th>
                   <th className="py-2.5 px-3">Observations / Visa</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 font-medium">
                 {monthlySanctionsData.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="py-10 text-center text-slate-400">
-                      {sanctionFilterMode === 'ENCAISSEE' 
-                        ? `Aucune sanction déjà encaissée pour le mois de ${selectedMonth}.`
-                        : `Aucun manquement ni dossier disciplinaire pour le mois de ${selectedMonth}.`}
+                    <td colSpan={9} className="py-10 text-center text-slate-400">
+                      {`Aucun manquement ni dossier disciplinaire pour le mois de ${selectedMonth}.`}
                     </td>
                   </tr>
                 ) : (
@@ -608,35 +543,12 @@ export const ReportsView: React.FC = () => {
                       </td>
                       <td className="py-2.5 px-3 text-center font-mono font-bold">
                         {s.deductionAmount > 0 ? (
-                          <span className={`px-2 py-0.5 rounded ${
-                            s.status === 'APPROUVEE'
-                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-300 font-black'
-                              : 'bg-rose-50 text-rose-700 border border-rose-200'
-                          }`}>
+                          <span className="px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200">
                             -{s.deductionAmount} {s.currency}
                           </span>
                         ) : (
                           <span className="text-slate-400">0 USD</span>
                         )}
-                      </td>
-                      <td className="py-2.5 px-3 text-center">
-                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded text-[10px] font-bold ${
-                          s.status === 'APPROUVEE' && s.deductionAmount > 0 
-                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' 
-                            : s.status === 'APPROUVEE' 
-                            ? 'bg-blue-100 text-blue-800 border border-blue-300' 
-                            : s.status === 'REJETEE' 
-                            ? 'bg-slate-100 text-slate-700 border border-slate-300' 
-                            : 'bg-amber-100 text-amber-800 border border-amber-300'
-                        }`}>
-                          {s.status === 'APPROUVEE' && s.deductionAmount > 0 
-                            ? '✅ Encaissée sur paie' 
-                            : s.status === 'APPROUVEE' 
-                            ? '✅ Sanction notifiée' 
-                            : s.status === 'REJETEE' 
-                            ? '❌ Rejetée' 
-                            : '⏳ À prélever (En examen)'}
-                        </span>
                       </td>
                       <td className="py-2.5 px-3 text-slate-500 text-[11px] truncate max-w-[150px]">
                         {s.decisionMotif || (s.decisionDate ? `Visé le ${s.decisionDate}` : 'En attente Direction')}
@@ -786,7 +698,7 @@ export const ReportsView: React.FC = () => {
                     </td>
                   </tr>
                 ) : (
-                  filteredAttendanceData.slice(0, 25).map((r, i) => (
+                  filteredAttendanceData.map((r, i) => (
                     <tr key={r.id}>
                       <td className="py-2 px-3 text-slate-400 font-mono">{i + 1}</td>
                       <td className="py-2 px-3 font-mono font-bold text-brand">{r.employeeId}</td>
@@ -809,39 +721,6 @@ export const ReportsView: React.FC = () => {
               </tbody>
             </table>
           )}
-        </div>
-
-        {activeTab === 'ATTENDANCE' && isDaily && filteredAttendanceData.length > 25 && (
-          <p className="text-center text-xs text-slate-400 italic">
-            Affichage des 25 premières lignes (le fichier PDF complet contiendra l'intégralité des {filteredAttendanceData.length} lignes).
-          </p>
-        )}
-
-        {/* Signature & Cachet Blocks */}
-        <div className="pt-8 mt-6 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-3 gap-6 text-center text-xs">
-          <div>
-            <p className="font-bold text-slate-800">Pour le Secrétariat & Contrôle</p>
-            <p className="text-[11px] text-slate-400 mt-0.5">Vérification physique des registres</p>
-            <div className="h-16 border-b border-dashed border-slate-300 mt-2 flex items-end justify-center pb-1 text-slate-400 italic text-[10px]">
-              Signature de l'opérateur
-            </div>
-          </div>
-
-          <div>
-            <p className="font-bold text-slate-800">Le Responsable RH</p>
-            <p className="text-[11px] text-slate-400 mt-0.5">Examen des justifications & manquements</p>
-            <div className="h-16 border-b border-dashed border-slate-300 mt-2 flex items-end justify-center pb-1 text-slate-400 italic text-[10px]">
-              Signature & Cachet RH
-            </div>
-          </div>
-
-          <div>
-            <p className="font-bold text-slate-800">Pour la Direction Générale</p>
-            <p className="text-[11px] text-slate-400 mt-0.5">PREMIDIS SARL – Siège de Goma</p>
-            <div className="h-16 border-b border-dashed border-slate-300 mt-2 flex items-end justify-center pb-1 text-slate-400 italic text-[10px]">
-              Signature & Sceau Officiel
-            </div>
-          </div>
         </div>
       </div>
     </div>
