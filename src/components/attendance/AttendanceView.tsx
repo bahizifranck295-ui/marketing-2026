@@ -1,4 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
+import { ReportsView } from '../reports/ReportsView';
+import { exportPreviewToPdf } from '../../utils/previewPdf';
 import { useApp } from '../../context/AppContext';
 import { EmployeeAvatar } from '../common/EmployeeAvatar';
 import { EmployeeCarnet } from './EmployeeCarnet';
@@ -124,26 +126,15 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
     );
   };
 
-  const handleExportMonthlyExcel = () => {
-    const data = monthlySynthesis.map(row => {
-      const rowObj: any = {
-        'N°': row.number,
-        Matricule: row.employee.matricule,
-        'Nom & Postnom': `${row.employee.nom} ${row.employee.postnom} ${row.employee.prenom}`,
-        Département: row.employee.departement
-      };
-      for (let day = 1; day <= 31; day++) {
-        const rec = row.days[day];
-        rowObj[`J${day}`] = rec ? rec.status.charAt(0) : '–';
-      }
-      rowObj['Total Présents (P)'] = row.totalP;
-      rowObj['Total Retards (R)'] = row.totalR;
-      rowObj['Total Absents (A)'] = row.totalA;
-      rowObj['Total Retard (min)'] = row.totalLateMin;
-      return rowObj;
-    });
-    exportToExcel(data, `Synthese_Mensuelle_${selectedMonth}`, 'Synthese_Mensuelle');
-  };
+  // Même document que Rapports › Mois (en-tête officiel, bilan, grille J1-J31), préparé hors écran puis exporté
+  const [exportingMonthly, setExportingMonthly] = useState(false);
+  const handleMonthlyDocumentReady = useCallback(async (el: HTMLDivElement, title: string) => {
+    try {
+      await exportPreviewToPdf(el, title);
+    } finally {
+      setExportingMonthly(false);
+    }
+  }, []);
 
   if (carnetEmployee) {
     return <EmployeeCarnet matricule={carnetEmployee} onClose={() => openEmployeeCarnet(null)} onOpenCorrectModal={onOpenCorrectModal} />;
@@ -271,12 +262,13 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
             </>
           ) : (
             <button
-              onClick={handleExportMonthlyExcel}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 font-semibold shadow-xs transition-colors"
-              title="Exporter la feuille de synthèse mensuelle J1-J31 en Excel"
+              onClick={() => setExportingMonthly(true)}
+              disabled={exportingMonthly}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-rose-600 text-white hover:bg-rose-700 font-semibold shadow-xs transition-colors disabled:opacity-60"
+              title="Exporter la feuille de synthèse mensuelle J1-J31 en PDF, avec l'en-tête officiel PREMIDIS SARL"
             >
-              <Download className="w-3.5 h-3.5" />
-              <span>Exporter Grille Mensuelle Excel</span>
+              <FileText className="w-3.5 h-3.5" />
+              <span>{exportingMonthly ? 'Préparation du PDF…' : 'Exporter Grille Mensuelle PDF'}</span>
             </button>
           )}
         </div>
@@ -541,6 +533,14 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+      {exportingMonthly && (
+        <div aria-hidden style={{ position: 'fixed', left: -20000, top: 0, width: 1280, pointerEvents: 'none' }}>
+          <ReportsView
+            preset={{ period: 'MOIS', month: selectedMonth, department: selectedDepartment, status: selectedStatus }}
+            onDocumentReady={handleMonthlyDocumentReady}
+          />
         </div>
       )}
     </div>

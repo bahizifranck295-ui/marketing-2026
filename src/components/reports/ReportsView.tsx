@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { exportPreviewToPdf } from '../../utils/previewPdf';
 import { useApp } from '../../context/AppContext';
 import { EmployeeAvatar } from '../common/EmployeeAvatar';
@@ -11,21 +11,34 @@ import type { SanctionPdfRow, MonthlyGridRow } from '../../utils/exportUtils';
 import { Letterhead } from '../common/Letterhead';
 import { StatusBadge, CodeBadge } from '../common/Badge';
 
-export const ReportsView: React.FC = () => {
+/** Document prérempli, exporté depuis un autre écran (ex. le carnet mensuel) sans quitter cet écran */
+export interface ReportPreset {
+  period: 'JOUR' | 'MOIS';
+  month?: string;
+  date?: string;
+  department?: string;
+  status?: 'ALL' | AttendanceStatus;
+}
+
+export const ReportsView: React.FC<{
+  preset?: ReportPreset;
+  /** Appelé une fois le document affiché : élément de l'aperçu et titre du rapport */
+  onDocumentReady?: (el: HTMLDivElement, title: string) => void;
+}> = ({ preset, onDocumentReady }) => {
   const { attendanceRecords, employees, departments, companySettings, sanctionCases, workingDate, reportTab, reportMonth } = useApp();
 
   // Tab: 'ATTENDANCE' (Rapports de présence) vs 'SANCTIONS' (Sanctions disciplinaires mensuelles)
-  const [activeTab, setActiveTab] = useState<'ATTENDANCE' | 'SANCTIONS'>(reportTab);
+  const [activeTab, setActiveTab] = useState<'ATTENDANCE' | 'SANCTIONS'>(preset ? 'ATTENDANCE' : reportTab);
   
   // Period mode for attendance: 'JOUR' or 'MOIS'
-  const [periodType, setPeriodType] = useState<'JOUR' | 'MOIS'>('JOUR');
+  const [periodType, setPeriodType] = useState<'JOUR' | 'MOIS'>(preset?.period ?? 'JOUR');
   
   // Filters
-  const [selectedDate, setSelectedDate] = useState(workingDate);
-  const [selectedMonth, setSelectedMonth] = useState(reportMonth ?? workingDate.slice(0, 7));
-  const [selectedDepartment, setSelectedDepartment] = useState('ALL');
+  const [selectedDate, setSelectedDate] = useState(preset?.date ?? workingDate);
+  const [selectedMonth, setSelectedMonth] = useState(preset?.month ?? reportMonth ?? workingDate.slice(0, 7));
+  const [selectedDepartment, setSelectedDepartment] = useState(preset?.department ?? 'ALL');
   const [selectedEmployeeId, setSelectedEmployeeId] = useState('ALL');
-  const [selectedStatus, setSelectedStatus] = useState<'ALL' | AttendanceStatus>('ALL');
+  const [selectedStatus, setSelectedStatus] = useState<'ALL' | AttendanceStatus>(preset?.status ?? 'ALL');
 
   const isDaily = periodType === 'JOUR';
 
@@ -244,6 +257,12 @@ export const ReportsView: React.FC = () => {
   // Le PDF reprend exactement l'aperçu affiché ci-dessous (en-tête, titre, bilan et tableau)
   const previewRef = useRef<HTMLDivElement>(null);
   const [exporting, setExporting] = useState(false);
+  const readyNotified = useRef(false);
+  useEffect(() => {
+    if (!onDocumentReady || readyNotified.current || !previewRef.current) return;
+    readyNotified.current = true;
+    onDocumentReady(previewRef.current, dynamicReportTitle);
+  });
   const handleExportPdf = async () => {
     if (!previewRef.current || exporting) return;
     setExporting(true);
