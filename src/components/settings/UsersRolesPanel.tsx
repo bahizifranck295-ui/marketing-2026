@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
+import { hashPassword } from '../../utils/password';
 import { useApp } from '../../context/AppContext';
 import { AppModule, PermissionAction, User } from '../../types';
 import { APP_MODULES, PERMISSION_ACTIONS, emptyPermissions } from '../../data/permissions';
 import { UserPlus, ShieldPlus, Pencil, Trash2, Check, X, Lock, Power, LogIn, Users, KeyRound } from 'lucide-react';
 
-type UserForm = { name: string; email: string; department: string; role: string };
-const EMPTY_FORM: UserForm = { name: '', email: '', department: '', role: 'SECRETAIRE' };
+type UserForm = { name: string; email: string; department: string; role: string; password: string };
+const EMPTY_FORM: UserForm = { name: '', email: '', department: '', role: 'SECRETAIRE', password: '' };
 
 const inputCls = 'w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 outline-none';
 
@@ -25,17 +26,25 @@ export const UsersRolesPanel: React.FC = () => {
   const [confirmDeleteUser, setConfirmDeleteUser] = useState<string | null>(null);
 
   const openCreate = () => { setForm({ ...EMPTY_FORM, role: roles[roles.length - 1]?.id || 'SECRETAIRE' }); setEditingId(null); setFormError(''); };
-  const openEdit = (u: User) => { setForm({ name: u.name, email: u.email, department: u.department || '', role: u.role }); setEditingId(u.id); setFormError(''); };
+  const openEdit = (u: User) => { setForm({ name: u.name, email: u.email, department: u.department || '', role: u.role, password: '' }); setEditingId(u.id); setFormError(''); };
 
-  const submitUser = (e: React.FormEvent) => {
+  const submitUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form) return;
     const email = form.email.trim().toLowerCase();
     if (!form.name.trim() || !email) { setFormError('Le nom et l\'adresse e-mail sont obligatoires.'); return; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setFormError('Adresse e-mail invalide.'); return; }
     if (allUsers.some(u => u.email.toLowerCase() === email && u.id !== editingId)) { setFormError('Un compte utilise déjà cette adresse e-mail.'); return; }
-    const data = { name: form.name.trim(), email, department: form.department, role: form.role };
-    if (editingId) updateUser(editingId, data); else addUser({ ...data, active: true });
+    const editing = editingId ? allUsers.find(u => u.id === editingId) : undefined;
+    if (!editing && form.password.length < 6) { setFormError('Choisissez un mot de passe d\'au moins 6 caractères.'); return; }
+    if (editing && form.password && form.password.length < 6) { setFormError('Le mot de passe doit contenir au moins 6 caractères.'); return; }
+    // L'empreinte du mot de passe dépend de l'e-mail : un nouvel e-mail demande de ressaisir le mot de passe
+    if (editing?.passwordHash && editing.email.toLowerCase() !== email && !form.password) {
+      setFormError('L\'e-mail a changé : saisissez aussi un nouveau mot de passe.'); return;
+    }
+    const data: Partial<User> = { name: form.name.trim(), email, department: form.department, role: form.role };
+    if (form.password) data.passwordHash = await hashPassword(email, form.password);
+    if (editingId) updateUser(editingId, data); else addUser({ ...(data as Omit<User, 'id'>), active: true });
     setForm(null); setEditingId(null);
   };
 
@@ -106,8 +115,8 @@ export const UsersRolesPanel: React.FC = () => {
           )}
 
           {form && (
-            <form onSubmit={submitUser} className="p-4 rounded-xl border border-brand/30 bg-brand/5 grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
-              <div className="md:col-span-4 font-bold text-slate-900">
+            <form onSubmit={submitUser} className="p-4 rounded-xl border border-brand/30 bg-brand/5 grid grid-cols-1 md:grid-cols-5 gap-3 text-xs">
+              <div className="md:col-span-5 font-bold text-slate-900">
                 {editingId ? 'Modifier le compte' : 'Créer un compte utilisateur'}
               </div>
               <label className="space-y-1"><span className="font-semibold text-slate-500">Nom complet</span>
@@ -122,14 +131,18 @@ export const UsersRolesPanel: React.FC = () => {
                   {departments.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}
                 </select>
               </label>
+              <label className="space-y-1"><span className="font-semibold text-slate-500">{editingId ? 'Nouveau mot de passe (facultatif)' : 'Mot de passe'}</span>
+                <input id="usr-password" type="password" autoComplete="new-password" className={inputCls} value={form.password}
+                  onChange={e => setForm({ ...form, password: e.target.value })} placeholder={editingId ? 'Laisser vide pour ne pas changer' : '6 caractères minimum'} />
+              </label>
               <label className="space-y-1"><span className="font-semibold text-slate-500">Rôle</span>
                 <select id="usr-role" className={inputCls} value={form.role} onChange={e => setForm({ ...form, role: e.target.value })}
                   disabled={editingId === currentUser?.id}>
                   {roles.map(r => <option key={r.id} value={r.id}>{r.label}</option>)}
                 </select>
               </label>
-              {formError && <p className="md:col-span-4 text-rose-600 font-semibold">{formError}</p>}
-              <div className="md:col-span-4 flex gap-2">
+              {formError && <p className="md:col-span-5 text-rose-600 font-semibold">{formError}</p>}
+              <div className="md:col-span-5 flex gap-2">
                 <button type="submit" className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-brand text-white font-semibold">
                   <Check className="w-3.5 h-3.5" /> {editingId ? 'Enregistrer' : 'Créer le compte'}
                 </button>
@@ -160,6 +173,9 @@ export const UsersRolesPanel: React.FC = () => {
                       <td className="px-4 py-3">
                         <p className="font-bold text-slate-900">{u.name} {isSelf && <span className="text-[10px] text-brand">(vous)</span>}</p>
                         <p className="text-[11px] text-slate-500 font-mono">{u.email}</p>
+                        {!u.passwordHash && (
+                          <p className="text-[10px] font-semibold text-amber-700">Mot de passe initial : à changer (Modifier)</p>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-slate-600">{u.department || '—'}</td>
                       <td className="px-4 py-3">

@@ -23,6 +23,7 @@ export interface User {
   avatar?: string;
   department?: string;
   active?: boolean; // false = compte désactivé, connexion refusée
+  passwordHash?: string; // empreinte SHA-256 ; absente = mot de passe initial
 }
 
 export type AdministrativeStatus = 'ACTIF' | 'INACTIF' | 'SUSPENDU';

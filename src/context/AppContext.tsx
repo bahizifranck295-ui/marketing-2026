@@ -123,7 +123,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch { /* idem */ }
     return INITIAL_ROLES;
   });
-  const [currentUser, setCurrentUser] = useState<User | null>(() => allUsers[0] || null); // default admin
+  // Aucune session gardée : à chaque ouverture, l'introduction puis la page de connexion
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [currentView, setCurrentView] = useState<AppView>('dashboard');
   const [carnetEmployee, setCarnetEmployee] = useState<string | null>(null);
   const openEmployeeCarnet = (matricule: string | null) => {

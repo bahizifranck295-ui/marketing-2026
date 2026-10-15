@@ -405,7 +405,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
 
         {/* Card 2: Top 5 des retardataires du mois (jusqu'au jour affiché) */}
-        <div className="hero-surface p-5 rounded-2xl text-white flex flex-col shadow-lg relative overflow-hidden">
+        <div className="hero-surface p-5 rounded-2xl text-white flex flex-col self-start shadow-lg relative overflow-hidden">
           <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none" />
 
           <div className="flex items-center justify-between mb-1 relative">
@@ -428,7 +428,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               Aucun retard enregistré ce mois-ci.
             </p>
           ) : (
-            <ol className="flex-1 space-y-1.5 relative">
+            <ol className="space-y-1.5 relative">
               {topLate.map((t, i) => (
                 <li key={t.emp.matricule} className="flex items-center gap-2.5 rounded-xl bg-white/10 ring-1 ring-white/15 px-2.5 py-1.5">
                   <span className="w-4 text-center text-xs font-black text-white/70">{i + 1}</span>
