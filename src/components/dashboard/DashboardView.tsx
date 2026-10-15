@@ -31,7 +31,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 }) => {
   const { 
     attendanceRecords, employees, departments, 
-    zktecoConfig, syncZKTecoNow, companySettings, setCurrentView, workingDate, openEmployeeCarnet, sanctionRules 
+    zktecoConfig, syncZKTecoNow, companySettings, setCurrentView, workingDate, openEmployeeCarnet, sanctionRules, openReport 
   } = useApp();
 
   const [selectedDate, setSelectedDate] = useState(workingDate);
@@ -346,8 +346,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   {sanctionReached.total > 5 ? ' · les 5 cas les plus lourds' : ''}
                 </p>
               </div>
-              <button onClick={() => setCurrentView('sanctions')} className="text-xs font-bold text-brand hover:underline">
-                Gérer les sanctions →
+              <button onClick={() => openReport('SANCTIONS', selectedDate.slice(0, 7))} className="text-xs font-bold text-brand hover:underline">
+                Voir le rapport des sanctions →
               </button>
             </div>
 

@@ -28,6 +28,11 @@ interface AppContextType {
   /** Carnet de présence d'un agent ouvert depuis le tableau de bord (matricule), sinon null */
   carnetEmployee: string | null;
   openEmployeeCarnet: (matricule: string | null) => void;
+  /** Onglet ouvert à l'arrivée dans Rapports (le menu ouvre le relevé des présences) */
+  reportTab: 'ATTENDANCE' | 'SANCTIONS';
+  openReport: (tab: 'ATTENDANCE' | 'SANCTIONS', month?: string) => void;
+  /** Mois proposé à l'arrivée dans Rapports (AAAA-MM) */
+  reportMonth: string | null;
   currentUser: User | null;
   setCurrentUser: (user: User | null) => void;
   switchUserRole: (role: User['role']) => void;
@@ -131,8 +136,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCarnetEmployee(matricule);
     if (matricule) setCurrentView('attendance');
   };
-  // Changer d'écran depuis le menu referme le carnet individuel
-  const goToView = (view: AppView) => { setCarnetEmployee(null); setCurrentView(view); };
+  const [reportTab, setReportTab] = useState<'ATTENDANCE' | 'SANCTIONS'>('ATTENDANCE');
+  const [reportMonth, setReportMonth] = useState<string | null>(null);
+  const openReport = (tab: 'ATTENDANCE' | 'SANCTIONS', month?: string) => {
+    setCarnetEmployee(null);
+    setReportTab(tab);
+    setReportMonth(month ?? null);
+    setCurrentView('reports');
+  };
+  // Changer d'écran depuis le menu referme le carnet individuel et rouvre les rapports sur les présences
+  const goToView = (view: AppView) => { setCarnetEmployee(null); setReportTab('ATTENDANCE'); setReportMonth(null); setCurrentView(view); };
 
   useEffect(() => {
     try { localStorage.setItem('premidis_users', JSON.stringify(allUsers)); } catch { /* stockage indisponible */ }
@@ -752,6 +765,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setCurrentView: goToView,
       carnetEmployee,
       openEmployeeCarnet,
+      reportTab,
+      reportMonth,
+      openReport,
       currentUser,
       setCurrentUser,
       switchUserRole,

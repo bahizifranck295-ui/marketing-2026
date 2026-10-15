@@ -12,17 +12,17 @@ import { Letterhead } from '../common/Letterhead';
 import { StatusBadge, CodeBadge } from '../common/Badge';
 
 export const ReportsView: React.FC = () => {
-  const { attendanceRecords, employees, departments, companySettings, sanctionCases, workingDate } = useApp();
+  const { attendanceRecords, employees, departments, companySettings, sanctionCases, workingDate, reportTab, reportMonth } = useApp();
 
   // Tab: 'ATTENDANCE' (Rapports de présence) vs 'SANCTIONS' (Sanctions disciplinaires mensuelles)
-  const [activeTab, setActiveTab] = useState<'ATTENDANCE' | 'SANCTIONS'>('ATTENDANCE');
+  const [activeTab, setActiveTab] = useState<'ATTENDANCE' | 'SANCTIONS'>(reportTab);
   
   // Period mode for attendance: 'JOUR' or 'MOIS'
   const [periodType, setPeriodType] = useState<'JOUR' | 'MOIS'>('JOUR');
   
   // Filters
   const [selectedDate, setSelectedDate] = useState(workingDate);
-  const [selectedMonth, setSelectedMonth] = useState('2026-10');
+  const [selectedMonth, setSelectedMonth] = useState(reportMonth ?? workingDate.slice(0, 7));
   const [selectedDepartment, setSelectedDepartment] = useState('ALL');
   const [selectedEmployeeId, setSelectedEmployeeId] = useState('ALL');
   const [selectedStatus, setSelectedStatus] = useState<'ALL' | AttendanceStatus>('ALL');
