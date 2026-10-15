@@ -21,7 +21,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 }) => {
   const { 
     attendanceRecords, employees, departments, 
-    zktecoConfig, syncZKTecoNow, companySettings, setCurrentView, workingDate 
+    zktecoConfig, syncZKTecoNow, companySettings, setCurrentView, workingDate, openEmployeeCarnet 
   } = useApp();
 
   const [selectedDate, setSelectedDate] = useState(workingDate);
@@ -60,6 +60,30 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       return matchStatus && matchDep && matchSearch;
     });
   }, [dayRecords, statusFilter, selectedDepartment, searchQuery]);
+
+  // Top 5 des retardataires : du 1er du mois au jour affiché, classés par minutes de retard cumulées
+  const topLate = useMemo(() => {
+    const monthStart = `${selectedDate.slice(0, 7)}-01`;
+    const recs = attendanceRecords.filter(r => r.date >= monthStart && r.date <= selectedDate);
+    return employees
+      .map(emp => {
+        const mine = recs.filter(r => r.employeeId === emp.matricule);
+        const late = mine.filter(r => r.status === 'RETARD');
+        return {
+          emp,
+          lateCount: late.length,
+          lateMinutes: late.reduce((n, r) => n + r.lateMinutes, 0),
+          absences: mine.filter(r => r.status === 'ABSENT').length,
+        };
+      })
+      .filter(t => t.lateCount > 0)
+      .sort((a, b) => b.lateMinutes - a.lateMinutes || b.lateCount - a.lateCount || b.absences - a.absences)
+      .slice(0, 5);
+  }, [attendanceRecords, employees, selectedDate]);
+  const topLateLabel = useMemo(() => {
+    const label = new Date(`${selectedDate}T12:00:00`).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+    return label.charAt(0).toUpperCase() + label.slice(1);
+  }, [selectedDate]);
 
   // Les 7 jours qui se terminent au jour affiché (le dernier jour importé depuis la pointeuse)
   const historyTrends = useMemo(() => {
@@ -273,39 +297,60 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
 
-        {/* Card 2: Attendance Insight Card (Blue Glass Gradient Card as in Image) */}
-        <div className="hero-surface p-5 rounded-2xl text-white flex flex-col justify-between shadow-lg relative overflow-hidden">
+        {/* Card 2: Top 5 des retardataires du mois (jusqu'au jour affiché) */}
+        <div className="hero-surface p-5 rounded-2xl text-white flex flex-col shadow-lg relative overflow-hidden">
           <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none" />
 
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-white" />
-                <span className="text-xs font-bold uppercase tracking-wider text-white/80">
-                  Analyse des Risques
-                </span>
-              </div>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/20 text-white">
-                Rapport RH
+          <div className="flex items-center justify-between mb-1 relative">
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-white" />
+              <span className="text-xs font-bold uppercase tracking-wider text-white/90">
+                Top 5 des retardataires
               </span>
             </div>
-
-            <div className="mb-4">
-              <span className="text-4xl font-black tracking-tight">12%</span>
-              <p className="text-xs text-white/80 font-medium mt-1">
-                Risque de retards cumulés (Prochains 7 jours)
-              </p>
-            </div>
-
-            <p className="text-xs text-white/85 leading-relaxed">
-              Le service Logistique et Usine enregistre la majorité des pointages tardifs les vendredis et lundis matin en raison des embouteillages vers la route de l'Aéroport.
-            </p>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/20 text-white">
+              {topLateLabel}
+            </span>
           </div>
+          <p className="text-[11px] text-white/75 mb-3 relative">
+            Classés par minutes de retard cumulées · absences du mois · cliquez sur un nom pour ouvrir son carnet
+          </p>
 
-          <div className="mt-6 pt-4 border-t border-white/20 flex items-center justify-between">
-            <div className="text-[11px] text-white/80">
-              <span>{employees.length} collaborateurs suivis</span>
-            </div>
+          {topLate.length === 0 ? (
+            <p className="flex-1 flex items-center justify-center text-xs text-white/80 text-center py-6 relative">
+              Aucun retard enregistré ce mois-ci.
+            </p>
+          ) : (
+            <ol className="flex-1 space-y-1.5 relative">
+              {topLate.map((t, i) => (
+                <li key={t.emp.matricule} className="flex items-center gap-2.5 rounded-xl bg-white/10 ring-1 ring-white/15 px-2.5 py-1.5">
+                  <span className="w-4 text-center text-xs font-black text-white/70">{i + 1}</span>
+                  <span className="shrink-0 rounded-full bg-white ring-2 ring-white/40">
+                    <EmployeeAvatar matricule={t.emp.matricule} size={32} />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <button
+                      onClick={() => openEmployeeCarnet(t.emp.matricule)}
+                      className="block max-w-full text-left text-xs font-bold leading-snug text-white hover:underline underline-offset-2"
+                      title={`Ouvrir le carnet de présence de ${t.emp.nom} ${t.emp.postnom} ${t.emp.prenom}`}
+                    >
+                      {t.emp.nom} {t.emp.postnom} {t.emp.prenom}
+                    </button>
+                    <p className="truncate text-[10px] text-white/75">{t.emp.departement} · {t.emp.poste}</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-xs font-black text-white">{t.lateMinutes} min</p>
+                    <p className="text-[10px] text-white/80">
+                      {t.lateCount} retard{t.lateCount > 1 ? 's' : ''} · {t.absences} abs.
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          )}
+
+          <div className="mt-3 pt-3 border-t border-white/20 flex items-center justify-between relative">
+            <span className="text-[11px] text-white/80">{employees.length} collaborateurs suivis</span>
             <button
               onClick={() => setCurrentView('sanctions')}
               className="px-3 py-1 rounded-lg bg-white/15 hover:bg-white/25 ring-1 ring-white/25 text-white text-xs font-bold transition-colors"

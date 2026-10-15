@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
 import { EmployeeAvatar } from '../common/EmployeeAvatar';
+import { EmployeeCarnet } from './EmployeeCarnet';
 import { AttendanceRecord, AttendanceStatus } from '../../types';
 import { StatusBadge, CodeBadge } from '../common/Badge';
 import { 
@@ -18,7 +19,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
   onOpenQuickPunch,
   onOpenCorrectModal
 }) => {
-  const { attendanceRecords, employees, departments, companySettings, workingDate } = useApp();
+  const { attendanceRecords, employees, departments, companySettings, workingDate, carnetEmployee, openEmployeeCarnet } = useApp();
 
   const [activeTab, setActiveTab] = useState<'DAILY' | 'MONTHLY_GRID'>('DAILY');
   const [selectedDate, setSelectedDate] = useState(workingDate);
@@ -143,6 +144,10 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
     });
     exportToExcel(data, `Synthese_Mensuelle_${selectedMonth}`, 'Synthese_Mensuelle');
   };
+
+  if (carnetEmployee) {
+    return <EmployeeCarnet matricule={carnetEmployee} onClose={() => openEmployeeCarnet(null)} onOpenCorrectModal={onOpenCorrectModal} />;
+  }
 
   return (
     <div className="space-y-6">

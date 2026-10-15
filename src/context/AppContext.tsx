@@ -25,6 +25,9 @@ interface AppContextType {
   setLanguage: (lang: AppLanguage) => void;
   currentView: AppView;
   setCurrentView: (view: AppView) => void;
+  /** Carnet de présence d'un agent ouvert depuis le tableau de bord (matricule), sinon null */
+  carnetEmployee: string | null;
+  openEmployeeCarnet: (matricule: string | null) => void;
   currentUser: User | null;
   setCurrentUser: (user: User | null) => void;
   switchUserRole: (role: User['role']) => void;
@@ -122,6 +125,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
   const [currentUser, setCurrentUser] = useState<User | null>(() => allUsers[0] || null); // default admin
   const [currentView, setCurrentView] = useState<AppView>('dashboard');
+  const [carnetEmployee, setCarnetEmployee] = useState<string | null>(null);
+  const openEmployeeCarnet = (matricule: string | null) => {
+    setCarnetEmployee(matricule);
+    if (matricule) setCurrentView('attendance');
+  };
+  // Changer d'écran depuis le menu referme le carnet individuel
+  const goToView = (view: AppView) => { setCarnetEmployee(null); setCurrentView(view); };
 
   useEffect(() => {
     try { localStorage.setItem('premidis_users', JSON.stringify(allUsers)); } catch { /* stockage indisponible */ }
@@ -215,7 +225,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>(() => {
     const saved = localStorage.getItem('premidis_attendance');
-    return saved ? JSON.parse(saved) : generateMockAttendance();
+    if (!saved) return generateMockAttendance();
+    // Anciennes données de démonstration : « 08:-4 » corrigé en « 07:56 »
+    const fix = (t: string | null) => {
+      const m = t?.match(/^(\d{2}):(-\d+)$/);
+      if (!m) return t;
+      const total = Number(m[1]) * 60 + Number(m[2]);
+      return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+    };
+    return (JSON.parse(saved) as AttendanceRecord[]).map(r => ({ ...r, actualCheckIn: fix(r.actualCheckIn), actualCheckOut: fix(r.actualCheckOut) }));
   });
 
   const [zktecoConfig, setZKTecoConfig] = useState<ZKTecoDeviceConfig>(() => {
@@ -730,7 +748,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       language,
       setLanguage,
       currentView,
-      setCurrentView,
+      setCurrentView: goToView,
+      carnetEmployee,
+      openEmployeeCarnet,
       currentUser,
       setCurrentUser,
       switchUserRole,

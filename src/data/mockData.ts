@@ -519,6 +519,12 @@ export function generateMockAttendance(): AttendanceRecord[] {
   // PRM-019 (Clovis) has lates
   // PRM-014 (Erick) has lates
   
+  // HH:MM à partir d'une heure et de minutes qui peuvent sortir de 0–59 (08:00 − 4 min → 07:56)
+  const clock = (h: number, m: number) => {
+    const t = h * 60 + m;
+    return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`;
+  };
+
   dates.forEach((date, dateIdx) => {
     employees.forEach((emp) => {
       const isToday = (date === '2026-10-11');
@@ -550,7 +556,7 @@ export function generateMockAttendance(): AttendanceRecord[] {
           notes = 'Embouteillage rond-point BDGL';
         } else {
           status = 'PRESENT';
-          actualCheckIn = `${String(expH).padStart(2, '0')}:${String(expM - 5).padStart(2, '0')}`;
+          actualCheckIn = clock(expH, expM - 5);
           actualCheckOut = '16:32';
         }
       } else if (emp.matricule === 'PRM-019') {
@@ -558,11 +564,11 @@ export function generateMockAttendance(): AttendanceRecord[] {
         if ([1, 4, 6, 9].includes(dateIdx)) {
           status = 'RETARD';
           lateMinutes = 22;
-          actualCheckIn = `${String(expH).padStart(2, '0')}:${String(expM + 22).padStart(2, '0')}`;
+          actualCheckIn = clock(expH, expM + 22);
           actualCheckOut = '16:02';
         } else {
           status = 'PRESENT';
-          actualCheckIn = `${String(expH).padStart(2, '0')}:${String(expM - 4).padStart(2, '0')}`;
+          actualCheckIn = clock(expH, expM - 4);
           actualCheckOut = '16:05';
         }
       } else if (emp.matricule === 'PRM-008') {
