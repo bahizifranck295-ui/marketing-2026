@@ -3,12 +3,8 @@ import { useApp } from '../../context/AppContext';
 import { EmployeeAvatar } from '../common/EmployeeAvatar';
 import { StatusBadge } from '../common/Badge';
 import { AttendanceRecord, SANCTION_LABELS } from '../../types';
-import { 
-  Users, CheckCircle2, Clock, AlertTriangle, XCircle, 
-  RefreshCw, Download, ArrowUpRight, ArrowDownRight, 
-  Sparkles, Calendar, Filter, ChevronRight, Fingerprint, Eye, Edit3, Search, FileText
-} from 'lucide-react';
-import { exportToExcel, generateAttendancePdf } from '../../utils/exportUtils';
+import { CheckCircle2, Clock, AlertTriangle, XCircle, ArrowUpRight, Calendar, ChevronRight, Edit3, Search, FileText } from 'lucide-react';
+import { generateAttendancePdf } from '../../utils/exportUtils';
 
 const SANCTION_LABEL: Record<string, string> = SANCTION_LABELS;
 /** Poids d'une règle : l'exclusion temporaire d'abord (et sa durée), puis la retenue, puis le niveau */
@@ -18,25 +14,19 @@ const weight = (r: { sanctionType: string; deductionAmount: number; exclusionDay
 const SANCTION_ORDER = ['AVERTISSEMENT_VERBAL', 'RETENUE_SALARIALE_PROPOSEE', 'EXCLUSION_TEMPORAIRE'];
 
 interface DashboardViewProps {
-  onOpenQuickPunch: () => void;
   onOpenCorrectModal: (record: AttendanceRecord) => void;
 }
 
-export const DashboardView: React.FC<DashboardViewProps> = ({ 
-  onOpenQuickPunch,
-  onOpenCorrectModal 
-}) => {
+export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenCorrectModal }) => {
   const { 
     attendanceRecords, employees, departments, 
-    zktecoConfig, syncZKTecoNow, companySettings, setCurrentView, workingDate, openEmployeeCarnet, sanctionRules, openReport 
+    setCurrentView, workingDate, openEmployeeCarnet, sanctionRules, openReport 
   } = useApp();
 
   const [selectedDate, setSelectedDate] = useState(workingDate);
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'PRESENT' | 'RETARD' | 'ABSENT'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState('ALL');
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [syncFeedback, setSyncFeedback] = useState<string | null>(null);
 
   // Filter records for selected date
   const dayRecords = useMemo(() => {
@@ -141,38 +131,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     });
   }, [attendanceRecords, selectedDate]);
 
-  const handleSync = async () => {
-    setIsSyncing(true);
-    setSyncFeedback(null);
-    try {
-      const res = await syncZKTecoNow();
-      setSyncFeedback(`Synchronisation réussie (${res.punchesImported} pointages)`);
-      setTimeout(() => setSyncFeedback(null), 4000);
-    } catch {
-      setSyncFeedback('Erreur de synchronisation');
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-
-  const handleQuickExportExcel = () => {
-    const exportData = filteredList.map(r => ({
-      Matricule: r.employeeId,
-      'Nom Complet': r.employeeName,
-      Département: r.department,
-      Date: r.date,
-      'Entrée Prévue': r.expectedCheckIn,
-      'Entrée Constatée': r.actualCheckIn || '–',
-      'Retard (min)': r.lateMinutes,
-      'Sortie Prévue': r.expectedCheckOut,
-      'Sortie Constatée': r.actualCheckOut || '–',
-      Statut: r.status,
-      Source: r.source,
-      Observations: r.notes || (r.isCorrected ? 'Corrigé manuellement' : '')
-    }));
-    exportToExcel(exportData, `Presences_PREMIDIS_${selectedDate}`);
-  };
-
   const handleQuickExportPdf = () => {
     const recordsToExport = filteredList.length > 0 ? filteredList : dayRecords;
     const filterInfo = statusFilter !== 'ALL' ? `Statut : ${statusFilter}` : 'Tous les statuts';
@@ -181,7 +139,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     generateAttendancePdf(
       `Relevé Quotidien des Pointages – ${selectedDate}`,
       recordsToExport,
-      companySettings,
       `${filterInfo} · ${depInfo} · Commune de Karisimbi, Goma · Effectif contrôlé : ${recordsToExport.length} agents`
     );
   };
@@ -195,7 +152,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             Tableau de Bord des Présences
           </h1>
           <p className="text-xs text-muted mt-1">
-            PREMIDIS SARL · Suivi biométrique en temps réel de l'effectif à Goma
+            PREMIDIS SARL · Présences importées chaque matin depuis la pointeuse (clé USB)
           </p>
         </div>
 
@@ -215,15 +172,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
       </div>
 
-      {syncFeedback && (
-        <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center justify-between animate-in fade-in">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-            <span>{syncFeedback}</span>
-          </div>
-          <button onClick={() => setSyncFeedback(null)} className="text-xs hover:underline">Fermer</button>
-        </div>
-      )}
 
       {/* Indicateurs du jour : tuiles en dégradé (même langage que PREMIDIS ERP), cliquables pour filtrer */}
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">

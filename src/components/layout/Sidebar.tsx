@@ -8,12 +8,12 @@ import { LOGO_ALT, LOGO_SRC } from '../../app/brand';
 
 // Menu latéral au format PREMIDIS ERP : en-tête logo, liens, carte utilisateur, réduction du menu.
 export const Sidebar: React.FC = () => {
-  const { currentView, setCurrentView, employees, attendanceRecords, sanctionCases, zktecoConfig, can, currentUser } = useApp();
+  const { currentView, setCurrentView, employees, attendanceRecords, sanctionCases, zktecoConfig, can, currentUser, workingDate } = useApp();
   const [collapsed, setCollapsed] = useState(false);
 
   // Compute live badges
-  const todayStr = '2026-10-11';
-  const todayRecords = attendanceRecords.filter(r => r.date === todayStr);
+  // Badge du jour affiché par défaut : le dernier jour importé depuis la pointeuse
+  const todayRecords = attendanceRecords.filter(r => r.date === workingDate);
   const todayLates = todayRecords.filter(r => r.status === 'RETARD').length;
   const pendingSanctions = sanctionCases.filter(s => s.status === 'EN_EXAMEN' || s.status === 'PROPOSEE').length;
 
@@ -99,16 +99,14 @@ export const Sidebar: React.FC = () => {
                 <span className="flex items-center gap-1.5 font-bold text-ink">
                   <Cpu className="w-3.5 h-3.5 text-brand" /> Biométrie ZKTeco
                 </span>
-                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" /> En ligne
-                </span>
+                <span className="text-[10px] font-semibold text-slate-500">Clé USB</span>
               </div>
               <p className="text-sidebar-muted leading-snug">
-                {zktecoConfig.model.replace(/\(.*?\)/, '').trim()} ({zktecoConfig.ipAddress})
+                {zktecoConfig.model.replace(/\(.*?\)/, '').trim()} · dernier import : {zktecoConfig.lastPunchImportedTime ? zktecoConfig.lastPunchImportedTime.slice(0, 16) : 'aucun'}
               </p>
               {can('settings') && (
                 <button onClick={() => setCurrentView('settings')} className="mt-1.5 font-semibold text-brand hover:underline">
-                  Gérer la pointeuse →
+                  Importer le fichier du jour →
                 </button>
               )}
             </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { Navbar } from './components/layout/Navbar';
 import { Sidebar } from './components/layout/Sidebar';
@@ -17,7 +17,6 @@ import { AttendanceRecord } from './types';
 function MainApp() {
   const { currentUser, currentView, setCurrentView, can } = useApp();
 
-  const [isQuickPunchOpen, setIsQuickPunchOpen] = useState(false);
   const [correctingRecord, setCorrectingRecord] = useState<AttendanceRecord | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
@@ -53,14 +52,12 @@ function MainApp() {
       <div className="flex-1 flex flex-col min-w-0 min-h-screen">
         {/* Barre d'outils : recherche, horloge, langue, thème, utilisateur */}
         <Navbar
-          onOpenQuickPunch={() => setIsQuickPunchOpen(true)}
           onOpenSearch={() => setIsSearchOpen(true)}
         />
 
         <main className="flex-1 px-4 pt-4 pb-28 lg:pb-8 lg:px-6 w-full max-w-[1400px] mx-auto">
           {currentView === 'dashboard' && (
             <DashboardView 
-              onOpenQuickPunch={() => setIsQuickPunchOpen(true)}
               onOpenCorrectModal={(rec) => setCorrectingRecord(rec)}
             />
           )}
@@ -71,7 +68,6 @@ function MainApp() {
 
           {currentView === 'attendance' && (
             <AttendanceView 
-              onOpenQuickPunch={() => setIsQuickPunchOpen(true)}
               onOpenCorrectModal={(rec) => setCorrectingRecord(rec)}
             />
           )}

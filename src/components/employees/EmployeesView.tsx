@@ -2,11 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
 import { EmployeeAvatar, resizePhoto } from '../common/EmployeeAvatar';
 import { Employee, AdministrativeStatus } from '../../types';
-import { 
-  Users, Plus, Search, Filter, Download, 
-  FileText, Edit2, Trash2, Eye, Phone, Mail, Clock, Calendar, CheckCircle, ShieldAlert, Camera
-} from 'lucide-react';
-import { exportToExcel, generateEmployeesPdf } from '../../utils/exportUtils';
+import { Plus, Search, FileText, Edit2, Trash2, Eye, Camera } from 'lucide-react';
+import { generateEmployeesPdf } from '../../utils/exportUtils';
 
 export const EmployeesView: React.FC = () => {
   const { employees, addEmployee, updateEmployee, deleteEmployee, departments, companySettings, attendanceRecords } = useApp();
@@ -124,26 +121,8 @@ export const EmployeesView: React.FC = () => {
     setIsAddModalOpen(false);
   };
 
-  const handleExportExcel = () => {
-    const data = filteredEmployees.map(e => ({
-      Matricule: e.matricule,
-      'Nom & Postnom': `${e.nom} ${e.postnom} ${e.prenom}`,
-      Département: e.departement,
-      Poste: e.poste,
-      'Date Embauche': e.dateEmbauche,
-      'Entrée Normale': e.heureEntreeNormale,
-      'Sortie Normale': e.heureSortieNormale,
-      'Tolérance (min)': e.toleranceMinutes,
-      'ID ZKTeco': e.zktecoBioId,
-      Téléphone: e.telephone,
-      Email: e.email,
-      'Statut Dossier': e.statutAdministratif
-    }));
-    exportToExcel(data, `Employes_PREMIDIS_${new Date().toISOString().substring(0, 10)}`);
-  };
-
   const handleExportPdf = () => {
-    generateEmployeesPdf(filteredEmployees, companySettings);
+    generateEmployeesPdf(filteredEmployees);
   };
 
   // Get selected employee's attendance stats

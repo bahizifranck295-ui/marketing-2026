@@ -2,55 +2,22 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { UsersRolesPanel } from './UsersRolesPanel';
 import { UsbImportPanel } from './UsbImportPanel';
-import { 
-  Settings, Cpu, Building2, Users, ShieldCheck, 
-  History, RefreshCw, CheckCircle2, AlertTriangle, 
-  Upload, Download, FileText, Wifi, Lock, Server, Trash2
-} from 'lucide-react';
+import { Cpu, Building2, Users, ShieldCheck, History } from 'lucide-react';
 
 export const SettingsView: React.FC = () => {
   const { 
     companySettings, updateCompanySettings,
-    departments, addDepartment, updateDepartment,
-    zktecoConfig, updateZKTecoConfig, testZKTecoConnection, syncZKTecoNow,
-    auditLogs, allUsers, switchUserRole, currentUser 
+    departments, addDepartment,
+    zktecoConfig, updateZKTecoConfig,
+    auditLogs
   } = useApp();
 
   const [activeTab, setActiveTab] = useState<'ZKTECO' | 'COMPANY' | 'DEPARTMENTS' | 'AUDIT' | 'USERS'>('ZKTECO');
-
-  // ZKTeco test state
-  const [testingConnection, setTestingConnection] = useState(false);
-  const [testResult, setTestResult] = useState<{ success: boolean; message: string; latencyMs: number } | null>(null);
-
-  // ZKTeco sync state
-  const [syncing, setSyncing] = useState(false);
-  const [syncResult, setSyncResult] = useState<string | null>(null);
 
   // New Department state
   const [newDepName, setNewDepName] = useState('');
   const [newDepCode, setNewDepCode] = useState('');
   const [newDepManager, setNewDepManager] = useState('');
-
-  const handleTestConnection = async () => {
-    setTestingConnection(true);
-    setTestResult(null);
-    const res = await testZKTecoConnection();
-    setTestResult(res);
-    setTestingConnection(false);
-  };
-
-  const handleSyncNow = async () => {
-    setSyncing(true);
-    setSyncResult(null);
-    try {
-      const res = await syncZKTecoNow();
-      setSyncResult(`Synchronisation réussie ! ${res.punchesImported} pointages importés.`);
-    } catch {
-      setSyncResult('Échec de synchronisation avec l\'appareil.');
-    } finally {
-      setSyncing(false);
-    }
-  };
 
   const handleAddDepartment = (e: React.FormEvent) => {
     e.preventDefault();
@@ -145,119 +112,39 @@ export const SettingsView: React.FC = () => {
       {/* TAB 1: ZKTECO DEVICE CONFIGURATION & FILE IMPORTER */}
       {activeTab === 'ZKTECO' && (
         <div className="space-y-6">
-          {/* Hardware Connection Card */}
-          <div className="glass-card rounded-2xl p-6 space-y-5">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center text-brand">
-                  <Cpu className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-slate-900">
-                    Pointeuse Biométrique ZKTeco
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Connexion réseau TCP/IP, protocole ZKEMkeeper ou synchronisation par fichier USB
-                  </p>
-                </div>
+          {/* Pointeuse : les données arrivent uniquement par la clé USB (aucune connexion réseau) */}
+          <div className="glass-card rounded-2xl p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center text-brand">
+                <Cpu className="w-5 h-5" />
               </div>
-
-              {/* Live Status Chip */}
-              <div className="flex items-center gap-2">
-                <span className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 ${
-                  zktecoConfig.status === 'ONLINE' ? 'bg-emerald-100 text-emerald-800' :
-                  zktecoConfig.status === 'SYNCHRONIZING' ? 'bg-amber-100 text-amber-800 animate-pulse' :
-                  'bg-rose-100 text-rose-800'
-                }`}>
-                  <span className={`w-2 h-2 rounded-full ${zktecoConfig.status === 'ONLINE' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-                  {zktecoConfig.status === 'ONLINE' ? 'Appareil Connecté' : 'Synchronisation...'}
-                </span>
+              <div>
+                <h3 className="text-base font-bold text-slate-900">Pointeuse biométrique ZKTeco</h3>
+                <p className="text-xs text-slate-500">
+                  Les pointages sont récupérés sur la pointeuse par clé USB, puis importés ci-dessous. L'application ne se connecte pas à l'appareil.
+                </p>
               </div>
             </div>
-
-            {/* Parameters Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
               <div>
-                <label className="block text-slate-500 font-bold mb-1">Marque</label>
+                <label htmlFor="zk-model" className="block text-slate-500 font-bold mb-1">Modèle de l'appareil</label>
                 <input
-                  type="text"
-                  disabled
-                  value={zktecoConfig.brand}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-500 font-bold mb-1">Modèle de l'appareil</label>
-                <input
+                  id="zk-model"
                   type="text"
                   value={zktecoConfig.model}
                   onChange={(e) => updateZKTecoConfig({ model: e.target.value })}
                   className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold outline-none"
                 />
               </div>
-
               <div>
-                <label className="block text-slate-500 font-bold mb-1">Adresse IP (LAN interne)</label>
-                <input
-                  type="text"
-                  value={zktecoConfig.ipAddress}
-                  onChange={(e) => updateZKTecoConfig({ ipAddress: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-mono font-bold outline-none"
-                  placeholder="192.168.1.201"
-                />
+                <p className="block text-slate-500 font-bold mb-1">Dernier import</p>
+                <p className="px-3 py-2 rounded-xl bg-slate-100 font-mono font-bold text-slate-800">{zktecoConfig.lastPunchImportedTime || '—'}</p>
               </div>
-
               <div>
-                <label className="block text-slate-500 font-bold mb-1">Port de communication</label>
-                <input
-                  type="number"
-                  value={zktecoConfig.port}
-                  onChange={(e) => updateZKTecoConfig({ port: parseInt(e.target.value) || 4370 })}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-mono font-bold outline-none"
-                />
+                <p className="block text-slate-500 font-bold mb-1">Journées importées (total)</p>
+                <p className="px-3 py-2 rounded-xl bg-slate-100 font-mono font-bold text-slate-800">{zktecoConfig.importedPunchesCount}</p>
               </div>
             </div>
-
-            {/* Test and Sync Buttons */}
-            <div className="flex flex-wrap items-center gap-3 pt-3 border-t border-slate-100">
-              <button
-                onClick={handleTestConnection}
-                disabled={testingConnection}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-slate-300 text-xs font-bold text-slate-800 hover:bg-slate-50 transition-all shadow-2xs disabled:opacity-50"
-              >
-                <Wifi className={`w-3.5 h-3.5 text-brand ${testingConnection ? 'animate-pulse' : ''}`} />
-                <span>{testingConnection ? 'Test réseau en cours...' : 'Tester la connexion TCP'}</span>
-              </button>
-
-              <button
-                onClick={handleSyncNow}
-                disabled={syncing}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-brand text-white text-xs font-bold hover:bg-brand-deep transition-all shadow-sm disabled:opacity-50"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
-                <span>{syncing ? 'Import des pointages...' : 'Synchroniser maintenant'}</span>
-              </button>
-            </div>
-
-            {/* Test Result Message */}
-            {testResult && (
-              <div className={`p-3.5 rounded-xl text-xs font-medium flex items-center gap-2 animate-in fade-in ${
-                testResult.success 
-                  ? 'bg-emerald-50 border border-emerald-200 text-emerald-800'
-                  : 'bg-rose-50 border border-rose-200 text-rose-800'
-              }`}>
-                {testResult.success ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <AlertTriangle className="w-4 h-4 text-rose-600" />}
-                <span>{testResult.message}</span>
-              </div>
-            )}
-
-            {syncResult && (
-              <div className="p-3.5 rounded-xl text-xs font-medium bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center gap-2 animate-in fade-in">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                <span>{syncResult}</span>
-              </div>
-            )}
           </div>
 
           <UsbImportPanel />
@@ -265,7 +152,7 @@ export const SettingsView: React.FC = () => {
           {/* Sync History Logs */}
           <div className="glass-card rounded-2xl p-6 space-y-4">
             <h3 className="text-sm font-bold text-slate-900">
-              Historique des Synchronisations & Événements Appareil
+              Historique des imports de la pointeuse
             </h3>
 
             <div className="overflow-x-auto rounded-xl border border-slate-100">
@@ -276,7 +163,7 @@ export const SettingsView: React.FC = () => {
                     <th className="py-2.5 px-3">Type</th>
                     <th className="py-2.5 px-3 text-center">Pointages</th>
                     <th className="py-2.5 px-3 text-center">Statut</th>
-                    <th className="py-2.5 px-3">Détails / Protocole</th>
+                    <th className="py-2.5 px-3">Détails</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-medium">

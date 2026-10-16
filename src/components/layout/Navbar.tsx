@@ -1,17 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Clock, Search, LogOut, Languages } from 'lucide-react';
+import { Clock, Search, LogOut } from 'lucide-react';
 import { ThemeToggle } from '../common/ThemeToggle';
 import { LOGO_ALT, LOGO_SRC } from '../../app/brand';
 
 interface NavbarProps {
-  onOpenQuickPunch: () => void;
   onOpenSearch: () => void;
 }
 
 // Barre d'outils au langage visuel PREMIDIS ERP (boutons « hdr-btn », pastilles d'état)
 export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
-  const { language, setLanguage, currentUser, setCurrentUser, addAuditLog } = useApp();
+  const { currentUser, setCurrentUser, addAuditLog } = useApp();
 
   const [currentTime, setCurrentTime] = useState('');
   const [currentDate, setCurrentDate] = useState('');
@@ -58,17 +57,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
               <span className="mt-0.5 block whitespace-nowrap text-[10px] font-semibold capitalize text-slate-500">{currentDate}</span>
             </div>
           </div>
-
-          {/* Langue */}
-          <button
-            onClick={() => setLanguage(language === 'fr' ? 'en' : 'fr')}
-            className="hdr-btn inline-flex h-9 min-w-9 px-2 items-center justify-center gap-1 rounded-full text-[11px] font-bold uppercase"
-            title="Changer de langue (FR / EN)"
-            aria-label="Changer de langue"
-          >
-            <Languages className="h-4 w-4" />
-            {language}
-          </button>
 
           <ThemeToggle />
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { EmployeeAvatar } from '../common/EmployeeAvatar';
 import { useApp, AppView } from '../../context/AppContext';
-import { Search, User, Building2, Calendar, FileText, ArrowRight } from 'lucide-react';
+import { Search, Building2, Calendar, FileText, ArrowRight } from 'lucide-react';
 
 interface GlobalSearchModalProps {
   isOpen: boolean;

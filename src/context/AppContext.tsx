@@ -6,7 +6,7 @@ import {
 } from '../types';
 import { normalizeSanctionLevel } from '../types';
 import { INITIAL_ROLES } from '../data/permissions';
-import { readAttendanceRows, groupByDay, textToRows, type DayAttendance } from '../utils/attendanceReader';
+import type { DayAttendance } from '../utils/attendanceReader';
 import { useTheme, setThemeUser } from '../theme/theme';
 import { 
   INITIAL_COMPANY_SETTINGS, INITIAL_USERS, INITIAL_DEPARTMENTS, 
@@ -15,15 +15,10 @@ import {
 } from '../data/mockData';
 
 export type AppView = AppModule;
-export type AppLanguage = 'fr' | 'en';
 
 interface AppContextType {
   // Appearance & Session
   theme: 'light' | 'dark';
-  setTheme: (theme: 'light' | 'dark') => void;
-  toggleTheme: () => void;
-  language: AppLanguage;
-  setLanguage: (lang: AppLanguage) => void;
   currentView: AppView;
   setCurrentView: (view: AppView) => void;
   /** Carnet de présence d'un agent ouvert depuis le tableau de bord (matricule), sinon null */
@@ -36,7 +31,6 @@ interface AppContextType {
   reportMonth: string | null;
   currentUser: User | null;
   setCurrentUser: (user: User | null) => void;
-  switchUserRole: (role: User['role']) => void;
   allUsers: User[];
   addUser: (user: Omit<User, 'id'>) => void;
   updateUser: (id: string, user: Partial<User>) => void;
@@ -55,7 +49,6 @@ interface AppContextType {
   updateCompanySettings: (settings: Partial<CompanySettings>) => void;
   departments: Department[];
   addDepartment: (dep: Omit<Department, 'id'>) => void;
-  updateDepartment: (id: string, dep: Partial<Department>) => void;
   
   employees: Employee[];
   addEmployee: (emp: Omit<Employee, 'id'>) => void;
@@ -63,16 +56,11 @@ interface AppContextType {
   deleteEmployee: (id: string) => void;
 
   attendanceRecords: AttendanceRecord[];
-  recordPunch: (matricule: string, time: string, isCheckOut?: boolean, notes?: string) => void;
   correctAttendance: (recordId: string, newCheckIn: string | null, newCheckOut: string | null, reason: string) => void;
-  bulkImportAttendance: (records: AttendanceRecord[], sourceMessage: string) => { added: number; updated: number };
   
   // ZKTeco integration
   zktecoConfig: ZKTecoDeviceConfig;
   updateZKTecoConfig: (config: Partial<ZKTecoDeviceConfig>) => void;
-  testZKTecoConnection: () => Promise<{ success: boolean; message: string; latencyMs: number }>;
-  syncZKTecoNow: () => Promise<{ success: boolean; punchesImported: number; message: string }>;
-  importZKTecoFile: (fileName: string, fileContent: string) => Promise<{ success: boolean; count: number; errors: string[] }>;
   /** Importe des journées déjà lues et vérifiées (aperçu de l'import) */
   applyAttendanceImport: (fileName: string, days: DayAttendance[], warnings?: string[]) => { count: number; absents: number; dates: string[] };
   /** Jour affiché par défaut : le dernier jour importé depuis la pointeuse */
@@ -92,7 +80,6 @@ interface AppContextType {
 
   // Calculation helpers
   calculateStatus: (expectedIn: string, actualIn: string | null, toleranceMin: number) => { status: AttendanceStatus; lateMinutes: number };
-  t: (key: string) => string;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -100,19 +87,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // 1. Theme State
   // Thème clair / sombre : même moteur que PREMIDIS ERP (attribut data-theme, préférence par utilisateur)
-  const { theme, setPref, toggle: toggleTheme } = useTheme();
-  const setTheme = (newTheme: 'light' | 'dark') => setPref(newTheme);
-
-  // 2. Language State
-  const [language, setLanguageState] = useState<AppLanguage>(() => {
-    const saved = localStorage.getItem('premidis_lang');
-    return saved === 'en' ? 'en' : 'fr';
-  });
-
-  const setLanguage = (lang: AppLanguage) => {
-    setLanguageState(lang);
-    localStorage.setItem('premidis_lang', lang);
-  };
+  const { theme } = useTheme();
 
   // 3. User & Navigation
   const [allUsers, setAllUsers] = useState<User[]>(() => {
@@ -165,12 +140,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!currentUser) return false;
     const role = roles.find(r => r.id === currentUser.role);
     return !!role?.permissions[module]?.includes(action);
-  };
-
-  const switchUserRole = (role: User['role']) => {
-    const target = allUsers.find(u => u.role === role && u.active !== false) || allUsers[0];
-    setCurrentUser(target);
-    addAuditLog('CHANGEMENT_UTILISATEUR', target.name, `Connecté sous le profil ${getRoleLabel(target.role)}`);
   };
 
   const addUser = (user: Omit<User, 'id'>) => {
@@ -375,73 +344,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     addAuditLog('CREATION_DEPARTEMENT', newDep.name, `Code: ${newDep.code}`);
   };
 
-  const updateDepartment = (id: string, depData: Partial<Department>) => {
-    setDepartments(prev => prev.map(d => d.id === id ? { ...d, ...depData } : d));
-  };
+
 
   // Attendance Actions
-  const recordPunch = (matricule: string, time: string, isCheckOut = false, notes = '') => {
-    const emp = employees.find(e => e.matricule === matricule);
-    if (!emp) return;
-
-    const todayStr = '2026-10-11'; // Current app date
-    const existingIndex = attendanceRecords.findIndex(r => r.employeeId === matricule && r.date === todayStr);
-
-    if (existingIndex >= 0) {
-      // Update existing record
-      const existing = attendanceRecords[existingIndex];
-      const updated = { ...existing };
-      
-      if (isCheckOut) {
-        updated.actualCheckOut = time;
-        updated.rawPunchOutTime = `${todayStr} ${time}:00`;
-        const [expOutH, expOutM] = updated.expectedCheckOut.split(':').map(Number);
-        const [actOutH, actOutM] = time.split(':').map(Number);
-        const earlyDiff = (expOutH * 60 + expOutM) - (actOutH * 60 + actOutM);
-        updated.earlyDepartureMinutes = earlyDiff > 0 ? earlyDiff : 0;
-      } else {
-        updated.actualCheckIn = time;
-        updated.rawPunchInTime = `${todayStr} ${time}:00`;
-        const { status, lateMinutes } = calculateStatus(emp.heureEntreeNormale, time, emp.toleranceMinutes);
-        updated.status = status;
-        updated.lateMinutes = lateMinutes;
-      }
-      if (notes) updated.notes = notes;
-
-      setAttendanceRecords(prev => {
-        const copy = [...prev];
-        copy[existingIndex] = updated;
-        return copy;
-      });
-
-      addAuditLog('POINTAGE_ENREGISTRE', `${matricule} (${emp.nom})`, `${isCheckOut ? 'Sortie' : 'Entrée'} à ${time}`);
-    } else {
-      // Create new record
-      const { status, lateMinutes } = calculateStatus(emp.heureEntreeNormale, isCheckOut ? null : time, emp.toleranceMinutes);
-      const newRec: AttendanceRecord = {
-        id: `att-${matricule}-${todayStr}`,
-        employeeId: matricule,
-        employeeName: `${emp.nom} ${emp.postnom} ${emp.prenom}`,
-        department: emp.departement,
-        date: todayStr,
-        expectedCheckIn: emp.heureEntreeNormale,
-        actualCheckIn: isCheckOut ? null : time,
-        lateMinutes: isCheckOut ? 0 : lateMinutes,
-        expectedCheckOut: emp.heureSortieNormale,
-        actualCheckOut: isCheckOut ? time : null,
-        earlyDepartureMinutes: 0,
-        status: isCheckOut ? 'PRESENT' : status,
-        source: 'MANUAL',
-        notes,
-        rawPunchInTime: isCheckOut ? null : `${todayStr} ${time}:00`,
-        rawPunchOutTime: isCheckOut ? `${todayStr} ${time}:00` : null,
-        verifiedByGuardOrSec: true
-      };
-      setAttendanceRecords(prev => [newRec, ...prev]);
-      addAuditLog('POINTAGE_MANUEL', `${matricule} (${emp.nom})`, `${isCheckOut ? 'Sortie' : 'Entrée'} à ${time}`);
-    }
-  };
-
   const correctAttendance = (recordId: string, newCheckIn: string | null, newCheckOut: string | null, reason: string) => {
     const existing = attendanceRecords.find(r => r.id === recordId);
     if (!existing) return;
@@ -476,8 +381,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const bulkImportAttendance = (newRecords: AttendanceRecord[], sourceMessage: string) => {
-    let added = 0;
-    let updated = 0;
+    // Compte fait sur les données actuelles (et non dans la mise à jour différée de React)
+    const existing = new Set(attendanceRecords.map(r => `${r.employeeId}-${r.date}`));
+    const added = newRecords.filter(r => !existing.has(`${r.employeeId}-${r.date}`)).length;
+    const updated = newRecords.length - added;
 
     setAttendanceRecords(prev => {
       const map = new Map<string, AttendanceRecord>(prev.map(r => [`${r.employeeId}-${r.date}`, r]));
@@ -502,10 +409,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               rawPunchOutTime: nr.rawPunchOutTime || cur.rawPunchOutTime
             });
           }
-          updated++;
         } else {
           map.set(key, nr);
-          added++;
         }
       });
       return Array.from(map.values());
@@ -524,83 +429,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const updateZKTecoConfig = (config: Partial<ZKTecoDeviceConfig>) => {
     setZKTecoConfig(prev => ({ ...prev, ...config }));
     addAuditLog('PARAMETRES_ZKTECO', 'Appareil de pointage', 'Mise à jour de la configuration ZKTeco');
-  };
-
-  const testZKTecoConnection = async () => {
-    // Simulate real network TCP handshake
-    setZKTecoConfig(prev => ({ ...prev, status: 'SYNCHRONIZING' }));
-    await new Promise(resolve => setTimeout(resolve, 1400));
-    
-    const isOnline = zktecoConfig.ipAddress.length > 5;
-    const latency = Math.floor(18 + Math.random() * 25);
-    
-    if (isOnline) {
-      setZKTecoConfig(prev => ({ 
-        ...prev, 
-        status: 'ONLINE',
-        lastSyncTime: new Date().toISOString().replace('T', ' ').substring(0, 19)
-      }));
-      addAuditLog('TEST_CONNEXION_ZKTECO', `${zktecoConfig.ipAddress}:${zktecoConfig.port}`, `Succès (Ping: ${latency}ms)`);
-      return { success: true, message: `Connexion TCP réussie avec ${zktecoConfig.model} (Latence: ${latency}ms, Protocole ZKEMkeeper OK).`, latencyMs: latency };
-    } else {
-      setZKTecoConfig(prev => ({ ...prev, status: 'OFFLINE', errorCount: prev.errorCount + 1 }));
-      addAuditLog('TEST_CONNEXION_ZKTECO', zktecoConfig.ipAddress, 'Échec de la connexion');
-      return { success: false, message: `Échec de connexion sur ${zktecoConfig.ipAddress}:${zktecoConfig.port}. Vérifiez le câble réseau ou l'adresse IP.`, latencyMs: 0 };
-    }
-  };
-
-  const syncZKTecoNow = async () => {
-    setZKTecoConfig(prev => ({ ...prev, status: 'SYNCHRONIZING' }));
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    const todayStr = '2026-10-11';
-    const nowTime = '08:45';
-    let imported = 0;
-
-    // Simulate clock-in arrivals from device buffer for today
-    setAttendanceRecords(prev => {
-      return prev.map(rec => {
-        if (rec.date === todayStr && !rec.actualCheckIn) {
-          const emp = employees.find(e => e.matricule === rec.employeeId);
-          if (emp && (emp.matricule === 'PRM-004' || emp.matricule === 'PRM-013')) {
-            imported++;
-            const { status, lateMinutes } = calculateStatus(emp.heureEntreeNormale, nowTime, emp.toleranceMinutes);
-            return {
-              ...rec,
-              actualCheckIn: nowTime,
-              status,
-              lateMinutes,
-              source: 'ZKTECO_BIOMETRIC',
-              rawPunchInTime: `${todayStr} ${nowTime}:12`
-            };
-          }
-        }
-        return rec;
-      });
-    });
-
-    const newLog: SyncLogEntry = {
-      id: `syn-${Date.now()}`,
-      timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
-      type: 'MANUAL_TRIGGER',
-      punchesImported: imported > 0 ? imported : 12,
-      newPunches: imported > 0 ? imported : 12,
-      duplicatesSkipped: 24,
-      status: 'SUCCESS',
-      message: `Synchronisation directe terminée. ${imported > 0 ? imported : 12} pointages biométriques récupérés.`,
-      operatorName: currentUser?.name
-    };
-
-    setZKTecoConfig(prev => ({
-      ...prev,
-      status: 'ONLINE',
-      lastSyncTime: new Date().toISOString().replace('T', ' ').substring(0, 19),
-      importedPunchesCount: prev.importedPunchesCount + (imported > 0 ? imported : 12),
-      syncLogs: [newLog, ...prev.syncLogs]
-    }));
-
-    addAuditLog('SYNCHRONISATION_ZKTECO', zktecoConfig.model, `${imported > 0 ? imported : 12} pointages importés`);
-    return { success: true, punchesImported: imported > 0 ? imported : 12, message: 'Synchronisation ZKTeco achevée avec succès.' };
   };
 
   const applyAttendanceImport = (fileName: string, days: DayAttendance[], warnings: string[] = []) => {
@@ -671,14 +499,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return { count: records.length, absents: absents.length, dates };
   };
 
-  const importZKTecoFile = async (fileName: string, fileContent: string) => {
-    // Fichier texte de la clé USB (AttLog.dat, CSV) : lecture, regroupement par jour, import
-    const read = readAttendanceRows(textToRows(fileContent), employees);
-    const errors = read.unknown.map(u => `Ligne ${u.line} : ${u.hint} — « ${u.raw.slice(0, 60)} »`);
-    const res = applyAttendanceImport(fileName, groupByDay(read.rows), errors);
-    return { success: res.count > 0, count: res.count, errors };
-  };
-
   // Sanctions Actions
   const addSanctionRule = (ruleData: Omit<SanctionRule, 'id'>) => {
     const newRule: SanctionRule = {
@@ -722,48 +542,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
   };
 
-  // Translations dictionary
-  const translations: Record<string, { fr: string; en: string }> = {
-    // Navigation
-    'nav.dashboard': { fr: 'Tableau de bord', en: 'Dashboard' },
-    'nav.employees': { fr: 'Employés', en: 'Employees' },
-    'nav.attendance': { fr: 'Présences', en: 'Attendance' },
-    'nav.reports': { fr: 'Rapports & Documents', en: 'Reports & Docs' },
-    'nav.sanctions': { fr: 'Retards & Sanctions', en: 'Tardiness & Sanctions' },
-    'nav.settings': { fr: 'Paramètres', en: 'Settings' },
-
-    // Statuses
-    'status.present': { fr: 'Présent', en: 'Present' },
-    'status.retard': { fr: 'Retard', en: 'Late' },
-    'status.absent': { fr: 'Absent', en: 'Absent' },
-
-    // Actions
-    'action.save': { fr: 'Enregistrer', en: 'Save' },
-    'action.cancel': { fr: 'Annuler', en: 'Cancel' },
-    'action.export': { fr: 'Exporter', en: 'Export' },
-    'action.print': { fr: 'Imprimer', en: 'Print' },
-    'action.filter': { fr: 'Filtrer', en: 'Filter' },
-    'action.search': { fr: 'Rechercher', en: 'Search' },
-    'action.punchNow': { fr: 'Pointer maintenant', en: 'Punch In/Out' },
-    'action.syncZk': { fr: 'Synchroniser ZKTeco', en: 'Sync ZKTeco' },
-    'action.correct': { fr: 'Corriger pointage', en: 'Correct Punch' },
-    'action.addEmployee': { fr: 'Ajouter un employé', en: 'Add Employee' }
-  };
-
-  const t = (key: string): string => {
-    if (translations[key]) {
-      return translations[key][language] || key;
-    }
-    return key;
-  };
-
   return (
     <AppContext.Provider value={{
       theme,
-      setTheme,
-      toggleTheme,
-      language,
-      setLanguage,
       currentView,
       setCurrentView: goToView,
       carnetEmployee,
@@ -773,7 +554,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       openReport,
       currentUser,
       setCurrentUser,
-      switchUserRole,
       allUsers,
       addUser,
       updateUser,
@@ -788,20 +568,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       updateCompanySettings,
       departments,
       addDepartment,
-      updateDepartment,
       employees,
       addEmployee,
       updateEmployee,
       deleteEmployee,
       attendanceRecords,
-      recordPunch,
       correctAttendance,
-      bulkImportAttendance,
       zktecoConfig,
       updateZKTecoConfig,
-      testZKTecoConnection,
-      syncZKTecoNow,
-      importZKTecoFile,
       applyAttendanceImport,
       workingDate,
       sanctionRules,
@@ -812,8 +586,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       reviewSanctionCase,
       auditLogs,
       addAuditLog,
-      calculateStatus,
-      t
+      calculateStatus
     }}>
       {children}
     </AppContext.Provider>

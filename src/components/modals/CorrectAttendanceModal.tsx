@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { EmployeeAvatar } from '../common/EmployeeAvatar';
 import { AttendanceRecord } from '../../types';
-import { Edit3, AlertTriangle, Clock, CheckCircle2 } from 'lucide-react';
+import { Edit3 } from 'lucide-react';
 import { StatusBadge } from '../common/Badge';
 
 interface CorrectAttendanceModalProps {

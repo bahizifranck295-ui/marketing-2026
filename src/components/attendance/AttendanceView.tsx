@@ -6,22 +6,17 @@ import { EmployeeAvatar } from '../common/EmployeeAvatar';
 import { EmployeeCarnet } from './EmployeeCarnet';
 import { AttendanceRecord, AttendanceStatus } from '../../types';
 import { StatusBadge, CodeBadge } from '../common/Badge';
-import { 
-  Calendar, Search, Filter, Download, Printer, 
-  Edit3, Plus, CheckCircle2, AlertTriangle, Clock, RefreshCw, FileText, ChevronLeft, ChevronRight
-} from 'lucide-react';
-import { exportToExcel, generateAttendancePdf } from '../../utils/exportUtils';
+import { Calendar, Search, FileText } from 'lucide-react';
+import { generateAttendancePdf } from '../../utils/exportUtils';
 
 interface AttendanceViewProps {
-  onOpenQuickPunch: () => void;
   onOpenCorrectModal: (record: AttendanceRecord) => void;
 }
 
 export const AttendanceView: React.FC<AttendanceViewProps> = ({
-  onOpenQuickPunch,
   onOpenCorrectModal
 }) => {
-  const { attendanceRecords, employees, departments, companySettings, workingDate, carnetEmployee, openEmployeeCarnet } = useApp();
+  const { attendanceRecords, employees, departments, workingDate, carnetEmployee, openEmployeeCarnet } = useApp();
 
   const [activeTab, setActiveTab] = useState<'DAILY' | 'MONTHLY_GRID'>('DAILY');
   const [selectedDate, setSelectedDate] = useState(workingDate);
@@ -99,29 +94,10 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
   }, [employees, attendanceRecords, selectedMonth, selectedDepartment, searchQuery]);
 
   // Export handlers
-  const handleExportDailyExcel = () => {
-    const data = filteredDailyList.map(r => ({
-      Matricule: r.employeeId,
-      'Nom Complet': r.employeeName,
-      Département: r.department,
-      Date: r.date,
-      'Entrée Prévue': r.expectedCheckIn,
-      'Entrée Constatée': r.actualCheckIn || '–',
-      'Retard (min)': r.lateMinutes,
-      'Sortie Prévue': r.expectedCheckOut,
-      'Sortie Constatée': r.actualCheckOut || '–',
-      Statut: r.status,
-      Source: r.source,
-      Observations: r.notes || (r.isCorrected ? 'Corrigé manuellement' : '')
-    }));
-    exportToExcel(data, `Carnet_Presence_Journalier_${selectedDate}`);
-  };
-
   const handleExportDailyPdf = () => {
     generateAttendancePdf(
       `Carnet de Présence – ${selectedDate}`,
       filteredDailyList,
-      companySettings,
       `Service : ${selectedDepartment === 'ALL' ? 'Tous départements' : selectedDepartment} · Commune de Karisimbi`
     );
   };

@@ -1,27 +1,11 @@
-import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { AttendanceRecord, CompanySettings, Employee } from '../types';
+import { AttendanceRecord, Employee } from '../types';
 import { drawLetterhead } from './letterhead';
-
-export const exportToExcel = (data: any[], fileName: string, sheetName = 'Présences') => {
-  const worksheet = XLSX.utils.json_to_sheet(data);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
-  
-  // Set auto column width
-  const maxProps = Object.keys(data[0] || {}).map(key => ({
-    wch: Math.max(key.length, ...data.map(d => String(d[key] ?? '').length)) + 2
-  }));
-  worksheet['!cols'] = maxProps;
-
-  XLSX.writeFile(workbook, `${fileName}.xlsx`);
-};
 
 export const generateAttendancePdf = (
   title: string,
   records: AttendanceRecord[],
-  company: CompanySettings,
   subtitle?: string
 ) => {
   const doc = new jsPDF('landscape');
@@ -136,7 +120,7 @@ export interface MonthlyGridRow {
   totalLateMin: number;
 }
 
-export const generateEmployeesPdf = (employees: Employee[], company: CompanySettings) => {
+export const generateEmployeesPdf = (employees: Employee[]) => {
   const doc = new jsPDF('landscape');
 
   // En-tête officiel PREMIDIS SARL

@@ -2,11 +2,8 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { exportPreviewToPdf } from '../../utils/previewPdf';
 import { useApp } from '../../context/AppContext';
 import { EmployeeAvatar } from '../common/EmployeeAvatar';
-import { AttendanceRecord, AttendanceStatus, Employee, SANCTION_LABELS, SanctionLevel } from '../../types';
-import { 
-  FileText, Calendar, Users, Clock, AlertTriangle, 
-  AlertOctagon, Filter, CheckCircle2, Building2
-} from 'lucide-react';
+import { AttendanceRecord, AttendanceStatus, SANCTION_LABELS, SanctionLevel } from '../../types';
+import { FileText, Calendar, AlertOctagon } from 'lucide-react';
 import type { SanctionPdfRow, MonthlyGridRow } from '../../utils/exportUtils';
 import { Letterhead } from '../common/Letterhead';
 import { StatusBadge, CodeBadge } from '../common/Badge';
@@ -25,7 +22,7 @@ export const ReportsView: React.FC<{
   /** Appelé une fois le document affiché : élément de l'aperçu et titre du rapport */
   onDocumentReady?: (el: HTMLDivElement, title: string) => void;
 }> = ({ preset, onDocumentReady }) => {
-  const { attendanceRecords, employees, departments, companySettings, sanctionCases, workingDate, reportTab, reportMonth } = useApp();
+  const { attendanceRecords, employees, departments, sanctionCases, workingDate, reportTab, reportMonth } = useApp();
 
   // Tab: 'ATTENDANCE' (Rapports de présence) vs 'SANCTIONS' (Sanctions disciplinaires mensuelles)
   const [activeTab, setActiveTab] = useState<'ATTENDANCE' | 'SANCTIONS'>(preset ? 'ATTENDANCE' : reportTab);

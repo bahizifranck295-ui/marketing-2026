@@ -1,11 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
 import { SanctionRule, SANCTION_LABELS } from '../../types';
-import { 
-  ShieldAlert, Plus, AlertTriangle,
-  Banknote, Snowflake, Flame, Trash2, Edit3, CheckCircle2,
-  Filter, ShieldCheck, ArrowRight
-} from 'lucide-react';
+import { Plus, AlertTriangle, Banknote, Snowflake, Flame, Trash2, Edit3, Filter, ShieldCheck } from 'lucide-react';
 
 export const SanctionsView: React.FC = () => {
   const { 
