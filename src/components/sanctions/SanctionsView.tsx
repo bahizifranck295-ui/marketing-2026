@@ -37,7 +37,7 @@ export const SanctionsView: React.FC = () => {
     deductionAmount: 30,
     currency: 'USD',
     isActive: true,
-    effectiveDate: '2026-10-01',
+    effectiveDate: new Date().toISOString().substring(0, 10),
     description: 'Retenue compensatoire sur salaire pour absences non justifiées répétées.'
   });
 

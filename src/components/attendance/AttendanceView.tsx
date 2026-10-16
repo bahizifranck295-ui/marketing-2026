@@ -22,7 +22,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
 
   const [activeTab, setActiveTab] = useState<'DAILY' | 'MONTHLY_GRID'>('DAILY');
   const [selectedDate, setSelectedDate] = useState(workingDate);
-  const [selectedMonth, setSelectedMonth] = useState('2026-10'); // YYYY-MM
+  const [selectedMonth, setSelectedMonth] = useState(workingDate.slice(0, 7)); // AAAA-MM, mois de la date de travail
   const [selectedDepartment, setSelectedDepartment] = useState('ALL');
   const [selectedStatus, setSelectedStatus] = useState<'ALL' | AttendanceStatus>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
@@ -44,10 +44,16 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
     });
   }, [dailyRecords, selectedStatus, selectedDepartment, searchQuery]);
 
-  // Monthly Grid Data (J1 to J31)
+  // Nombre réel de jours du mois choisi (28 à 31)
+  const monthDays = useMemo(() => {
+    const [y, m] = selectedMonth.split('-').map(Number);
+    return Array.from({ length: new Date(Date.UTC(y, m, 0)).getUTCDate() }, (_, i) => i + 1);
+  }, [selectedMonth]);
+
+  // Grille mensuelle J1 à la fin du mois
   const monthlySynthesis = useMemo(() => {
-    const daysInMonth = 31; // October has 31 days
-    const monthPrefix = selectedMonth; // e.g. "2026-10"
+    const daysInMonth = monthDays.length;
+    const monthPrefix = selectedMonth; // ex. "2026-10"
 
     // Group records by employee
     return employees.map((emp, index) => {
@@ -93,7 +99,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
         row.employee.matricule.toLowerCase().includes(searchQuery.toLowerCase());
       return matchDep && matchSearch;
     });
-  }, [employees, attendanceRecords, selectedMonth, selectedDepartment, searchQuery]);
+  }, [employees, attendanceRecords, selectedMonth, monthDays, selectedDepartment, searchQuery]);
 
   // Export handlers
   const handleExportDailyPdf = () => {
@@ -153,7 +159,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              Synthèse Mensuelle (J1 - J31)
+              Synthèse Mensuelle (J1 - J{monthDays.length})
             </button>
           </div>
 
@@ -396,7 +402,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
             <div>
               <h3 className="text-base font-bold text-ink">
-                Carnet de Synthèse Mensuelle des Présences (J1 à J31)
+                Carnet de Synthèse Mensuelle des Présences (J1 à J{monthDays.length})
               </h3>
               <p className="text-xs text-slate-500">
                 Mois sélectionné : {selectedMonth} · Codes réglementaires : P = Présent (vert), R = Retard (orange), A = Absent (rouge)
@@ -420,8 +426,8 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                   <th className="py-2.5 px-3 border-r border-slate-700 min-w-[150px]">Nom & Postnom</th>
                   <th className="py-2.5 px-3 border-r border-slate-700 min-w-[120px]">Département</th>
                   
-                  {/* Days 1 to 31 */}
-                  {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+                  {/* Jours du mois */}
+                  {monthDays.map(day => (
                     <th key={day} className="py-2 px-1 text-center border-r border-slate-700 min-w-[24px]">
                       {day}
                     </th>
@@ -437,7 +443,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
               <tbody className="divide-y divide-slate-200 font-medium">
                 {monthlySynthesis.length === 0 ? (
                   <tr>
-                    <td colSpan={39} className="py-12 text-center text-slate-400">
+                    <td colSpan={monthDays.length + 8} className="py-12 text-center text-slate-400">
                       Aucun employé trouvé pour cette sélection.
                     </td>
                   </tr>
@@ -457,8 +463,8 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                         {row.employee.departement}
                       </td>
 
-                      {/* Day cells 1 to 31 */}
-                      {Array.from({ length: 31 }, (_, i) => i + 1).map(day => {
+                      {/* Une cellule par jour du mois */}
+                      {monthDays.map(day => {
                         const rec = row.days[day];
                         if (!rec) {
                           return (
