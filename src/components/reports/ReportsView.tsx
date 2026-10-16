@@ -2,9 +2,9 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { exportPreviewToPdf } from '../../utils/previewPdf';
 import { useApp } from '../../context/AppContext';
 import { EmployeeAvatar } from '../common/EmployeeAvatar';
-import { AttendanceRecord, AttendanceStatus, SANCTION_LABELS, SanctionLevel } from '../../types';
+import { AttendanceRecord, AttendanceStatus, Employee, SANCTION_LABELS } from '../../types';
+import { evaluateSanctions, sanctionText } from '../../utils/sanctions';
 import { FileText, Calendar, AlertOctagon } from 'lucide-react';
-import type { SanctionPdfRow, MonthlyGridRow } from '../../utils/exportUtils';
 import { Letterhead } from '../common/Letterhead';
 import { StatusBadge, CodeBadge } from '../common/Badge';
 
@@ -17,12 +17,41 @@ export interface ReportPreset {
   status?: 'ALL' | AttendanceStatus;
 }
 
+/** Ligne de la synthèse mensuelle (grille J1-J31) */
+interface MonthlyGridRow {
+  number: number;
+  employee: Employee;
+  days: Record<number, AttendanceRecord | null>;
+  totalP: number;
+  totalR: number;
+  totalA: number;
+  totalLateMin: number;
+}
+
+/** Ligne du rapport mensuel des sanctions */
+interface SanctionPdfRow {
+  matricule: string;
+  employeeName: string;
+  department: string;
+  lateCount: number;
+  totalMinutesLate: number;
+  absenceCount: number;
+  proposedSanction: string;
+  ruleName: string;
+  deductionAmount: number;
+  currency: string;
+  status: string;
+  decisionDate: string | null;
+  decidedBy: string | null;
+  decisionMotif?: string;
+}
+
 export const ReportsView: React.FC<{
   preset?: ReportPreset;
   /** Appelé une fois le document affiché : élément de l'aperçu et titre du rapport */
   onDocumentReady?: (el: HTMLDivElement, title: string) => void;
 }> = ({ preset, onDocumentReady }) => {
-  const { attendanceRecords, employees, departments, sanctionCases, workingDate, reportTab, reportMonth, can } = useApp();
+  const { attendanceRecords, employees, departments, sanctionCases, sanctionRules, workingDate, reportTab, reportMonth, can } = useApp();
 
   // Tab: 'ATTENDANCE' (Rapports de présence) vs 'SANCTIONS' (Sanctions disciplinaires mensuelles)
   const [activeTab, setActiveTab] = useState<'ATTENDANCE' | 'SANCTIONS'>(preset ? 'ATTENDANCE' : reportTab);
@@ -176,80 +205,31 @@ export const ReportsView: React.FC<{
     return { totalListed, grandP, grandR, grandA, grandLateMin };
   }, [monthlySynthesis]);
 
-  // Monthly Disciplinary Sanctions Data strictly based on selectedMonth
+  // Sanctions du mois : même calcul que le tableau de bord et le module Sanctions (barèmes actifs)
   const monthlySanctionsData: SanctionPdfRow[] = useMemo(() => {
     if (activeTab !== 'SANCTIONS') return [];
-
-    const monthKey = selectedMonth; // e.g. "2026-10"
-    const monthDate = new Date(`${selectedMonth}-01`);
-    const monthName = monthDate.toLocaleDateString('fr-FR', { month: 'long' }).toLowerCase();
-    const yearStr = selectedMonth.split('-')[0];
-
-    return employees.map(emp => {
-      const lateRecs = attendanceRecords.filter(r => r.employeeId === emp.matricule && r.date.startsWith(monthKey) && r.status === 'RETARD');
-      const absenceRecs = attendanceRecords.filter(r => r.employeeId === emp.matricule && r.date.startsWith(monthKey) && r.status === 'ABSENT');
-
-      const lateCount = lateRecs.length;
-      const totalMinutesLate = lateRecs.reduce((sum, r) => sum + r.lateMinutes, 0);
-      const absenceCount = absenceRecs.length;
-
-      // Existing case if recorded in database/mock data matching selected period
-      const existing = sanctionCases.find(s => {
-        if (s.employeeId !== emp.matricule) return false;
-        const p = (s.period || '').toLowerCase();
-        return p.includes(monthKey) || (p.includes(monthName) && p.includes(yearStr));
-      });
-
-      let deductionAmount = existing ? (existing.approvedDeductionAmount ?? existing.deductionAmount) : 0;
-      let sanctionType = existing ? existing.proposedSanction : 'AUCUNE';
-      let status = existing ? existing.status : (lateCount >= 3 || absenceCount >= 1 ? 'PROPOSEE' : 'CONFORME');
-
-      // Auto-evaluation based on enterprise rule threshold if case was not yet finalized
-      if (!existing && (lateCount >= 3 || absenceCount >= 1)) {
-        if (absenceCount >= 2) {
-          deductionAmount = 45;
-          sanctionType = 'RETENUE_SALARIALE_PROPOSEE';
-        } else if (absenceCount >= 1) {
-          deductionAmount = 20;
-          sanctionType = 'RETENUE_SALARIALE_PROPOSEE';
-        } else if (lateCount >= 5) {
-          deductionAmount = 15;
-          sanctionType = 'RETENUE_SALARIALE_PROPOSEE';
-        } else if (lateCount >= 3) {
-          deductionAmount = 0;
-          sanctionType = 'AVERTISSEMENT_VERBAL';
-        }
-      }
-
-      return {
+    return evaluateSanctions(employees, attendanceRecords, sanctionRules, selectedMonth, undefined, sanctionCases)
+      .filter(p => selectedDepartment === 'ALL' || p.emp.departement === selectedDepartment)
+      .filter(p => selectedEmployeeId === 'ALL' || p.emp.matricule === selectedEmployeeId)
+      .map(({ emp, lateCount, lateMinutes, absences, rule, decision }) => ({
         matricule: emp.matricule,
         employeeName: `${emp.nom} ${emp.postnom} ${emp.prenom}`,
         department: emp.departement,
-        lateCount: existing ? Math.max(existing.lateCount, lateCount) : lateCount,
-        totalMinutesLate: existing ? Math.max(existing.totalMinutesLate, totalMinutesLate) : totalMinutesLate,
-        absenceCount: existing ? Math.max(existing.absenceCount, absenceCount) : absenceCount,
-        proposedSanction: sanctionType,
-        deductionAmount,
-        currency: existing?.currency || 'USD',
-        status: existing?.status || (deductionAmount > 0 ? 'EN_EXAMEN' : 'CONFORME'),
-        decisionDate: existing?.decisionDate || null,
-        decidedBy: existing?.decidedBy || null,
-        decisionMotif: existing?.decisionMotif || (existing?.justificationNotes ?? '')
-      };
-    }).filter(s => {
-      // Must have an actual sanction to serve or deduction to pay!
-      const hasRealSanction = s.proposedSanction !== 'AUCUNE' || s.deductionAmount > 0 || s.status === 'APPROUVEE';
-      if (!hasRealSanction) return false;
-
-      // Filter by department
-      if (selectedDepartment !== 'ALL' && s.department !== selectedDepartment) return false;
-
-      // Filter by employee
-      if (selectedEmployeeId !== 'ALL' && s.matricule !== selectedEmployeeId) return false;
-
-      return true;
-    });
-  }, [activeTab, employees, attendanceRecords, sanctionCases, selectedMonth, selectedDepartment, selectedEmployeeId]);
+        lateCount,
+        totalMinutesLate: lateMinutes,
+        absenceCount: absences,
+        proposedSanction: sanctionText(rule, SANCTION_LABELS),
+        ruleName: rule.name,
+        deductionAmount: decision?.status === 'REJETEE' ? 0 : rule.deductionAmount,
+        currency: rule.currency,
+        status: decision?.status ?? 'PROPOSEE',
+        decisionDate: decision?.decisionDate ?? null,
+        decidedBy: decision?.decidedBy ?? null,
+        decisionMotif: decision
+          ? `${decision.status === 'APPROUVEE' ? 'Validée' : 'Rejetée'} le ${decision.decisionDate} par ${decision.decidedBy}${decision.decisionMotif ? ` — ${decision.decisionMotif}` : ''}`
+          : `En attente de la Direction · ${rule.name}`,
+      }));
+  }, [activeTab, employees, attendanceRecords, sanctionRules, sanctionCases, selectedMonth, selectedDepartment, selectedEmployeeId]);
 
   // Le PDF reprend exactement l'aperçu affiché ci-dessous (en-tête, titre, bilan et tableau)
   const previewRef = useRef<HTMLDivElement>(null);
@@ -555,7 +535,7 @@ export const ReportsView: React.FC<{
                         {s.absenceCount > 0 ? `${s.absenceCount} j` : '0'}
                       </td>
                       <td className="py-2.5 px-3 font-semibold text-slate-700">
-                        {SANCTION_LABELS[s.proposedSanction as SanctionLevel] ?? s.proposedSanction.replace(/_/g, ' ')}
+                        {s.proposedSanction}
                       </td>
                       <td className="py-2.5 px-3 text-center font-mono font-bold">
                         {s.deductionAmount > 0 ? (
@@ -566,8 +546,8 @@ export const ReportsView: React.FC<{
                           <span className="text-slate-400">0 USD</span>
                         )}
                       </td>
-                      <td className="py-2.5 px-3 text-slate-500 text-[11px] truncate max-w-[150px]">
-                        {s.decisionMotif || (s.decisionDate ? `Visé le ${s.decisionDate}` : 'En attente Direction')}
+                      <td className="py-2.5 px-3 text-slate-500 text-[11px] min-w-[180px]">
+                        {s.decisionMotif}
                       </td>
                     </tr>
                   ))
@@ -728,7 +708,7 @@ export const ReportsView: React.FC<{
                       <td className="py-2 px-3 text-center">
                         <StatusBadge status={r.status} size="sm" />
                       </td>
-                      <td className="py-2 px-3 text-slate-500 truncate max-w-[150px]">
+                      <td className="py-2 px-3 text-slate-500 min-w-[150px]">
                         {r.notes || (r.isCorrected ? `Ajusté (${r.correctionReason})` : '–')}
                       </td>
                     </tr>

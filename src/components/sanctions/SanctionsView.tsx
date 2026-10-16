@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
+import { SanctionCasesPanel } from './SanctionCasesPanel';
 import { SanctionRule, SANCTION_LABELS } from '../../types';
 import { Plus, AlertTriangle, Banknote, Snowflake, Flame, Trash2, Edit3, Filter, ShieldCheck } from 'lucide-react';
 
@@ -200,6 +201,9 @@ export const SanctionsView: React.FC = () => {
           <ShieldCheck className="w-3.5 h-3.5" /> Barème RH Officiel
         </span>
       </div>
+
+      {/* Dossiers du mois à valider par la Direction */}
+      <SanctionCasesPanel />
 
       {/* MAIN SECTION: BARÈMES DES SOMMES RETIRABLES & GESTION DU GEL DES SANCTIONS */}
       <div className="p-5 rounded-2xl glass-card space-y-5">

@@ -110,15 +110,6 @@ export const generateAttendancePdf = (
   doc.save(`${title.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().substring(0, 10)}.pdf`);
 };
 
-export interface MonthlyGridRow {
-  number: number;
-  employee: Employee;
-  days: Record<number, AttendanceRecord | null>;
-  totalP: number;
-  totalR: number;
-  totalA: number;
-  totalLateMin: number;
-}
 
 export const generateEmployeesPdf = (employees: Employee[]) => {
   const doc = new jsPDF('landscape');
@@ -172,18 +163,3 @@ export const generateEmployeesPdf = (employees: Employee[]) => {
   doc.save(`Registre_Personnel_PREMIDIS_${new Date().toISOString().substring(0, 10)}.pdf`);
 };
 
-export interface SanctionPdfRow {
-  matricule: string;
-  employeeName: string;
-  department: string;
-  lateCount: number;
-  totalMinutesLate: number;
-  absenceCount: number;
-  proposedSanction: string;
-  deductionAmount: number;
-  currency: string;
-  status: string;
-  decisionDate: string | null;
-  decidedBy: string | null;
-  decisionMotif?: string;
-}

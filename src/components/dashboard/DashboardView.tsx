@@ -3,15 +3,9 @@ import { useApp } from '../../context/AppContext';
 import { EmployeeAvatar } from '../common/EmployeeAvatar';
 import { StatusBadge } from '../common/Badge';
 import { AttendanceRecord, SANCTION_LABELS } from '../../types';
+import { evaluateSanctions, sanctionText } from '../../utils/sanctions';
 import { CheckCircle2, Clock, AlertTriangle, XCircle, ArrowUpRight, Calendar, ChevronRight, Edit3, Search, FileText } from 'lucide-react';
 import { generateAttendancePdf } from '../../utils/exportUtils';
-
-const SANCTION_LABEL: Record<string, string> = SANCTION_LABELS;
-/** Poids d'une règle : l'exclusion temporaire d'abord (et sa durée), puis la retenue, puis le niveau */
-const weight = (r: { sanctionType: string; deductionAmount: number; exclusionDays?: number }) =>
-  (r.sanctionType === 'EXCLUSION_TEMPORAIRE' ? 100000 + (r.exclusionDays || 1) * 1000 : 0) + r.deductionAmount * 10 + SANCTION_ORDER.indexOf(r.sanctionType);
-/** Du moins lourd au plus lourd */
-const SANCTION_ORDER = ['AVERTISSEMENT_VERBAL', 'RETENUE_SALARIALE_PROPOSEE', 'EXCLUSION_TEMPORAIRE'];
 
 interface DashboardViewProps {
   onOpenCorrectModal: (record: AttendanceRecord) => void;
@@ -20,7 +14,7 @@ interface DashboardViewProps {
 export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenCorrectModal }) => {
   const { 
     attendanceRecords, employees, departments, 
-    setCurrentView, workingDate, openEmployeeCarnet, sanctionRules, openReport, can
+    setCurrentView, workingDate, openEmployeeCarnet, sanctionRules, sanctionCases, openReport, can
   } = useApp();
   const canCorrect = can('attendance', 'edit');
   const canOpenCarnet = can('attendance');
@@ -86,30 +80,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenCorrectModal
     return label.charAt(0).toUpperCase() + label.slice(1);
   }, [selectedDate]);
 
-  // Employés ayant atteint un seuil de sanction : règles actives appliquées du 1er du mois au jour affiché.
-  // Pour chacun, la règle la plus lourde atteinte (retenue la plus forte, puis niveau de sanction).
+  // Employés ayant atteint un seuil de sanction : barèmes actifs, du 1er du mois au jour affiché (calcul commun)
   const sanctionReached = useMemo(() => {
-    const monthStart = `${selectedDate.slice(0, 7)}-01`;
-    const recs = attendanceRecords.filter(r => r.date >= monthStart && r.date <= selectedDate);
-    const rules = sanctionRules.filter(r => r.isActive && r.period === 'MONTH');
-    const reached = employees.flatMap(emp => {
-      const mine = recs.filter(r => r.employeeId === emp.matricule);
-      const late = mine.filter(r => r.status === 'RETARD');
-      const lateCount = late.length;
-      const lateMinutes = late.reduce((n, r) => n + r.lateMinutes, 0);
-      const absences = mine.filter(r => r.status === 'ABSENT').length;
-      const hits = rules.filter(rule => {
-        const lateOk = lateCount >= Math.max(1, rule.thresholdLateCount) && lateMinutes >= rule.thresholdLateMinutes;
-        const absOk = absences >= Math.max(1, rule.thresholdAbsenceCount);
-        return rule.targetType === 'RETARD' ? lateOk : rule.targetType === 'ABSENCE' ? absOk : lateOk && absOk;
-      });
-      if (!hits.length) return [];
-      const rule = hits.sort((a, b) => weight(b) - weight(a))[0];
-      return [{ emp, lateCount, lateMinutes, absences, rule }];
-    });
-    reached.sort((a, b) => weight(b.rule) - weight(a.rule) || b.lateMinutes - a.lateMinutes);
-    return { total: reached.length, rows: reached.slice(0, 5) };
-  }, [attendanceRecords, employees, sanctionRules, selectedDate]);
+    const all = evaluateSanctions(employees, attendanceRecords, sanctionRules, selectedDate.slice(0, 7), selectedDate, sanctionCases);
+    return { total: all.length, rows: all.slice(0, 5) };
+  }, [attendanceRecords, employees, sanctionRules, sanctionCases, selectedDate]);
 
   // Les 7 jours qui se terminent au jour affiché (le dernier jour importé depuis la pointeuse)
   const historyTrends = useMemo(() => {
@@ -379,7 +354,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenCorrectModal
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {sanctionReached.rows.map(({ emp, lateCount, lateMinutes, absences, rule }) => (
+                {sanctionReached.rows.map(({ emp, lateCount, lateMinutes, absences, rule, decision }) => (
                   <tr key={emp.matricule} className="hover:bg-slate-50/60">
                     <td className="py-2.5 px-3">
                       <div className="flex items-center gap-2.5">
@@ -412,12 +387,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenCorrectModal
                     <td className="py-2.5 px-3 text-[11px] leading-snug text-slate-600 hidden lg:table-cell">{rule.name}</td>
                     <td className="py-2.5 px-3">
                       <span className="inline-block px-2 py-0.5 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 font-bold text-[11px] leading-snug">
-                        {SANCTION_LABEL[rule.sanctionType] ?? rule.sanctionType}
-                        {rule.sanctionType === 'EXCLUSION_TEMPORAIRE' && ` · ${rule.exclusionDays || 1} j`}
+                        {sanctionText(rule, SANCTION_LABELS)}
                       </span>
                       {rule.deductionAmount > 0 && (
                         <p className="text-[10px] text-rose-600 font-semibold mt-0.5">Retenue {rule.deductionAmount} {rule.currency}</p>
                       )}
+                      <p className={`text-[10px] font-bold mt-0.5 ${decision?.status === 'APPROUVEE' ? 'text-emerald-600' : decision?.status === 'REJETEE' ? 'text-slate-500' : 'text-amber-600'}`}>
+                        {decision?.status === 'APPROUVEE' ? 'Validée par la Direction' : decision?.status === 'REJETEE' ? 'Rejetée' : 'À valider'}
+                      </p>
                     </td>
                   </tr>
                 ))}

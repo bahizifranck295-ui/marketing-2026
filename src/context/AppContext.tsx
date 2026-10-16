@@ -2,11 +2,12 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { 
   User, Employee, Department, AttendanceRecord, AttendanceStatus, 
   ZKTecoDeviceConfig, SanctionRule, SanctionCase, AuditLog, CompanySettings,
-  SyncLogEntry, SanctionStatus, AppModule, PermissionAction, RoleDefinition
+  SyncLogEntry, AppModule, PermissionAction, RoleDefinition
 } from '../types';
 import { normalizeSanctionLevel } from '../types';
 import { INITIAL_ROLES } from '../data/permissions';
 import type { DayAttendance } from '../utils/attendanceReader';
+import { caseMonth, type SanctionProposal } from '../utils/sanctions';
 import { useTheme, setThemeUser } from '../theme/theme';
 import { loadJSON, saveJSON, onStorageIssue, type StorageIssue } from '../utils/storage';
 import { 
@@ -73,7 +74,8 @@ interface AppContextType {
   updateSanctionRule: (id: string, rule: Partial<SanctionRule>) => void;
   deleteSanctionRule: (id: string) => void;
   sanctionCases: SanctionCase[];
-  reviewSanctionCase: (id: string, status: SanctionStatus, motif: string, approvedAmount?: number) => void;
+  /** Décision de la Direction sur un dossier proposé (validé ou rejeté), avec motif */
+  decideSanction: (proposal: SanctionProposal, status: 'APPROUVEE' | 'REJETEE', motif: string) => void;
   
   // Audit Logs
   auditLogs: AuditLog[];
@@ -572,29 +574,40 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     addAuditLog('SUPPRESSION_REGLE_SANCTION', id, 'Suppression d\'un barème de sanction');
   };
 
-  const reviewSanctionCase = (id: string, newStatus: SanctionStatus, motif: string, approvedAmount?: number) => {
-    if (!allowed('sanctions', 'validate', 'reviewSanctionCase')) return;
-    const sc = sanctionCases.find(c => c.id === id);
-    if (!sc) return;
-
-    const finalAmount = approvedAmount !== undefined ? approvedAmount : sc.deductionAmount;
-
-    const updated: SanctionCase = {
-      ...sc,
-      status: newStatus,
+  const decideSanction = (proposal: SanctionProposal, status: 'APPROUVEE' | 'REJETEE', motif: string) => {
+    if (!allowed('sanctions', 'validate', 'decideSanction')) return;
+    const { emp, month, rule } = proposal;
+    const id = `case-${emp.matricule}-${month}`;
+    const decided: SanctionCase = {
+      id,
+      employeeId: emp.matricule,
+      matricule: emp.matricule,
+      employeeName: `${emp.nom} ${emp.postnom} ${emp.prenom}`,
+      department: emp.departement,
+      period: month,
+      lateCount: proposal.lateCount,
+      totalMinutesLate: proposal.lateMinutes,
+      datesLate: proposal.lateDates,
+      absenceCount: proposal.absences,
+      datesAbsent: proposal.absenceDates,
+      ruleId: rule.id,
+      ruleName: rule.name,
+      proposedSanction: rule.sanctionType,
+      deductionAmount: rule.deductionAmount,
+      approvedDeductionAmount: status === 'APPROUVEE' ? rule.deductionAmount : 0,
+      currency: rule.currency,
+      status,
       decisionDate: new Date().toISOString().substring(0, 10),
-      decidedBy: currentUser ? `${currentUser.name} (${currentUser.role})` : 'Direction',
+      decidedBy: currentUser ? `${currentUser.name} (${getRoleLabel(currentUser.role)})` : 'Direction',
       decisionMotif: motif,
-      approvedDeductionAmount: newStatus === 'APPROUVEE' ? finalAmount : 0
+      createdAt: new Date().toISOString(),
     };
-
-    setSanctionCases(prev => prev.map(c => c.id === id ? updated : c));
-    addAuditLog(
-      newStatus === 'APPROUVEE' ? 'APPROBATION_SANCTION' : 'REJET_SANCTION',
-      `${sc.matricule} - ${sc.employeeName}`,
-      `Statut: ${newStatus}, Décision: ${sc.proposedSanction}, Retenue salariale: ${newStatus === 'APPROUVEE' ? finalAmount : 0} ${sc.currency}, Motif: ${motif}`
-    );
+    // Une seule décision par employé et par mois (les anciens dossiers du même mois sont remplacés)
+    setSanctionCases(prev => [decided, ...prev.filter(c => !((c.matricule === emp.matricule || c.employeeId === emp.matricule) && caseMonth(c.period) === month))]);
+    addAuditLog(status === 'APPROUVEE' ? 'APPROBATION_SANCTION' : 'REJET_SANCTION', `${emp.matricule} - ${month}`,
+      `${rule.name} · ${rule.sanctionType}${rule.exclusionDays ? ` (${rule.exclusionDays} j)` : ''}${rule.deductionAmount ? ` · ${rule.deductionAmount} ${rule.currency}` : ''} · Motif : ${motif}`);
   };
+
 
   return (
     <AppContext.Provider value={{
@@ -637,7 +650,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       updateSanctionRule,
       deleteSanctionRule,
       sanctionCases,
-      reviewSanctionCase,
+      decideSanction,
       auditLogs,
       addAuditLog,
       calculateStatus,

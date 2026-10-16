@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { evaluateSanctions } from '../../utils/sanctions';
 import { useApp, AppView } from '../../context/AppContext';
 import {
   Home, Users, CalendarCheck, FileText,
@@ -8,14 +9,17 @@ import { LOGO_ALT, LOGO_SRC } from '../../app/brand';
 
 // Menu latéral au format PREMIDIS ERP : en-tête logo, liens, carte utilisateur, réduction du menu.
 export const Sidebar: React.FC = () => {
-  const { currentView, setCurrentView, employees, attendanceRecords, sanctionCases, zktecoConfig, can, currentUser, workingDate } = useApp();
+  const { currentView, setCurrentView, employees, attendanceRecords, sanctionCases, sanctionRules, zktecoConfig, can, currentUser, workingDate } = useApp();
   const [collapsed, setCollapsed] = useState(false);
 
   // Compute live badges
   // Badge du jour affiché par défaut : le dernier jour importé depuis la pointeuse
   const todayRecords = attendanceRecords.filter(r => r.date === workingDate);
   const todayLates = todayRecords.filter(r => r.status === 'RETARD').length;
-  const pendingSanctions = sanctionCases.filter(s => s.status === 'EN_EXAMEN' || s.status === 'PROPOSEE').length;
+  // Dossiers du mois en cours (jour de travail) qui attendent la décision de la Direction
+  const pendingSanctions = useMemo(
+    () => evaluateSanctions(employees, attendanceRecords, sanctionRules, workingDate.slice(0, 7), workingDate, sanctionCases).filter(p => !p.decision).length,
+    [employees, attendanceRecords, sanctionRules, sanctionCases, workingDate]);
 
   const navItems: { id: AppView; label: string; short: string; icon: any; badge?: number | string; badgeColor?: string }[] = [
     { id: 'dashboard', label: 'Tableau de bord', short: 'Accueil', icon: Home },
