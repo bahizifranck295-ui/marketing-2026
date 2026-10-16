@@ -12,6 +12,7 @@ export const SettingsView: React.FC = () => {
     zktecoConfig, updateZKTecoConfig,
     auditLogs, can
   } = useApp();
+  const canViewSettings = can('settings');
   const canEditSettings = can('settings', 'edit');
   const canCreateSettings = can('settings', 'create');
   const canImport = can('attendance', 'create');
@@ -64,53 +65,61 @@ export const SettingsView: React.FC = () => {
           <span>Appareil ZKTeco</span>
         </button>
 
-        <button
-          onClick={() => setActiveTab('COMPANY')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-            activeTab === 'COMPANY'
-              ? 'bg-brand text-white shadow-xs'
-              : 'text-slate-600 hover:bg-slate-100'
-          }`}
-        >
-          <Building2 className="w-3.5 h-3.5" />
-          <span>Entreprise & Horaires</span>
-        </button>
+        {canViewSettings && (
+          <button
+            onClick={() => setActiveTab('COMPANY')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              activeTab === 'COMPANY'
+                ? 'bg-brand text-white shadow-xs'
+                : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            <Building2 className="w-3.5 h-3.5" />
+            <span>Entreprise & Horaires</span>
+          </button>
+        )}
 
-        <button
-          onClick={() => setActiveTab('DEPARTMENTS')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-            activeTab === 'DEPARTMENTS'
-              ? 'bg-brand text-white shadow-xs'
-              : 'text-slate-600 hover:bg-slate-100'
-          }`}
-        >
-          <Users className="w-3.5 h-3.5" />
-          <span>Départements ({departments.length})</span>
-        </button>
+        {canViewSettings && (
+          <button
+            onClick={() => setActiveTab('DEPARTMENTS')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              activeTab === 'DEPARTMENTS'
+                ? 'bg-brand text-white shadow-xs'
+                : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            <Users className="w-3.5 h-3.5" />
+            <span>Départements ({departments.length})</span>
+          </button>
+        )}
 
-        <button
-          onClick={() => setActiveTab('USERS')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-            activeTab === 'USERS'
-              ? 'bg-brand text-white shadow-xs'
-              : 'text-slate-600 hover:bg-slate-100'
-          }`}
-        >
-          <ShieldCheck className="w-3.5 h-3.5" />
-          <span>Utilisateurs & Rôles</span>
-        </button>
+        {canViewSettings && (
+          <button
+            onClick={() => setActiveTab('USERS')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              activeTab === 'USERS'
+                ? 'bg-brand text-white shadow-xs'
+                : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span>Utilisateurs & Rôles</span>
+          </button>
+        )}
 
-        <button
-          onClick={() => setActiveTab('AUDIT')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-            activeTab === 'AUDIT'
-              ? 'bg-brand text-white shadow-xs'
-              : 'text-slate-600 hover:bg-slate-100'
-          }`}
-        >
-          <History className="w-3.5 h-3.5" />
-          <span>Journal d'Audit ({auditLogs.length})</span>
-        </button>
+        {canViewSettings && (
+          <button
+            onClick={() => setActiveTab('AUDIT')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              activeTab === 'AUDIT'
+                ? 'bg-brand text-white shadow-xs'
+                : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            <History className="w-3.5 h-3.5" />
+            <span>Journal d'Audit ({auditLogs.length})</span>
+          </button>
+        )}
 
         {canEditSettings && (
           <button
@@ -211,7 +220,7 @@ export const SettingsView: React.FC = () => {
       )}
 
       {/* TAB 2: COMPANY & DEFAULT SCHEDULES */}
-      {activeTab === 'COMPANY' && (
+      {activeTab === 'COMPANY' && canViewSettings && (
         <fieldset disabled={!canEditSettings} className="glass-card rounded-2xl p-6 space-y-5 disabled:opacity-90">
           <h3 className="text-base font-bold text-slate-900">
             Identité de PREMIDIS SARL & Horaires Officiels
@@ -328,7 +337,7 @@ export const SettingsView: React.FC = () => {
       )}
 
       {/* TAB 3: DEPARTMENTS */}
-      {activeTab === 'DEPARTMENTS' && (
+      {activeTab === 'DEPARTMENTS' && canViewSettings && (
         <div className="glass-card rounded-2xl p-6 space-y-5">
           <div className="flex items-center justify-between pb-3 border-b border-slate-100">
             <h3 className="text-base font-bold text-slate-900">
@@ -405,12 +414,12 @@ export const SettingsView: React.FC = () => {
       )}
 
       {/* TAB 4: USERS & ROLES */}
-      {activeTab === 'USERS' && <UsersRolesPanel />}
+      {activeTab === 'USERS' && canViewSettings && <UsersRolesPanel />}
 
       {activeTab === 'BACKUP' && canEditSettings && <BackupPanel />}
 
       {/* TAB 5: AUDIT LOGS */}
-      {activeTab === 'AUDIT' && (
+      {activeTab === 'AUDIT' && canViewSettings && (
         <div className="glass-card rounded-2xl p-6 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-base font-bold text-slate-900">

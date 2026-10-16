@@ -9,7 +9,7 @@ import { LOGO_ALT, LOGO_SRC } from '../../app/brand';
 
 // Menu latéral au format PREMIDIS ERP : en-tête logo, liens, carte utilisateur, réduction du menu.
 export const Sidebar: React.FC = () => {
-  const { currentView, setCurrentView, employees, attendanceRecords, sanctionCases, sanctionRules, zktecoConfig, can, currentUser, workingDate } = useApp();
+  const { currentView, setCurrentView, employees, attendanceRecords, sanctionCases, sanctionRules, zktecoConfig, can, canOpen, currentUser, workingDate } = useApp();
   const [collapsed, setCollapsed] = useState(false);
 
   // Compute live badges
@@ -37,7 +37,7 @@ export const Sidebar: React.FC = () => {
     },
     { id: 'settings', label: 'Paramètres', short: 'Paramètres', icon: Settings },
   ];
-  const allowed = navItems.filter(item => can(item.id));
+  const allowed = navItems.filter(item => canOpen(item.id));
 
   const initials = (currentUser?.name || 'PA').split(' ').map(s => s[0]).slice(0, 2).join('').toUpperCase();
 
@@ -108,7 +108,7 @@ export const Sidebar: React.FC = () => {
               <p className="text-sidebar-muted leading-snug">
                 {zktecoConfig.model.replace(/\(.*?\)/, '').trim()} · dernier import : {zktecoConfig.lastPunchImportedTime ? zktecoConfig.lastPunchImportedTime.slice(0, 16) : 'aucun'}
               </p>
-              {can('settings') && (
+              {can('attendance', 'create') && (
                 <button onClick={() => setCurrentView('settings')} className="mt-1.5 font-semibold text-brand hover:underline">
                   Importer le fichier du jour →
                 </button>

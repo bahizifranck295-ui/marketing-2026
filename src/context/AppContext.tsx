@@ -45,6 +45,8 @@ interface AppContextType {
   deleteRole: (id: string) => void;
   getRoleLabel: (roleId: string) => string;
   can: (module: AppModule, action?: PermissionAction) => boolean;
+  /** Écran accessible : Paramètres s'ouvre aussi pour l'import du matin (droit « Présences › Créer ») */
+  canOpen: (view: AppModule) => boolean;
   
   // Data entities
   companySettings: CompanySettings;
@@ -161,6 +163,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const role = roles.find(r => r.id === currentUser.role);
     return !!role?.permissions[module]?.includes(action);
   };
+  const canOpen = (view: AppModule) => can(view) || (view === 'settings' && can('attendance', 'create'));
 
   /**
    * Contrôle de droit appliqué à chaque modification, en plus des boutons masqués à l'écran :
@@ -631,6 +634,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       deleteRole,
       getRoleLabel,
       can,
+      canOpen,
       companySettings,
       updateCompanySettings,
       departments,

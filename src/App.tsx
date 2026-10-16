@@ -17,15 +17,15 @@ import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { StorageBanner } from './components/common/StorageBanner';
 
 function MainApp() {
-  const { currentUser, currentView, setCurrentView, can } = useApp();
+  const { currentUser, currentView, setCurrentView, canOpen } = useApp();
 
   const [correctingRecord, setCorrectingRecord] = useState<AttendanceRecord | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   // Si le module affiché n'est pas autorisé pour ce rôle, on bascule sur le premier module permis
-  const allowedViews = (['dashboard', 'employees', 'attendance', 'reports', 'sanctions', 'settings'] as const).filter(v => can(v));
+  const allowedViews = (['dashboard', 'employees', 'attendance', 'reports', 'sanctions', 'settings'] as const).filter(v => canOpen(v));
   useEffect(() => {
-    if (currentUser && !can(currentView) && allowedViews.length > 0) {
+    if (currentUser && !canOpen(currentView) && allowedViews.length > 0) {
       setCurrentView(allowedViews[0]);
     }
   });
