@@ -8,6 +8,7 @@ import { normalizeSanctionLevel } from '../types';
 import { INITIAL_ROLES } from '../data/permissions';
 import type { DayAttendance } from '../utils/attendanceReader';
 import { useTheme, setThemeUser } from '../theme/theme';
+import { loadJSON, saveJSON, onStorageIssue, type StorageIssue } from '../utils/storage';
 import { 
   INITIAL_COMPANY_SETTINGS, INITIAL_USERS, INITIAL_DEPARTMENTS, 
   INITIAL_EMPLOYEES, generateMockAttendance, INITIAL_SANCTION_RULES, 
@@ -78,31 +79,41 @@ interface AppContextType {
   auditLogs: AuditLog[];
   addAuditLog: (action: string, target: string, details: string) => void;
 
+  // Incidents de stockage
+  storageIssues: StorageIssue[];
+  dismissStorageIssues: () => void;
+
   // Calculation helpers
   calculateStatus: (expectedIn: string, actualIn: string | null, toleranceMin: number) => { status: AttendanceStatus; lateMinutes: number };
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+const AUDIT_LOG_LIMIT = 2000;
+
+/** Dernier jour présent dans le carnet (jour affiché par défaut à l'ouverture) */
+function lastRecordDate(records: AttendanceRecord[]): string {
+  const dates = records.map(r => r.date).filter(Boolean).sort();
+  return dates[dates.length - 1] || new Date().toISOString().slice(0, 10);
+}
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // 1. Theme State
   // Thème clair / sombre : même moteur que PREMIDIS ERP (attribut data-theme, préférence par utilisateur)
   const { theme } = useTheme();
 
+  // Incidents de stockage (donnée illisible mise de côté, stockage plein) affichés à l'utilisateur
+  const [storageIssues, setStorageIssues] = useState<StorageIssue[]>([]);
+  useEffect(() => onStorageIssue(issue => setStorageIssues(prev =>
+    prev.some(p => p.kind === issue.kind && p.key === issue.key) ? prev : [...prev, issue])), []);
+  const dismissStorageIssues = () => setStorageIssues([]);
+
   // 3. User & Navigation
   const [allUsers, setAllUsers] = useState<User[]>(() => {
-    try {
-      const saved = localStorage.getItem('premidis_users');
-      if (saved) return JSON.parse(saved);
-    } catch { /* données locales illisibles : on repart des comptes de base */ }
-    return INITIAL_USERS.map(u => ({ ...u, active: true }));
+    return loadJSON('premidis_users', () => INITIAL_USERS.map(u => ({ ...u, active: true })));
   });
   const [roles, setRoles] = useState<RoleDefinition[]>(() => {
-    try {
-      const saved = localStorage.getItem('premidis_roles');
-      if (saved) return JSON.parse(saved);
-    } catch { /* idem */ }
-    return INITIAL_ROLES;
+    return loadJSON('premidis_roles', () => INITIAL_ROLES);
   });
   // Aucune session gardée : à chaque ouverture, l'introduction puis la page de connexion
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -124,15 +135,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const goToView = (view: AppView) => { setCarnetEmployee(null); setReportTab('ATTENDANCE'); setReportMonth(null); setCurrentView(view); };
 
   useEffect(() => {
-    try { localStorage.setItem('premidis_users', JSON.stringify(allUsers)); } catch { /* stockage indisponible */ }
+    saveJSON('premidis_users', allUsers);
   }, [allUsers]);
   useEffect(() => {
-    try { localStorage.setItem('premidis_roles', JSON.stringify(roles)); } catch { /* stockage indisponible */ }
+    saveJSON('premidis_roles', roles);
   }, [roles]);
 
   useEffect(() => {
     setThemeUser(currentUser?.id || null);
   }, [currentUser?.id]);
+
+  // Un compte désactivé ou supprimé pendant la session est déconnecté immédiatement
+  useEffect(() => {
+    if (!currentUser) return;
+    const account = allUsers.find(u => u.id === currentUser.id);
+    if (!account || account.active === false) setCurrentUser(null);
+  }, [allUsers, currentUser]);
 
   const getRoleLabel = (roleId: string) => roles.find(r => r.id === roleId)?.label || roleId;
 
@@ -188,27 +206,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // 4. Data states with localStorage persistence
   const [companySettings, setCompanySettings] = useState<CompanySettings>(() => {
-    const saved = localStorage.getItem('premidis_settings');
-    return saved ? JSON.parse(saved) : INITIAL_COMPANY_SETTINGS;
+    return loadJSON('premidis_settings', () => INITIAL_COMPANY_SETTINGS);
   });
 
   const [departments, setDepartments] = useState<Department[]>(() => {
-    const saved = localStorage.getItem('premidis_departments');
-    return saved ? JSON.parse(saved) : INITIAL_DEPARTMENTS;
+    return loadJSON('premidis_departments', () => INITIAL_DEPARTMENTS, () => []);
   });
 
   const [employees, setEmployees] = useState<Employee[]>(() => {
-    const saved = localStorage.getItem('premidis_employees');
-    return saved ? JSON.parse(saved) : INITIAL_EMPLOYEES;
+    return loadJSON('premidis_employees', () => INITIAL_EMPLOYEES, () => []);
   });
 
   const [workingDate, setWorkingDate] = useState<string>(() => {
-    try { return localStorage.getItem('premidis_working_date') || '2026-10-11'; } catch { return '2026-10-11'; }
+    return loadJSON<string>('premidis_working_date', () => lastRecordDate(loadJSON<AttendanceRecord[]>('premidis_attendance', generateMockAttendance)));
   });
-  useEffect(() => { try { localStorage.setItem('premidis_working_date', workingDate); } catch { /* stockage indisponible */ } }, [workingDate]);
+  useEffect(() => { saveJSON('premidis_working_date', workingDate); }, [workingDate]);
 
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>(() => {
-    const saved = localStorage.getItem('premidis_attendance');
+    const saved = loadJSON<unknown[] | null>('premidis_attendance', () => null, () => []);
     if (!saved) return generateMockAttendance();
     // Anciennes données de démonstration : « 08:-4 » corrigé en « 07:56 »
     const fix = (t: string | null) => {
@@ -217,62 +232,60 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const total = Number(m[1]) * 60 + Number(m[2]);
       return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
     };
-    return (JSON.parse(saved) as AttendanceRecord[]).map(r => ({ ...r, actualCheckIn: fix(r.actualCheckIn), actualCheckOut: fix(r.actualCheckOut) }));
+    return (saved as AttendanceRecord[]).map(r => ({ ...r, actualCheckIn: fix(r.actualCheckIn), actualCheckOut: fix(r.actualCheckOut) }));
   });
 
   const [zktecoConfig, setZKTecoConfig] = useState<ZKTecoDeviceConfig>(() => {
-    const saved = localStorage.getItem('premidis_zkteco');
-    return saved ? JSON.parse(saved) : INITIAL_ZKTECO_CONFIG;
+    return loadJSON('premidis_zkteco', () => INITIAL_ZKTECO_CONFIG);
   });
 
   const [sanctionRules, setSanctionRules] = useState<SanctionRule[]>(() => {
-    const saved = localStorage.getItem('premidis_sanction_rules');
+    const saved = loadJSON<unknown[] | null>('premidis_sanction_rules', () => null, () => []);
     if (!saved) return INITIAL_SANCTION_RULES;
-    return (JSON.parse(saved) as SanctionRule[]).map(r => ({ ...r, sanctionType: normalizeSanctionLevel(r.sanctionType, r.deductionAmount) }));
+    return (saved as SanctionRule[]).map(r => ({ ...r, sanctionType: normalizeSanctionLevel(r.sanctionType, r.deductionAmount) }));
   });
 
   const [sanctionCases, setSanctionCases] = useState<SanctionCase[]>(() => {
-    const saved = localStorage.getItem('premidis_sanction_cases');
+    const saved = loadJSON<unknown[] | null>('premidis_sanction_cases', () => null, () => []);
     if (!saved) return INITIAL_SANCTION_CASES;
-    return (JSON.parse(saved) as SanctionCase[]).map(c => ({ ...c, proposedSanction: normalizeSanctionLevel(c.proposedSanction, c.deductionAmount) }));
+    return (saved as SanctionCase[]).map(c => ({ ...c, proposedSanction: normalizeSanctionLevel(c.proposedSanction, c.deductionAmount) }));
   });
 
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>(() => {
-    const saved = localStorage.getItem('premidis_audit_logs');
-    return saved ? JSON.parse(saved) : INITIAL_AUDIT_LOGS;
+    return loadJSON('premidis_audit_logs', () => INITIAL_AUDIT_LOGS, () => []);
   });
 
   // Save to localStorage when updated
   useEffect(() => {
-    localStorage.setItem('premidis_settings', JSON.stringify(companySettings));
+    saveJSON('premidis_settings', companySettings);
   }, [companySettings]);
 
   useEffect(() => {
-    localStorage.setItem('premidis_departments', JSON.stringify(departments));
+    saveJSON('premidis_departments', departments);
   }, [departments]);
 
   useEffect(() => {
-    localStorage.setItem('premidis_employees', JSON.stringify(employees));
+    saveJSON('premidis_employees', employees);
   }, [employees]);
 
   useEffect(() => {
-    localStorage.setItem('premidis_attendance', JSON.stringify(attendanceRecords));
+    saveJSON('premidis_attendance', attendanceRecords);
   }, [attendanceRecords]);
 
   useEffect(() => {
-    localStorage.setItem('premidis_zkteco', JSON.stringify(zktecoConfig));
+    saveJSON('premidis_zkteco', zktecoConfig);
   }, [zktecoConfig]);
 
   useEffect(() => {
-    localStorage.setItem('premidis_sanction_rules', JSON.stringify(sanctionRules));
+    saveJSON('premidis_sanction_rules', sanctionRules);
   }, [sanctionRules]);
 
   useEffect(() => {
-    localStorage.setItem('premidis_sanction_cases', JSON.stringify(sanctionCases));
+    saveJSON('premidis_sanction_cases', sanctionCases);
   }, [sanctionCases]);
 
   useEffect(() => {
-    localStorage.setItem('premidis_audit_logs', JSON.stringify(auditLogs));
+    saveJSON('premidis_audit_logs', auditLogs);
   }, [auditLogs]);
 
   // Audit Log Helper
@@ -282,12 +295,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
       userId: currentUser?.id || 'sys',
       userName: currentUser?.name || 'Système',
-      userRole: currentUser?.role || 'ADMIN',
+      userRole: currentUser?.role || 'SYSTEME',
       action,
       target,
       details
     };
-    setAuditLogs(prev => [newLog, ...prev]);
+    // Les 2 000 derniers événements sont conservés (le journal ne remplit pas le stockage)
+    setAuditLogs(prev => [newLog, ...prev].slice(0, AUDIT_LOG_LIMIT));
   };
 
   // Status Calculation Helper (STRICT 3-STATUS RULE)
@@ -586,7 +600,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       reviewSanctionCase,
       auditLogs,
       addAuditLog,
-      calculateStatus
+      calculateStatus,
+      storageIssues,
+      dismissStorageIssues
     }}>
       {children}
     </AppContext.Provider>

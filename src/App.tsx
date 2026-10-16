@@ -13,6 +13,8 @@ import { CorrectAttendanceModal } from './components/modals/CorrectAttendanceMod
 import { GlobalSearchModal } from './components/modals/GlobalSearchModal';
 import { StartupIntro } from './components/login/StartupIntro';
 import { AttendanceRecord } from './types';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { StorageBanner } from './components/common/StorageBanner';
 
 function MainApp() {
   const { currentUser, currentView, setCurrentView, can } = useApp();
@@ -51,6 +53,7 @@ function MainApp() {
 
       <div className="flex-1 flex flex-col min-w-0 min-h-screen">
         {/* Barre d'outils : recherche, horloge, langue, thème, utilisateur */}
+        <StorageBanner />
         <Navbar
           onOpenSearch={() => setIsSearchOpen(true)}
         />
@@ -109,9 +112,11 @@ function Startup() {
 
 export default function App() {
   return (
-    <AppProvider>
-      <Startup />
-      <MainApp />
-    </AppProvider>
+    <ErrorBoundary>
+      <AppProvider>
+        <Startup />
+        <MainApp />
+      </AppProvider>
+    </ErrorBoundary>
   );
 }
