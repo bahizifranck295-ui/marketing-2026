@@ -165,7 +165,8 @@ export async function runOcr(img: HTMLCanvasElement, progress?: OcrProgress): Pr
   for (let i = 0; i < boxes.length; i++) {
     if (i % 5 === 0) progress?.(`Lecture du texte : ${i + 1} / ${boxes.length}`);
     const r = await recognize(rec, chars, img, boxes[i]);
-    if (r.text && r.score > 0.5) result.push({ ...boxes[i], ...r });
+    // Aucune zone lue n'est écartée : une lecture peu sûre est gardée et signalée « à vérifier » dans l'aperçu
+    if (r.text) result.push({ ...boxes[i], ...r });
   }
   return result;
 }
@@ -175,7 +176,8 @@ export async function runOcr(img: HTMLCanvasElement, progress?: OcrProgress): Pr
  * Les zones sont parcourues de gauche à droite et chaque zone rejoint la ligne dont la dernière zone
  * la chevauche le plus en hauteur : une photo un peu penchée garde ainsi ses lignes entières.
  */
-export function boxesToRows(boxes: OcrBox[]): string[][] {
+export interface OcrLine { cells: string[]; /** confiance la plus basse des zones de la ligne (0 à 1) */ confidence: number }
+export function boxesToLines(boxes: OcrBox[]): OcrLine[] {
   const lines: OcrBox[][] = [];
   [...boxes].sort((a, b) => a.x - b.x).forEach(b => {
     let best: OcrBox[] | null = null, bestOverlap = 0;
@@ -196,7 +198,7 @@ export function boxesToRows(boxes: OcrBox[]): string[][] {
         if (prev && b.x - (prev.x + prev.w) < 0.6 * b.h) cells[cells.length - 1] += ` ${b.text}`;
         else cells.push(b.text);
       });
-      return cells;
+      return { cells, confidence: Math.min(...l.map(b => b.score)) };
     });
 }
 
@@ -207,7 +209,8 @@ export async function fileToCanvases(file: File): Promise<HTMLCanvasElement[]> {
     pdfjs.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url).toString();
     const pdf = await pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
     const pages: HTMLCanvasElement[] = [];
-    for (let p = 1; p <= Math.min(pdf.numPages, 10); p++) {
+    // Toutes les pages sont lues : aucune page du rapport n'est laissée de côté
+    for (let p = 1; p <= pdf.numPages; p++) {
       const page = await pdf.getPage(p);
       const vp = page.getViewport({ scale: 2 });
       const c = document.createElement('canvas');

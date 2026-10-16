@@ -6,7 +6,7 @@ import {
 } from '../types';
 import { normalizeSanctionLevel } from '../types';
 import { INITIAL_ROLES } from '../data/permissions';
-import type { DayAttendance } from '../utils/attendanceReader';
+import { absentCandidates, type DayAttendance } from '../utils/attendanceReader';
 import { caseMonth, type SanctionProposal } from '../utils/sanctions';
 import { useTheme, setThemeUser } from '../theme/theme';
 import { loadJSON, saveJSON, onStorageIssue, type StorageIssue } from '../utils/storage';
@@ -64,7 +64,7 @@ interface AppContextType {
   zktecoConfig: ZKTecoDeviceConfig;
   updateZKTecoConfig: (config: Partial<ZKTecoDeviceConfig>) => void;
   /** Importe des journées déjà lues et vérifiées (aperçu de l'import) */
-  applyAttendanceImport: (fileName: string, days: DayAttendance[], warnings?: string[]) => { count: number; absents: number; dates: string[] };
+  applyAttendanceImport: (fileName: string, days: DayAttendance[], warnings?: string[], markAbsents?: boolean) => { count: number; absents: number; dates: string[] };
   /** Jour affiché par défaut : le dernier jour importé depuis la pointeuse */
   workingDate: string;
 
@@ -482,7 +482,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     addAuditLog('PARAMETRES_ZKTECO', 'Appareil de pointage', 'Mise à jour de la configuration ZKTeco');
   };
 
-  const applyAttendanceImport = (fileName: string, days: DayAttendance[], warnings: string[] = []) => {
+  const applyAttendanceImport = (fileName: string, days: DayAttendance[], warnings: string[] = [], markAbsents = true) => {
     if (!allowed('attendance', 'create', 'applyAttendanceImport')) return { count: 0, absents: 0, dates: [] };
     // Une journée par agent : premier pointage = entrée, dernier = sortie. Les agents actifs sans aucun
     // pointage ces jours-là sont marqués absents (sauf s'ils ont déjà une ligne dans le carnet).
@@ -504,13 +504,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         status,
         source: 'FILE_IMPORT',
         rawPunchInTime: `${date} ${punches.join(' / ')}`,
-        notes: `Importé depuis ${fileName} (${punches.length} pointage(s))`
+        // Tous les pointages lus sont conservés et visibles dans le carnet
+        notes: `Pointeuse : ${punches.join(' · ')} — fichier ${fileName}`
       };
     });
     const dates = [...new Set(days.map(d => d.date))];
-    const seen = new Set([...attendanceRecords.map(r => `${r.employeeId}|${r.date}`), ...records.map(r => `${r.employeeId}|${r.date}`)]);
-    const absents: AttendanceRecord[] = [];
-    dates.forEach(date => employees.filter(e => e.statutAdministratif === 'ACTIF' && !seen.has(`${e.matricule}|${date}`)).forEach(emp => absents.push({
+    const existing = new Set(attendanceRecords.map(r => `${r.employeeId}|${r.date}`));
+    const absents: AttendanceRecord[] = !markAbsents ? [] : absentCandidates(days, employees, existing, companySettings.workingDays || []).map(({ date, emp }) => ({
       id: `att-${emp.matricule}-${date}`,
       employeeId: emp.matricule,
       employeeName: `${emp.nom} ${emp.postnom} ${emp.prenom}`,
@@ -524,8 +524,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       earlyDepartureMinutes: 0,
       status: 'ABSENT',
       source: 'FILE_IMPORT',
-      notes: `Aucun pointage dans ${fileName}`
-    })));
+      notes: `Aucun pointage pour ce jour dans ${fileName}`
+    }));
     if (!records.length) return { count: 0, absents: 0, dates };
 
     bulkImportAttendance([...records, ...absents], `Fichier de la pointeuse importé : ${fileName}`);

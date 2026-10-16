@@ -1,12 +1,24 @@
-import React, { useState } from 'react';
-import * as XLSX from 'xlsx';
+import React, { useMemo, useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { EmployeeAvatar } from '../common/EmployeeAvatar';
-import { readAttendanceRows, groupByDay, textToRows, type DayAttendance } from '../../utils/attendanceReader';
+import { readAttendanceRows, groupByDay, textToRows, decodeText, absentCandidates, type DayAttendance, type ReadResult } from '../../utils/attendanceReader';
 import { Upload, CheckCircle2, AlertTriangle, ScanText, X, Loader2, ArrowRight } from 'lucide-react';
 
 type Method = 'texte' | 'excel' | 'ocr';
-interface Preview { fileName: string; method: Method; days: DayAttendance[]; unknown: { line: number; raw: string; hint: string }[]; rawText: string }
+interface Preview {
+  fileName: string;
+  method: Method;
+  days: DayAttendance[];
+  unknown: ReadResult['unknown'];
+  ignored: ReadResult['ignored'];
+  totalLines: number;
+  /** Journées retirées à la main par l'opérateur dans l'aperçu */
+  removed: number;
+  rawText: string;
+}
+
+/** En dessous de ce seuil, une lecture OCR est signalée « à vérifier » */
+const OCR_SURE = 0.85;
 
 const METHOD_LABEL: Record<Method, string> = {
   texte: 'Fichier de la clé USB lu directement',
@@ -45,19 +57,25 @@ function excelCell(v: unknown): string {
 
 /**
  * Import du matin : le fichier copié sur la clé USB (AttLog, CSV, Excel) ou une photo / un PDF du rapport
- * imprimé par la pointeuse. Les documents image sont lus par OpenOCR dans le navigateur. Avant d'écrire
- * dans le carnet, l'aperçu montre pour chaque agent reconnu la date, l'entrée, la sortie et le statut.
+ * imprimé par la pointeuse. Les documents image sont lus par OpenOCR dans le navigateur.
+ * Fidélité : chaque ligne du document est comptée (importée, à vérifier ou sans pointage), tous les pointages
+ * lus sont affichés et conservés, et les absences déduites sont listées à part et peuvent être refusées.
  */
 export const UsbImportPanel: React.FC = () => {
-  const { employees, calculateStatus, applyAttendanceImport, setCurrentView } = useApp();
+  const { employees, attendanceRecords, companySettings, calculateStatus, applyAttendanceImport, setCurrentView } = useApp();
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<Preview | null>(null);
+  const [markAbsents, setMarkAbsents] = useState(true);
   const [done, setDone] = useState<{ count: number; absents: number; dates: string[] } | null>(null);
 
-  const analyse = (fileName: string, method: Method, rows: string[][]) => {
-    const read = readAttendanceRows(rows, employees);
-    setPreview({ fileName, method, days: groupByDay(read.rows), unknown: read.unknown, rawText: rows.map(r => r.join('  ')).join('\n') });
+  const analyse = (fileName: string, method: Method, rows: string[][], confidences?: number[]) => {
+    const read = readAttendanceRows(rows, employees, { ocr: method === 'ocr', confidences });
+    setMarkAbsents(true);
+    setPreview({
+      fileName, method, days: groupByDay(read.rows), unknown: read.unknown, ignored: read.ignored,
+      totalLines: read.totalLines, removed: 0, rawText: rows.map(r => r.join('  ')).join('\n'),
+    });
   };
 
   const handleFile = async (file: File) => {
@@ -65,6 +83,7 @@ export const UsbImportPanel: React.FC = () => {
     try {
       if (/\.(xlsx?|xlsm|ods)$/i.test(file.name)) {
         setBusy('Lecture du classeur Excel…');
+        const XLSX = await import('xlsx');
         const wb = XLSX.read(await file.arrayBuffer(), { type: 'array', cellDates: true });
         const rows = wb.SheetNames.flatMap(n => XLSX.utils.sheet_to_json<unknown[]>(wb.Sheets[n], { header: 1, raw: true, defval: '' }));
         analyse(file.name, 'excel', rows.map(r => r.map(excelCell)));
@@ -72,15 +91,15 @@ export const UsbImportPanel: React.FC = () => {
         setBusy('Préparation du document…');
         const ocr = await import('../../ocr/openocr');
         const pages = await ocr.fileToCanvases(file);
-        const rows: string[][] = [];
+        const lines: { cells: string[]; confidence: number }[] = [];
         for (let i = 0; i < pages.length; i++) {
           const boxes = await ocr.runOcr(pages[i], m => setBusy(pages.length > 1 ? `Page ${i + 1}/${pages.length} · ${m}` : m));
-          rows.push(...ocr.boxesToRows(boxes));
+          lines.push(...ocr.boxesToLines(boxes));
         }
-        analyse(file.name, 'ocr', rows);
+        analyse(file.name, 'ocr', lines.map(l => l.cells), lines.map(l => l.confidence));
       } else {
         setBusy('Lecture du fichier…');
-        analyse(file.name, 'texte', textToRows(await file.text()));
+        analyse(file.name, 'texte', textToRows(decodeText(await file.arrayBuffer())));
       }
     } catch (e) {
       setError(`Lecture impossible : ${e instanceof Error ? e.message : String(e)}`);
@@ -89,12 +108,25 @@ export const UsbImportPanel: React.FC = () => {
     }
   };
 
-  const removeDay = (i: number) => setPreview(p => p && { ...p, days: p.days.filter((_, j) => j !== i) });
+  const removeDay = (i: number) => setPreview(p => p && { ...p, days: p.days.filter((_, j) => j !== i), removed: p.removed + 1 });
+
+  // Absences déduites (même règle que l'enregistrement) : affichées avant validation
+  const absents = useMemo(() => {
+    if (!preview) return [];
+    const existing = new Set(attendanceRecords.map(r => `${r.employeeId}|${r.date}`));
+    return absentCandidates(preview.days, employees, existing, companySettings.workingDays || []);
+  }, [preview, attendanceRecords, employees, companySettings.workingDays]);
+
+  const punchLines = preview ? preview.days.reduce((n, d) => n + d.lines.length, 0) : 0;
+  const uncertain = preview ? preview.days.filter(d => d.confidence !== undefined && d.confidence < OCR_SURE).length : 0;
 
   const validate = () => {
     if (!preview) return;
-    const warnings = preview.unknown.map(u => `Ligne ${u.line} : ${u.hint}`);
-    setDone(applyAttendanceImport(preview.fileName, preview.days, warnings));
+    const warnings = [
+      ...preview.unknown.map(u => `Ligne ${u.line} : ${u.hint}`),
+      ...(preview.removed ? [`${preview.removed} journée(s) retirée(s) par l'opérateur`] : []),
+    ];
+    setDone(applyAttendanceImport(preview.fileName, preview.days, warnings, markAbsents));
     setPreview(null);
   };
 
@@ -108,9 +140,9 @@ export const UsbImportPanel: React.FC = () => {
           </h3>
           <p className="text-xs text-slate-500 mt-1 max-w-3xl">
             Sur la pointeuse : Menu › Clé USB › Télécharger les présences. Importez ici le fichier de la clé (AttLog.dat, .txt, .csv),
-            la liste Excel, ou une photo / un PDF du rapport imprimé : ce dernier est lu par OpenOCR. Chaque agent est retrouvé par son
-            matricule, son ID pointeuse ou son nom ; le premier pointage du jour est l'entrée, le dernier la sortie. Les agents sans
-            pointage ce jour-là sont marqués absents.
+            la liste Excel, ou une photo / un PDF du rapport imprimé (lu par OpenOCR). Chaque agent est retrouvé par son matricule,
+            son ID pointeuse ou son nom ; le premier pointage du jour est l'entrée, le dernier la sortie. Rien n'est enregistré avant
+            votre validation, et chaque ligne du document apparaît dans le compte rendu.
           </p>
         </div>
         <button
@@ -139,21 +171,27 @@ export const UsbImportPanel: React.FC = () => {
             <Loader2 className="w-3.5 h-3.5 animate-spin" /> {busy}
           </p>
         )}
-        {error && <p className="text-xs font-semibold text-rose-600">{error}</p>}
+        {error && <p className="text-xs font-semibold text-rose-600" role="alert">{error}</p>}
       </div>
 
       {preview && (
         <div className="space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-xs text-slate-700">
-              <b className="text-brand">{preview.fileName}</b> · {METHOD_LABEL[preview.method]} ·{' '}
-              <b>{preview.days.length}</b> journée(s) d'agent reconnue(s)
-              {preview.unknown.length > 0 && <> · <span className="text-amber-700 font-semibold">{preview.unknown.length} ligne(s) à vérifier</span></>}
+          {/* Compte rendu : toutes les lignes du document sont comptées */}
+          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-1" data-import-summary>
+            <p className="text-slate-700">
+              <b className="text-brand">{preview.fileName}</b> · {METHOD_LABEL[preview.method]} · <b>{preview.totalLines}</b> ligne(s) lue(s) :
             </p>
+            <ul className="flex flex-wrap gap-x-4 gap-y-1 text-[11px]">
+              <li><b className="text-emerald-700">{punchLines}</b> ligne(s) de pointage → <b>{preview.days.length}</b> journée(s) d'agent</li>
+              <li><b className="text-amber-700">{preview.unknown.length}</b> à vérifier (non importées)</li>
+              <li><b className="text-slate-600">{preview.ignored.length}</b> sans pointage (titres, en-têtes)</li>
+              {preview.removed > 0 && <li><b className="text-rose-600">{preview.removed}</b> journée(s) retirée(s) par vous</li>}
+            </ul>
             {preview.method === 'ocr' && (
-              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500">
-                <ScanText className="w-3.5 h-3.5" /> Relisez les heures avant de valider : l'OCR peut se tromper sur un document flou.
-              </span>
+              <p className="flex items-center gap-1 text-[11px] font-semibold text-slate-500">
+                <ScanText className="w-3.5 h-3.5" /> Lecture OCR : comparez chaque heure avec le document.
+                {uncertain > 0 && <span className="text-amber-700"> {uncertain} journée(s) signalée(s) « lecture incertaine ».</span>}
+              </p>
             )}
           </div>
 
@@ -164,6 +202,7 @@ export const UsbImportPanel: React.FC = () => {
                   <tr>
                     <th className="py-2.5 px-3">Agent</th>
                     <th className="py-2.5 px-3">Date</th>
+                    <th className="py-2.5 px-3">Pointages lus</th>
                     <th className="py-2.5 px-3 text-center">Entrée</th>
                     <th className="py-2.5 px-3 text-center">Sortie</th>
                     <th className="py-2.5 px-3 text-center">Statut</th>
@@ -174,8 +213,9 @@ export const UsbImportPanel: React.FC = () => {
                 <tbody className="divide-y divide-slate-100">
                   {preview.days.map((d, i) => {
                     const { status, lateMinutes } = calculateStatus(d.emp.heureEntreeNormale, d.checkIn, d.emp.toleranceMinutes);
+                    const unsure = d.confidence !== undefined && d.confidence < OCR_SURE;
                     return (
-                      <tr key={`${d.emp.matricule}-${d.date}`}>
+                      <tr key={`${d.emp.matricule}-${d.date}`} className={unsure ? 'bg-amber-50/70' : ''}>
                         <td className="py-2 px-3">
                           <div className="flex items-center gap-2">
                             <EmployeeAvatar matricule={d.emp.matricule} size={28} />
@@ -186,6 +226,11 @@ export const UsbImportPanel: React.FC = () => {
                           </div>
                         </td>
                         <td className="py-2 px-3 font-mono">{fmtDate(d.date)}</td>
+                        <td className="py-2 px-3 font-mono text-[11px] text-slate-700">
+                          {d.punches.join(' · ')}
+                          <span className="block text-[10px] text-slate-400">ligne{d.lines.length > 1 ? 's' : ''} {d.lines.join(', ')}{d.duplicates ? ` · ${d.duplicates} doublon(s) identique(s)` : ''}</span>
+                          {unsure && <span className="block text-[10px] font-bold text-amber-700">Lecture incertaine ({Math.round((d.confidence ?? 0) * 100)} %) : à vérifier</span>}
+                        </td>
                         <td className="py-2 px-3 text-center font-mono font-bold">{d.checkIn}</td>
                         <td className="py-2 px-3 text-center font-mono">{d.checkOut ?? '—'}</td>
                         <td className="py-2 px-3 text-center">
@@ -195,7 +240,7 @@ export const UsbImportPanel: React.FC = () => {
                         </td>
                         <td className="py-2 px-3 text-slate-600">{MATCH_LABEL[d.matchedBy]}</td>
                         <td className="py-2 px-3 text-right">
-                          <button onClick={() => removeDay(i)} className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50" title="Ne pas importer cette ligne" aria-label={`Ne pas importer ${d.emp.nom}`}>
+                          <button onClick={() => removeDay(i)} className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50" title="Ne pas importer cette journée" aria-label={`Ne pas importer ${d.emp.nom} le ${fmtDate(d.date)}`}>
                             <X className="w-3.5 h-3.5" />
                           </button>
                         </td>
@@ -213,15 +258,42 @@ export const UsbImportPanel: React.FC = () => {
 
           {preview.unknown.length > 0 && (
             <div className="p-3 rounded-xl bg-amber-50 text-amber-900 text-[11px] space-y-1">
-              <p className="font-bold flex items-center gap-1.5"><AlertTriangle className="w-3.5 h-3.5" /> Lignes non importées</p>
-              <ul className="list-disc pl-4 space-y-0.5 max-h-28 overflow-y-auto">
-                {preview.unknown.slice(0, 30).map(u => <li key={u.line}>Ligne {u.line} : {u.hint} — <span className="font-mono">{u.raw.slice(0, 80)}</span></li>)}
+              <p className="font-bold flex items-center gap-1.5"><AlertTriangle className="w-3.5 h-3.5" /> Lignes à vérifier, non importées ({preview.unknown.length})</p>
+              <ul className="list-disc pl-4 space-y-0.5 max-h-40 overflow-y-auto">
+                {preview.unknown.map(u => <li key={u.line}>Ligne {u.line} : {u.hint} — <span className="font-mono">{u.raw}</span></li>)}
               </ul>
             </div>
           )}
 
+          {preview.ignored.length > 0 && (
+            <details className="text-[11px]">
+              <summary className="cursor-pointer font-semibold text-slate-600">Lignes sans pointage ({preview.ignored.length}) : titres, en-têtes</summary>
+              <ul className="mt-1 pl-4 list-disc max-h-32 overflow-y-auto text-slate-500">
+                {preview.ignored.map(l => <li key={l.line}>Ligne {l.line} : <span className="font-mono">{l.raw}</span></li>)}
+              </ul>
+            </details>
+          )}
+
+          {/* Absences déduites : elles ne figurent pas dans le fichier, l'opérateur décide */}
+          {absents.length > 0 && (
+            <div className="p-3 rounded-xl border border-rose-200 bg-rose-50/60 text-[11px] space-y-1.5">
+              <label className="flex items-start gap-2 font-semibold text-rose-900 cursor-pointer">
+                <input type="checkbox" checked={markAbsents} onChange={e => setMarkAbsents(e.target.checked)} className="mt-0.5" />
+                <span>
+                  Marquer absents les {absents.length} agent(s) actif(s) sans aucun pointage dans ce fichier
+                  {' '}({[...new Set(absents.map(a => fmtDate(a.date)))].join(', ')}, jours ouvrés seulement).
+                  Ces absences sont déduites : elles ne sont pas écrites dans le fichier.
+                </span>
+              </label>
+              <details>
+                <summary className="cursor-pointer text-rose-800">Voir la liste</summary>
+                <p className="mt-1 text-rose-900">{absents.map(a => `${a.emp.nom} ${a.emp.prenom} (${fmtDate(a.date)})`).join(' · ')}</p>
+              </details>
+            </div>
+          )}
+
           <details className="text-xs">
-            <summary className="cursor-pointer font-semibold text-slate-600">Texte lu dans le document</summary>
+            <summary className="cursor-pointer font-semibold text-slate-600">Texte complet lu dans le document</summary>
             <pre className="mt-2 p-3 rounded-xl bg-slate-900 text-green-400 font-mono text-[11px] max-h-40 overflow-auto whitespace-pre-wrap">{preview.rawText}</pre>
           </details>
 
@@ -240,7 +312,7 @@ export const UsbImportPanel: React.FC = () => {
       )}
 
       {done && (
-        <div className="p-4 rounded-xl text-xs bg-emerald-50 text-emerald-800 flex flex-wrap items-center justify-between gap-3">
+        <div className="p-4 rounded-xl text-xs bg-emerald-50 text-emerald-800 flex flex-wrap items-center justify-between gap-3" role="status">
           <p className="font-bold">
             {done.count} présence(s) et {done.absents} absence(s) enregistrées pour le {done.dates.map(fmtDate).join(', ')}.
             Le tableau de bord, le carnet des présences, les retards et les rapports sont à jour.
