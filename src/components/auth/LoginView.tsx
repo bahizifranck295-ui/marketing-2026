@@ -262,7 +262,7 @@ export const LoginView: React.FC = () => {
               Pour des motifs de sécurité interne à PREMIDIS SARL, la réinitialisation de mot de passe doit être validée par le service informatique ou la Direction RH.
             </p>
             <p className="text-slate-600 font-mono text-[11px]">
-              Contact : {companySettings.phone} | {companySettings.email}
+              Contact : {companySettings.phone}{companySettings.email ? ` | ${companySettings.email}` : ''}
             </p>
             <div className="flex justify-end pt-2">
               <button onClick={() => setForgotModal(false)} className="h-9 px-4 rounded-md bg-brand text-white text-sm font-medium hover:bg-brand-strong">

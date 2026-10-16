@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { UsersRolesPanel } from './UsersRolesPanel';
 import { UsbImportPanel } from './UsbImportPanel';
-import { Cpu, Building2, Users, ShieldCheck, History } from 'lucide-react';
+import { BackupPanel } from './BackupPanel';
+import { Cpu, Building2, Users, ShieldCheck, History, HardDriveDownload } from 'lucide-react';
 
 export const SettingsView: React.FC = () => {
   const { 
@@ -15,7 +16,7 @@ export const SettingsView: React.FC = () => {
   const canCreateSettings = can('settings', 'create');
   const canImport = can('attendance', 'create');
 
-  const [activeTab, setActiveTab] = useState<'ZKTECO' | 'COMPANY' | 'DEPARTMENTS' | 'AUDIT' | 'USERS'>('ZKTECO');
+  const [activeTab, setActiveTab] = useState<'ZKTECO' | 'COMPANY' | 'DEPARTMENTS' | 'AUDIT' | 'USERS' | 'BACKUP'>('ZKTECO');
 
   // New Department state
   const [newDepName, setNewDepName] = useState('');
@@ -110,6 +111,20 @@ export const SettingsView: React.FC = () => {
           <History className="w-3.5 h-3.5" />
           <span>Journal d'Audit ({auditLogs.length})</span>
         </button>
+
+        {canEditSettings && (
+          <button
+            onClick={() => setActiveTab('BACKUP')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              activeTab === 'BACKUP'
+                ? 'bg-brand text-white shadow-xs'
+                : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            <HardDriveDownload className="w-3.5 h-3.5" />
+            <span>Sauvegarde</span>
+          </button>
+        )}
       </div>
 
       {/* TAB 1: ZKTECO DEVICE CONFIGURATION & FILE IMPORTER */}
@@ -391,6 +406,8 @@ export const SettingsView: React.FC = () => {
 
       {/* TAB 4: USERS & ROLES */}
       {activeTab === 'USERS' && <UsersRolesPanel />}
+
+      {activeTab === 'BACKUP' && canEditSettings && <BackupPanel />}
 
       {/* TAB 5: AUDIT LOGS */}
       {activeTab === 'AUDIT' && (

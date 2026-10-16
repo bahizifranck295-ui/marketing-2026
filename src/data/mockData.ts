@@ -7,7 +7,7 @@ export const INITIAL_COMPANY_SETTINGS: CompanySettings = {
   rccm: "CD/GOM/RCCM/14-B-0203",
   phone: "+243 965 538 258",
   whatsapp: "+243 910 042 575",
-  email: "breezyjovial1@gmail.com",
+  email: "", // à renseigner dans Paramètres › Entreprise
   timezone: "Africa/Lubumbashi (CAT / GMT+2)",
   defaultExpectedCheckIn: "08:30",
   defaultExpectedCheckOut: "16:30",
