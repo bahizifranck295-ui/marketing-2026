@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { exportPreviewToPdf } from '../../utils/previewPdf';
+import { exportPreviewToPdf } from '../../utils/pdfLoader';
 import { useApp } from '../../context/AppContext';
 import { EmployeeAvatar } from '../common/EmployeeAvatar';
 import { AttendanceRecord, AttendanceStatus, Employee, SANCTION_LABELS } from '../../types';

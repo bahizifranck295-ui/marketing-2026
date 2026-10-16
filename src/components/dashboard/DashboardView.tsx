@@ -5,7 +5,7 @@ import { StatusBadge } from '../common/Badge';
 import { AttendanceRecord, SANCTION_LABELS } from '../../types';
 import { evaluateSanctions, sanctionText } from '../../utils/sanctions';
 import { CheckCircle2, Clock, AlertTriangle, XCircle, ArrowUpRight, Calendar, ChevronRight, Edit3, Search, FileText } from 'lucide-react';
-import { generateAttendancePdf } from '../../utils/exportUtils';
+import { generateAttendancePdf } from '../../utils/pdfLoader';
 
 interface DashboardViewProps {
   onOpenCorrectModal: (record: AttendanceRecord) => void;

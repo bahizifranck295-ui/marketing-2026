@@ -3,7 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { EmployeeAvatar, resizePhoto } from '../common/EmployeeAvatar';
 import { Employee, AdministrativeStatus } from '../../types';
 import { Plus, Search, FileText, Edit2, Trash2, Eye, Camera } from 'lucide-react';
-import { generateEmployeesPdf } from '../../utils/exportUtils';
+import { generateEmployeesPdf } from '../../utils/pdfLoader';
 
 export const EmployeesView: React.FC = () => {
   const { employees, addEmployee, updateEmployee, deleteEmployee, departments, companySettings, attendanceRecords, can } = useApp();

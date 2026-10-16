@@ -1,4 +1,4 @@
-import jsPDF from 'jspdf';
+import type jsPDF from 'jspdf';
 import { LETTERHEAD_LOGO } from '../assets/letterheadLogo';
 
 // En-tête officiel PREMIDIS SARL, reproduit en texte vectoriel.

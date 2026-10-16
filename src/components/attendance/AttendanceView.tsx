@@ -1,13 +1,13 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { ReportsView } from '../reports/ReportsView';
-import { exportPreviewToPdf } from '../../utils/previewPdf';
+import { exportPreviewToPdf } from '../../utils/pdfLoader';
 import { useApp } from '../../context/AppContext';
 import { EmployeeAvatar } from '../common/EmployeeAvatar';
 import { EmployeeCarnet } from './EmployeeCarnet';
 import { AttendanceRecord, AttendanceStatus } from '../../types';
 import { StatusBadge, CodeBadge } from '../common/Badge';
 import { Calendar, Search, FileText } from 'lucide-react';
-import { generateAttendancePdf } from '../../utils/exportUtils';
+import { generateAttendancePdf } from '../../utils/pdfLoader';
 
 interface AttendanceViewProps {
   onOpenCorrectModal: (record: AttendanceRecord) => void;
