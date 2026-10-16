@@ -16,7 +16,9 @@ interface AttendanceViewProps {
 export const AttendanceView: React.FC<AttendanceViewProps> = ({
   onOpenCorrectModal
 }) => {
-  const { attendanceRecords, employees, departments, workingDate, carnetEmployee, openEmployeeCarnet } = useApp();
+  const { attendanceRecords, employees, departments, workingDate, carnetEmployee, openEmployeeCarnet, can } = useApp();
+  const canEdit = can('attendance', 'edit');
+  const canExport = can('attendance', 'export');
 
   const [activeTab, setActiveTab] = useState<'DAILY' | 'MONTHLY_GRID'>('DAILY');
   const [selectedDate, setSelectedDate] = useState(workingDate);
@@ -224,7 +226,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
 
         {/* Export Buttons */}
         <div className="flex items-center gap-2">
-          {activeTab === 'DAILY' ? (
+          {!canExport ? null : activeTab === 'DAILY' ? (
             <>
               <button
                 onClick={handleExportDailyPdf}
@@ -372,12 +374,12 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({
                       </td>
 
                       <td className="py-3 px-3 text-right">
-                        <button
+                        {canEdit && <button
                           onClick={() => onOpenCorrectModal(record)}
                           className="px-2 py-1 rounded-lg hover:bg-slate-100 text-slate-600 font-semibold transition-colors text-[11px]"
                         >
                           Modifier
-                        </button>
+                        </button>}
                       </td>
                     </tr>
                   ))

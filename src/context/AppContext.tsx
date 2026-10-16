@@ -160,13 +160,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return !!role?.permissions[module]?.includes(action);
   };
 
+  /**
+   * Contrôle de droit appliqué à chaque modification, en plus des boutons masqués à l'écran :
+   * une action non autorisée est refusée et inscrite au journal d'audit.
+   */
+  const allowed = (module: AppModule, action: PermissionAction, operation: string) => {
+    if (can(module, action)) return true;
+    addAuditLog('ACTION_REFUSEE', operation, `Droit « ${action} » manquant sur le module ${module}`);
+    return false;
+  };
+
   const addUser = (user: Omit<User, 'id'>) => {
+    if (!allowed('settings', 'edit', 'addUser')) return;
     const newUser: User = { ...user, id: `usr-${Date.now()}`, active: user.active ?? true };
     setAllUsers(prev => [...prev, newUser]);
     addAuditLog('CREATION_UTILISATEUR', newUser.email, `Rôle : ${getRoleLabel(newUser.role)}`);
   };
 
   const updateUser = (id: string, data: Partial<User>) => {
+    if (!allowed('settings', 'edit', 'updateUser')) return;
     setAllUsers(prev => prev.map(u => (u.id === id ? { ...u, ...data } : u)));
     if (currentUser?.id === id) setCurrentUser(prev => (prev ? { ...prev, ...data } : prev));
     const target = allUsers.find(u => u.id === id);
@@ -177,6 +189,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const deleteUser = (id: string) => {
+    if (!allowed('settings', 'edit', 'deleteUser')) return;
     if (currentUser?.id === id) return; // on ne supprime pas son propre compte
     const target = allUsers.find(u => u.id === id);
     setAllUsers(prev => prev.filter(u => u.id !== id));
@@ -184,6 +197,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const addRole = (role: Omit<RoleDefinition, 'id' | 'system'>) => {
+    if (!allowed('settings', 'edit', 'addRole')) return;
     const base = role.label.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z0-9]+/g, '_').replace(/^_|_$/g, '') || 'ROLE';
     let id = base;
     for (let i = 2; roles.some(r => r.id === id); i++) id = `${base}_${i}`;
@@ -192,12 +206,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateRole = (id: string, data: Partial<Omit<RoleDefinition, 'id' | 'system'>>) => {
+    if (!allowed('settings', 'edit', 'updateRole')) return;
     if (id === 'ADMIN' && data.permissions) return; // l'administrateur garde tous les droits
     setRoles(prev => prev.map(r => (r.id === id ? { ...r, ...data } : r)));
     addAuditLog('MODIFICATION_ROLE', getRoleLabel(id), data.permissions ? 'Permissions mises à jour' : 'Rôle mis à jour');
   };
 
   const deleteRole = (id: string) => {
+    if (!allowed('settings', 'edit', 'deleteRole')) return;
     const role = roles.find(r => r.id === id);
     if (!role || role.system || allUsers.some(u => u.role === id)) return;
     setRoles(prev => prev.filter(r => r.id !== id));
@@ -326,6 +342,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Employee Actions
   const addEmployee = (empData: Omit<Employee, 'id'>) => {
+    if (!allowed('employees', 'create', 'addEmployee')) return;
     const newEmp: Employee = {
       ...empData,
       id: `emp-${Date.now()}`
@@ -335,12 +352,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateEmployee = (id: string, empData: Partial<Employee>) => {
-    setEmployees(prev => prev.map(e => e.id === id ? { ...e, ...empData } : e));
+    if (!allowed('employees', 'edit', 'updateEmployee')) return;
     const emp = employees.find(e => e.id === id);
-    addAuditLog('MODIFICATION_EMPLOYE', emp ? emp.matricule : id, 'Mise à jour du dossier employé');
+    if (!emp) return;
+    const next = { ...emp, ...empData };
+    setEmployees(prev => prev.map(e => e.id === id ? next : e));
+    // Le carnet et les dossiers suivent le matricule, le nom et le département de l'employé
+    const fullName = `${next.nom} ${next.postnom} ${next.prenom}`;
+    if (next.matricule !== emp.matricule || fullName !== `${emp.nom} ${emp.postnom} ${emp.prenom}` || next.departement !== emp.departement) {
+      setAttendanceRecords(prev => prev.map(r => r.employeeId === emp.matricule
+        ? { ...r, employeeId: next.matricule, employeeName: fullName, department: next.departement, id: r.id.replace(emp.matricule, next.matricule) }
+        : r));
+      setSanctionCases(prev => prev.map(c => c.employeeId === emp.matricule || c.matricule === emp.matricule
+        ? { ...c, employeeId: next.matricule, matricule: next.matricule, employeeName: fullName, department: next.departement }
+        : c));
+    }
+    addAuditLog('MODIFICATION_EMPLOYE', next.matricule, emp.matricule !== next.matricule ? `Matricule ${emp.matricule} → ${next.matricule}` : 'Mise à jour du dossier employé');
   };
 
   const deleteEmployee = (id: string) => {
+    if (!allowed('employees', 'delete', 'deleteEmployee')) return;
     const emp = employees.find(e => e.id === id);
     if (emp) {
       setEmployees(prev => prev.filter(e => e.id !== id));
@@ -350,6 +381,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Department Actions
   const addDepartment = (depData: Omit<Department, 'id'>) => {
+    if (!allowed('settings', 'create', 'addDepartment')) return;
     const newDep: Department = {
       ...depData,
       id: `dep-${Date.now()}`
@@ -362,6 +394,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Attendance Actions
   const correctAttendance = (recordId: string, newCheckIn: string | null, newCheckOut: string | null, reason: string) => {
+    if (!allowed('attendance', 'edit', 'correctAttendance')) return;
     const existing = attendanceRecords.find(r => r.id === recordId);
     if (!existing) return;
 
@@ -436,16 +469,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // ZKTeco Device Actions
   const updateCompanySettings = (newSettings: Partial<CompanySettings>) => {
+    if (!allowed('settings', 'edit', 'updateCompanySettings')) return;
     setCompanySettings(prev => ({ ...prev, ...newSettings }));
     addAuditLog('PARAMETRES_ENTREPRISE', 'Configuration', 'Mise à jour des paramètres généraux');
   };
 
   const updateZKTecoConfig = (config: Partial<ZKTecoDeviceConfig>) => {
+    if (!allowed('settings', 'edit', 'updateZKTecoConfig')) return;
     setZKTecoConfig(prev => ({ ...prev, ...config }));
     addAuditLog('PARAMETRES_ZKTECO', 'Appareil de pointage', 'Mise à jour de la configuration ZKTeco');
   };
 
   const applyAttendanceImport = (fileName: string, days: DayAttendance[], warnings: string[] = []) => {
+    if (!allowed('attendance', 'create', 'applyAttendanceImport')) return { count: 0, absents: 0, dates: [] };
     // Une journée par agent : premier pointage = entrée, dernier = sortie. Les agents actifs sans aucun
     // pointage ces jours-là sont marqués absents (sauf s'ils ont déjà une ligne dans le carnet).
     const toMin = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
@@ -515,6 +551,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Sanctions Actions
   const addSanctionRule = (ruleData: Omit<SanctionRule, 'id'>) => {
+    if (!allowed('sanctions', 'create', 'addSanctionRule')) return;
     const newRule: SanctionRule = {
       ...ruleData,
       id: `rule-${Date.now()}`
@@ -524,16 +561,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateSanctionRule = (id: string, ruleData: Partial<SanctionRule>) => {
+    if (!allowed('sanctions', 'edit', 'updateSanctionRule')) return;
     setSanctionRules(prev => prev.map(r => r.id === id ? { ...r, ...ruleData } : r));
     addAuditLog('MODIFICATION_REGLE_SANCTION', id, 'Mise à jour des critères de sanction');
   };
 
   const deleteSanctionRule = (id: string) => {
+    if (!allowed('sanctions', 'delete', 'deleteSanctionRule')) return;
     setSanctionRules(prev => prev.filter(r => r.id !== id));
     addAuditLog('SUPPRESSION_REGLE_SANCTION', id, 'Suppression d\'un barème de sanction');
   };
 
   const reviewSanctionCase = (id: string, newStatus: SanctionStatus, motif: string, approvedAmount?: number) => {
+    if (!allowed('sanctions', 'validate', 'reviewSanctionCase')) return;
     const sc = sanctionCases.find(c => c.id === id);
     if (!sc) return;
 

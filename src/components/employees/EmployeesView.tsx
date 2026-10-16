@@ -6,7 +6,18 @@ import { Plus, Search, FileText, Edit2, Trash2, Eye, Camera } from 'lucide-react
 import { generateEmployeesPdf } from '../../utils/exportUtils';
 
 export const EmployeesView: React.FC = () => {
-  const { employees, addEmployee, updateEmployee, deleteEmployee, departments, companySettings, attendanceRecords } = useApp();
+  const { employees, addEmployee, updateEmployee, deleteEmployee, departments, companySettings, attendanceRecords, can } = useApp();
+  const canCreate = can('employees', 'create');
+  const canEdit = can('employees', 'edit');
+  const canDelete = can('employees', 'delete');
+  const canExport = can('employees', 'export');
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [formError, setFormError] = useState('');
+
+  // Prochain matricule et prochain ID pointeuse libres (jamais celui d'un employé existant, même après suppression)
+  const nextNumber = (values: string[]) => values.reduce((max, v) => Math.max(max, parseInt(v.replace(/\D/g, ''), 10) || 0), 0) + 1;
+  const nextMatricule = () => `PRM-${String(nextNumber(employees.map(e => e.matricule))).padStart(3, '0')}`;
+  const nextBioId = () => String(nextNumber(employees.map(e => e.zktecoBioId)));
 
   const [searchQuery, setSearchQuery] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('ALL');
@@ -17,7 +28,7 @@ export const EmployeesView: React.FC = () => {
 
   // Form state
   const [formData, setFormData] = useState<Omit<Employee, 'id'>>({
-    matricule: `PRM-${String(employees.length + 1).padStart(3, '0')}`,
+    matricule: '',
     nom: '',
     postnom: '',
     prenom: '',
@@ -29,7 +40,7 @@ export const EmployeesView: React.FC = () => {
     heureEntreeNormale: '08:30',
     heureSortieNormale: '16:30',
     toleranceMinutes: 10,
-    zktecoBioId: String(employees.length + 1),
+    zktecoBioId: '',
     statutAdministratif: 'ACTIF'
   });
 
@@ -62,7 +73,7 @@ export const EmployeesView: React.FC = () => {
 
   const handleOpenAdd = () => {
     setFormData({
-      matricule: `PRM-${String(employees.length + 1).padStart(3, '0')}`,
+      matricule: nextMatricule(),
       nom: '',
       postnom: '',
       prenom: '',
@@ -74,11 +85,12 @@ export const EmployeesView: React.FC = () => {
       heureEntreeNormale: companySettings.defaultExpectedCheckIn,
       heureSortieNormale: companySettings.defaultExpectedCheckOut,
       toleranceMinutes: companySettings.defaultToleranceMinutes,
-      zktecoBioId: String(employees.length + 1),
+      zktecoBioId: nextBioId(),
       statutAdministratif: 'ACTIF',
       photoUrl: undefined
     });
     setPhotoError('');
+    setFormError('');
     setEditingEmployee(null);
     setIsAddModalOpen(true);
   };
@@ -103,20 +115,37 @@ export const EmployeesView: React.FC = () => {
       photoUrl: emp.photoUrl
     });
     setPhotoError('');
+    setFormError('');
     setIsAddModalOpen(true);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.nom || !formData.prenom || !formData.matricule) {
-      alert('Veuillez remplir au minimum le matricule, le nom et le prénom.');
+    const matricule = formData.matricule.trim().toUpperCase();
+    const bioId = formData.zktecoBioId.trim();
+    if (!formData.nom.trim() || !formData.prenom.trim() || !matricule) {
+      setFormError('Veuillez remplir au minimum le matricule, le nom et le prénom.');
       return;
     }
+    // Un matricule et un ID pointeuse ne désignent qu'un seul employé : sinon les pointages seraient mélangés
+    const others = employees.filter(e => e.id !== editingEmployee?.id);
+    const sameMatricule = others.find(e => e.matricule.toUpperCase() === matricule);
+    if (sameMatricule) {
+      setFormError(`Le matricule ${matricule} est déjà attribué à ${sameMatricule.nom} ${sameMatricule.prenom}.`);
+      return;
+    }
+    const norm = (id: string) => id.replace(/^0+(?=\d)/, '');
+    const sameBioId = bioId ? others.find(e => norm(e.zktecoBioId.trim()) === norm(bioId)) : undefined;
+    if (sameBioId) {
+      setFormError(`L'ID pointeuse ${bioId} est déjà attribué à ${sameBioId.nom} ${sameBioId.prenom}.`);
+      return;
+    }
+    const data = { ...formData, matricule, zktecoBioId: bioId };
 
     if (editingEmployee) {
-      updateEmployee(editingEmployee.id, formData);
+      updateEmployee(editingEmployee.id, data);
     } else {
-      addEmployee(formData);
+      addEmployee(data);
     }
     setIsAddModalOpen(false);
   };
@@ -145,22 +174,22 @@ export const EmployeesView: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
-          <button
+          {canExport && <button
             onClick={handleExportPdf}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
           >
             <FileText className="w-3.5 h-3.5 text-rose-600" />
             <span>PDF</span>
-          </button>
+          </button>}
 
 
-          <button
+          {canCreate && <button
             onClick={handleOpenAdd}
             className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-brand text-white hover:bg-brand-deep text-xs font-semibold shadow-sm transition-all"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Nouvel Employé</span>
-          </button>
+          </button>}
         </div>
       </div>
 
@@ -295,24 +324,30 @@ export const EmployeesView: React.FC = () => {
                         >
                           <Eye className="w-3.5 h-3.5" />
                         </button>
-                        <button
+                        {canEdit && <button
                           onClick={() => handleOpenEdit(emp)}
                           className="p-1.5 rounded-lg text-slate-500 hover:text-brand hover:bg-slate-100 transition-colors"
                           title="Modifier le dossier"
+                          aria-label={`Modifier le dossier de ${emp.nom} ${emp.prenom}`}
                         >
                           <Edit2 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (confirm(`Confirmez-vous la suppression de l'employé ${emp.nom} ${emp.prenom} ?`)) {
-                              deleteEmployee(emp.id);
-                            }
-                          }}
-                          className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-                          title="Supprimer l'employé"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        </button>}
+                        {canDelete && (confirmDeleteId === emp.id ? (
+                          <span className="inline-flex items-center gap-1 text-[11px]">
+                            <span className="font-semibold text-rose-600">Supprimer ?</span>
+                            <button onClick={() => { deleteEmployee(emp.id); setConfirmDeleteId(null); }} className="px-2 py-0.5 rounded-lg bg-rose-600 text-white font-bold">Oui</button>
+                            <button onClick={() => setConfirmDeleteId(null)} className="px-2 py-0.5 rounded-lg border border-slate-200 font-bold text-slate-600">Non</button>
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => setConfirmDeleteId(emp.id)}
+                            className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                            title="Supprimer l'employé"
+                            aria-label={`Supprimer ${emp.nom} ${emp.prenom}`}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        ))}
                       </div>
                     </td>
                   </tr>
@@ -341,7 +376,7 @@ export const EmployeesView: React.FC = () => {
                     <label htmlFor="emp-photo" className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand text-white font-semibold hover:bg-brand-strong">
                       <Camera className="w-3.5 h-3.5" /> {formData.photoUrl ? 'Changer la photo' : 'Importer une photo'}
                     </label>
-                    <input id="emp-photo" type="file" accept="image/*" capture="user" onChange={handlePhoto} className="hidden" />
+                    <input id="emp-photo" type="file" accept="image/*" onChange={handlePhoto} className="hidden" />
                     {formData.photoUrl && (
                       <button type="button" onClick={() => setFormData(f => ({ ...f, photoUrl: undefined }))} className="px-3 py-1.5 rounded-xl border border-slate-200 font-semibold text-slate-600 hover:bg-slate-100">
                         Retirer
@@ -511,6 +546,8 @@ export const EmployeesView: React.FC = () => {
                   </div>
                 </div>
               </div>
+
+              {formError && <p className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 font-semibold" role="alert">{formError}</p>}
 
               {/* Submit Buttons */}
               <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-200">

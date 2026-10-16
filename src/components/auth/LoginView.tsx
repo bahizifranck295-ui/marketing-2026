@@ -66,6 +66,20 @@ export const LoginView: React.FC = () => {
     }, 400);
   };
 
+  // Présentation : un clic sur un compte de démonstration ouvre directement sa session
+  // (le mot de passe de démonstration est tout de même vérifié, et la connexion est inscrite au journal)
+  const loginDemo = async (u: AppUser) => {
+    setEmail(u.email);
+    setPassword(DEMO_PASSWORD);
+    setErrorMsg('');
+    if (u.active === false || !(await checkPassword(u, DEMO_PASSWORD))) {
+      setErrorMsg('Ce compte de démonstration n\'est plus disponible.');
+      return;
+    }
+    setCurrentUser(u);
+    addAuditLog('CONNEXION', u.name, `Connexion de démonstration sous le profil ${getRoleLabel(u.role)}`);
+  };
+
   const target = useCallback(() => logoRef.current, []);
   const onReveal = useCallback(() => setPhase(p => (p === 'playing' ? 'revealing' : p)), []);
   const onDone = useCallback(() => setPhase('done'), []);
@@ -83,7 +97,8 @@ export const LoginView: React.FC = () => {
         key={u.id}
         type="button"
         data-demo-account={u.role}
-        onClick={() => { setEmail(u.email); setPassword(DEMO_PASSWORD); setErrorMsg(''); }}
+        onClick={() => loginDemo(u)}
+        disabled={loading}
         style={{ transitionDelay: `${i * 60}ms` }}
         className={`group flex min-w-0 items-center gap-3 rounded-2xl border p-3 text-left transition-colors ${
           active ? 'border-brand bg-brand/10' : 'border-slate-200 bg-white/60 hover:border-brand/60 hover:bg-brand/5'
@@ -231,7 +246,7 @@ export const LoginView: React.FC = () => {
               </button>
             )}
             <p className="text-center text-[11px] text-slate-500">
-              Mot de passe de démonstration : <span className="font-semibold">{DEMO_PASSWORD}</span>
+              Un clic ouvre directement le compte · mot de passe de démonstration : <span className="font-semibold">{DEMO_PASSWORD}</span>
             </p>
           </div>
           )}

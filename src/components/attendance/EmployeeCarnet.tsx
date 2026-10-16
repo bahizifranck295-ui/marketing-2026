@@ -15,7 +15,8 @@ const SOURCE_LABEL = { ZKTECO_BIOMETRIC: 'Biométrie', FILE_IMPORT: 'Clé USB', 
 
 /** Carnet de présence d'un seul agent : fiche, bilan du mois et pointages jour par jour */
 export const EmployeeCarnet: React.FC<EmployeeCarnetProps> = ({ matricule, onClose, onOpenCorrectModal }) => {
-  const { employees, attendanceRecords, workingDate } = useApp();
+  const { employees, attendanceRecords, workingDate, can } = useApp();
+  const canEdit = can('attendance', 'edit');
   const emp = employees.find(e => e.matricule === matricule);
   const [month, setMonth] = useState(workingDate.slice(0, 7));
 
@@ -103,7 +104,7 @@ export const EmployeeCarnet: React.FC<EmployeeCarnetProps> = ({ matricule, onClo
                 <th className="py-2.5 px-3 text-center">Retard</th>
                 <th className="py-2.5 px-3 text-center">Statut</th>
                 <th className="py-2.5 px-3">Source / remarque</th>
-                <th className="py-2.5 px-3 text-right">Corriger</th>
+                <th className="py-2.5 px-3 text-right">{canEdit ? 'Corriger' : ''}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -121,9 +122,9 @@ export const EmployeeCarnet: React.FC<EmployeeCarnetProps> = ({ matricule, onClo
                     {SOURCE_LABEL[r.source]}{r.isCorrected ? ' · corrigé' : ''}{r.notes ? ` · ${r.notes}` : ''}
                   </td>
                   <td className="py-2.5 px-3 text-right">
-                    <button onClick={() => onOpenCorrectModal(r)} className="p-1.5 rounded-lg text-slate-400 hover:text-brand hover:bg-purple-50" title="Corriger ce pointage" aria-label={`Corriger le pointage du ${r.date}`}>
+                    {canEdit && <button onClick={() => onOpenCorrectModal(r)} className="p-1.5 rounded-lg text-slate-400 hover:text-brand hover:bg-purple-50" title="Corriger ce pointage" aria-label={`Corriger le pointage du ${r.date}`}>
                       <Edit3 className="w-3.5 h-3.5" />
-                    </button>
+                    </button>}
                   </td>
                 </tr>
               ))}

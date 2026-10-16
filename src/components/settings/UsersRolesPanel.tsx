@@ -17,6 +17,7 @@ export const UsersRolesPanel: React.FC = () => {
   } = useApp();
 
   const canManage = can('settings', 'edit');
+  const isAdmin = currentUser?.role === 'ADMIN';
   const [tab, setTab] = useState<'USERS' | 'ROLES'>('USERS');
 
   // ---- Utilisateurs ----
@@ -203,8 +204,9 @@ export const UsersRolesPanel: React.FC = () => {
                             </>
                           ) : (
                             <>
-                              {!isSelf && active && (
-                                <button title="Se connecter avec ce compte (test des permissions)"
+                              {/* Aperçu d'un autre compte : réservé à l'Administrateur (sinon élévation de privilèges) */}
+                              {isAdmin && !isSelf && active && (
+                                <button title="Voir l'application avec ce compte (Administrateur uniquement)"
                                   onClick={() => { setCurrentUser(u); addAuditLog('CHANGEMENT_UTILISATEUR', u.name, `Connecté sous le profil ${getRoleLabel(u.role)}`); }}
                                   className="p-1.5 rounded-lg text-slate-500 hover:text-brand"><LogIn className="w-3.5 h-3.5" /></button>
                               )}

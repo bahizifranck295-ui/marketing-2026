@@ -20,8 +20,12 @@ interface DashboardViewProps {
 export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenCorrectModal }) => {
   const { 
     attendanceRecords, employees, departments, 
-    setCurrentView, workingDate, openEmployeeCarnet, sanctionRules, openReport 
+    setCurrentView, workingDate, openEmployeeCarnet, sanctionRules, openReport, can
   } = useApp();
+  const canCorrect = can('attendance', 'edit');
+  const canOpenCarnet = can('attendance');
+  // Lien vers le carnet seulement si le rôle peut consulter les présences
+  const openCarnet = (matricule: string) => { if (canOpenCarnet) openEmployeeCarnet(matricule); };
 
   const [selectedDate, setSelectedDate] = useState(workingDate);
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'PRESENT' | 'RETARD' | 'ABSENT'>('ALL');
@@ -310,7 +314,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenCorrectModal
                   </span>
                   <div className="min-w-0 flex-1">
                     <button
-                      onClick={() => openEmployeeCarnet(t.emp.matricule)}
+                      onClick={() => openCarnet(t.emp.matricule)}
                       className="block max-w-full text-left text-xs font-bold leading-snug text-white hover:underline underline-offset-2"
                       title={`Ouvrir le carnet de présence de ${t.emp.nom} ${t.emp.postnom} ${t.emp.prenom}`}
                     >
@@ -331,12 +335,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenCorrectModal
 
           <div className="mt-3 pt-3 border-t border-white/20 flex items-center justify-between relative">
             <span className="text-[11px] text-white/80">{employees.length} collaborateurs suivis</span>
-            <button
+            {can('employees') && <button
               onClick={() => setCurrentView('employees')}
               className="px-3 py-1 rounded-lg bg-white/15 hover:bg-white/25 ring-1 ring-white/25 text-white text-xs font-bold transition-colors"
             >
               Voir les employés
-            </button>
+            </button>}
           </div>
         </div>
       </div>
@@ -353,9 +357,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenCorrectModal
               {sanctionReached.total > 5 ? ' · les 5 cas les plus lourds' : ''}
             </p>
           </div>
-          <button onClick={() => openReport('SANCTIONS', selectedDate.slice(0, 7))} className="text-xs font-bold text-brand hover:underline">
+          {can('reports') && <button onClick={() => openReport('SANCTIONS', selectedDate.slice(0, 7))} className="text-xs font-bold text-brand hover:underline">
             Voir le rapport des sanctions →
-          </button>
+          </button>}
         </div>
 
         {sanctionReached.rows.length === 0 ? (
@@ -382,7 +386,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenCorrectModal
                         <EmployeeAvatar matricule={emp.matricule} size={38} />
                         <div className="min-w-0">
                           <button
-                            onClick={() => openEmployeeCarnet(emp.matricule)}
+                            onClick={() => openCarnet(emp.matricule)}
                             className="block text-left font-bold text-slate-900 hover:text-brand hover:underline underline-offset-2"
                             title={`Ouvrir le carnet de présence de ${emp.nom} ${emp.postnom} ${emp.prenom}`}
                           >
@@ -490,14 +494,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenCorrectModal
             </div>
 
             {/* Export buttons */}
-            <button
+            {can('dashboard', 'export') && <button
               onClick={handleQuickExportPdf}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-xs font-bold transition-all shadow-2xs"
               title="Exporter un fichier PDF officiel contenant les informations du jour"
             >
               <FileText className="w-3.5 h-3.5 text-rose-600" />
               <span>Exporter PDF du jour</span>
-            </button>
+            </button>}
           </div>
         </div>
 
@@ -589,13 +593,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenCorrectModal
                       </td>
 
                       <td className="py-3 px-3.5 text-right">
-                        <button
+                        {canCorrect && <button
                           onClick={() => onOpenCorrectModal(record)}
                           className="p-1 rounded-lg text-slate-500 hover:text-brand hover:bg-slate-100 transition-colors"
                           title="Corriger ou documenter ce pointage"
+                          aria-label={`Corriger le pointage de ${record.employeeName}`}
                         >
                           <Edit3 className="w-3.5 h-3.5" />
-                        </button>
+                        </button>}
                       </td>
                     </tr>
                   );

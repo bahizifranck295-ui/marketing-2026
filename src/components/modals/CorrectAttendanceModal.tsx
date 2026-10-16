@@ -17,6 +17,14 @@ export const CorrectAttendanceModal: React.FC<CorrectAttendanceModalProps> = ({ 
   const [actualOut, setActualOut] = useState<string>('');
   const [reason, setReason] = useState<string>('');
   const [wasAbsent, setWasAbsent] = useState<boolean>(false);
+  const [error, setError] = useState('');
+
+  // Échap ferme la fenêtre
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
 
   useEffect(() => {
     if (record) {
@@ -38,21 +46,26 @@ export const CorrectAttendanceModal: React.FC<CorrectAttendanceModalProps> = ({ 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!reason.trim()) {
-      alert('Veuillez renseigner un motif obligatoire pour cette correction administrative.');
+      setError('Veuillez renseigner un motif obligatoire pour cette correction administrative.');
+      return;
+    }
+    // Une sortie ne peut pas précéder l'entrée
+    if (!wasAbsent && actualIn && actualOut && actualOut <= actualIn) {
+      setError(`L'heure de sortie (${actualOut}) doit être postérieure à l'heure d'entrée (${actualIn}).`);
       return;
     }
 
     correctAttendance(
       record.id,
       wasAbsent ? null : (actualIn || null),
-      actualOut || null,
-      reason
+      wasAbsent ? null : (actualOut || null),
+      reason.trim()
     );
     onClose();
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Correction du pointage">
       <div className="glass-card rounded-3xl w-full max-w-lg p-6 shadow-2xl animate-in fade-in zoom-in-95 space-y-4 text-xs">
         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
           <div className="flex items-center gap-2">
@@ -145,6 +158,7 @@ export const CorrectAttendanceModal: React.FC<CorrectAttendanceModalProps> = ({ 
             />
           </div>
 
+          {error && <p className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 font-semibold" role="alert">{error}</p>}
           <div className="flex items-center justify-end gap-2 pt-2">
             <button
               type="button"

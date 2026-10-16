@@ -8,8 +8,13 @@ export const SanctionsView: React.FC = () => {
     sanctionRules, 
     addSanctionRule, 
     updateSanctionRule, 
-    deleteSanctionRule 
+    deleteSanctionRule,
+    can
   } = useApp();
+  const canCreate = can('sanctions', 'create');
+  const canEdit = can('sanctions', 'edit');
+  const canDelete = can('sanctions', 'delete');
+  const [confirmDeleteRuleId, setConfirmDeleteRuleId] = useState<string | null>(null);
 
   const [activeTab, setActiveTab] = useState<'ACTIVE' | 'FROZEN'>('ACTIVE');
   const [filterType, setFilterType] = useState<'ALL' | 'RETARD' | 'ABSENCE'>('ALL');
@@ -77,10 +82,9 @@ export const SanctionsView: React.FC = () => {
 
   // Delete action
   const handleDeleteRule = (rule: SanctionRule) => {
-    if (window.confirm(`Confirmez-vous la suppression définitive du barème « ${rule.name} » ?`)) {
-      deleteSanctionRule(rule.id);
-      showNotification(`🗑️ Le barème « ${rule.name} » a été supprimé.`, 'delete');
-    }
+    deleteSanctionRule(rule.id);
+    setConfirmDeleteRuleId(null);
+    showNotification(`🗑️ Le barème « ${rule.name} » a été supprimé.`, 'delete');
   };
 
   // Open modal for new rule
@@ -152,14 +156,14 @@ export const SanctionsView: React.FC = () => {
 
         {/* Action button: + Configurer un Seuil / Retenue */}
         <div className="flex items-center gap-2.5">
-          <button
+          {canCreate && <button
             onClick={handleOpenCreateModal}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand text-white hover:bg-brand-deep text-xs font-bold transition-all shadow-md active:scale-95"
             title="Créer un nouveau seuil de retard ou d'absence avec somme d'argent retirable"
           >
             <Plus className="w-4 h-4" />
             <span>+ Configurer un Seuil / Retenue</span>
-          </button>
+          </button>}
         </div>
       </div>
 
@@ -314,7 +318,7 @@ export const SanctionsView: React.FC = () => {
                   : 'Lorsqu\'une sanction est gelée dans la liste active, elle apparaît ici pour être réactivée si besoin.'}
               </p>
             </div>
-            {activeTab === 'ACTIVE' && (
+            {activeTab === 'ACTIVE' && canCreate && (
               <button
                 onClick={handleOpenCreateModal}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand text-white text-xs font-bold"
@@ -408,28 +412,36 @@ export const SanctionsView: React.FC = () => {
                 <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
                   <div className="flex items-center gap-1.5">
                     {/* Modify Button */}
-                    <button
+                    {canEdit && <button
                       type="button"
                       onClick={() => handleOpenEditModal(rule)}
                       className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
                       title="Modifier les seuils et montants"
                     >
                       <Edit3 className="w-3.5 h-3.5" />
-                    </button>
+                    </button>}
 
                     {/* Delete Button */}
+                    {canDelete && (confirmDeleteRuleId === rule.id ? (
+                      <span className="inline-flex items-center gap-1 text-[11px]">
+                        <span className="font-semibold text-rose-600">Supprimer ?</span>
+                        <button type="button" onClick={() => handleDeleteRule(rule)} className="px-2 py-0.5 rounded-lg bg-rose-600 text-white font-bold">Oui</button>
+                        <button type="button" onClick={() => setConfirmDeleteRuleId(null)} className="px-2 py-0.5 rounded-lg border border-slate-200 font-bold text-slate-600">Non</button>
+                      </span>
+                    ) : (
                     <button
                       type="button"
-                      onClick={() => handleDeleteRule(rule)}
+                      onClick={() => setConfirmDeleteRuleId(rule.id)}
                       className="p-1.5 rounded-lg text-rose-500 hover:text-rose-700 hover:bg-rose-50 transition-colors"
                       title="Supprimer ce barème"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
+                    ))}
                   </div>
 
                   {/* FREEZE / UNFREEZE BUTTON AS SPECIFICALLY REQUESTED BY USER */}
-                  {rule.isActive ? (
+                  {!canEdit ? null : rule.isActive ? (
                     <button
                       type="button"
                       onClick={() => handleFreezeRule(rule)}

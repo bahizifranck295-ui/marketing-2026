@@ -9,8 +9,11 @@ export const SettingsView: React.FC = () => {
     companySettings, updateCompanySettings,
     departments, addDepartment,
     zktecoConfig, updateZKTecoConfig,
-    auditLogs
+    auditLogs, can
   } = useApp();
+  const canEditSettings = can('settings', 'edit');
+  const canCreateSettings = can('settings', 'create');
+  const canImport = can('attendance', 'create');
 
   const [activeTab, setActiveTab] = useState<'ZKTECO' | 'COMPANY' | 'DEPARTMENTS' | 'AUDIT' | 'USERS'>('ZKTECO');
 
@@ -131,8 +134,9 @@ export const SettingsView: React.FC = () => {
                 <input
                   id="zk-model"
                   type="text"
-                  value={zktecoConfig.model}
-                  onChange={(e) => updateZKTecoConfig({ model: e.target.value })}
+                  defaultValue={zktecoConfig.model}
+                  disabled={!canEditSettings}
+                  onBlur={(e) => { if (e.target.value.trim() && e.target.value !== zktecoConfig.model) updateZKTecoConfig({ model: e.target.value.trim() }); }}
                   className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold outline-none"
                 />
               </div>
@@ -147,7 +151,9 @@ export const SettingsView: React.FC = () => {
             </div>
           </div>
 
-          <UsbImportPanel />
+          {canImport ? <UsbImportPanel /> : (
+            <p className="glass-card rounded-2xl p-5 text-xs text-slate-500">L'import du fichier de la pointeuse est réservé aux rôles autorisés à créer des présences.</p>
+          )}
 
           {/* Sync History Logs */}
           <div className="glass-card rounded-2xl p-6 space-y-4">
@@ -191,7 +197,7 @@ export const SettingsView: React.FC = () => {
 
       {/* TAB 2: COMPANY & DEFAULT SCHEDULES */}
       {activeTab === 'COMPANY' && (
-        <div className="glass-card rounded-2xl p-6 space-y-5">
+        <fieldset disabled={!canEditSettings} className="glass-card rounded-2xl p-6 space-y-5 disabled:opacity-90">
           <h3 className="text-base font-bold text-slate-900">
             Identité de PREMIDIS SARL & Horaires Officiels
           </h3>
@@ -201,8 +207,8 @@ export const SettingsView: React.FC = () => {
               <label className="block text-slate-500 font-bold mb-1">Raison sociale</label>
               <input
                 type="text"
-                value={companySettings.companyName}
-                onChange={(e) => updateCompanySettings({ companyName: e.target.value })}
+                defaultValue={companySettings.companyName}
+                onBlur={(e) => { if (e.target.value !== companySettings.companyName) updateCompanySettings({ companyName: e.target.value }); }}
                 className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold outline-none"
               />
             </div>
@@ -210,8 +216,8 @@ export const SettingsView: React.FC = () => {
               <label className="block text-slate-500 font-bold mb-1">Sous-titre / Activité</label>
               <input
                 type="text"
-                value={companySettings.companySubName}
-                onChange={(e) => updateCompanySettings({ companySubName: e.target.value })}
+                defaultValue={companySettings.companySubName}
+                onBlur={(e) => { if (e.target.value !== companySettings.companySubName) updateCompanySettings({ companySubName: e.target.value }); }}
                 className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 outline-none"
               />
             </div>
@@ -219,8 +225,8 @@ export const SettingsView: React.FC = () => {
               <label className="block text-slate-500 font-bold mb-1">Adresse complète</label>
               <input
                 type="text"
-                value={companySettings.address}
-                onChange={(e) => updateCompanySettings({ address: e.target.value })}
+                defaultValue={companySettings.address}
+                onBlur={(e) => { if (e.target.value !== companySettings.address) updateCompanySettings({ address: e.target.value }); }}
                 className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 outline-none"
               />
             </div>
@@ -228,8 +234,8 @@ export const SettingsView: React.FC = () => {
               <label className="block text-slate-500 font-bold mb-1">Numéro RCCM officiel</label>
               <input
                 type="text"
-                value={companySettings.rccm}
-                onChange={(e) => updateCompanySettings({ rccm: e.target.value })}
+                defaultValue={companySettings.rccm}
+                onBlur={(e) => { if (e.target.value !== companySettings.rccm) updateCompanySettings({ rccm: e.target.value }); }}
                 className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-mono font-bold outline-none"
               />
             </div>
@@ -237,8 +243,8 @@ export const SettingsView: React.FC = () => {
               <label className="block text-slate-500 font-bold mb-1">Téléphone de contact</label>
               <input
                 type="text"
-                value={companySettings.phone}
-                onChange={(e) => updateCompanySettings({ phone: e.target.value })}
+                defaultValue={companySettings.phone}
+                onBlur={(e) => { if (e.target.value !== companySettings.phone) updateCompanySettings({ phone: e.target.value }); }}
                 className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-mono outline-none"
               />
             </div>
@@ -246,8 +252,18 @@ export const SettingsView: React.FC = () => {
               <label className="block text-slate-500 font-bold mb-1">WhatsApp officiel</label>
               <input
                 type="text"
-                value={companySettings.whatsapp}
-                onChange={(e) => updateCompanySettings({ whatsapp: e.target.value })}
+                defaultValue={companySettings.whatsapp}
+                onBlur={(e) => { if (e.target.value !== companySettings.whatsapp) updateCompanySettings({ whatsapp: e.target.value }); }}
+                className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-mono outline-none"
+              />
+            </div>
+            <div>
+              <label htmlFor="company-email" className="block text-slate-500 font-bold mb-1">E-mail officiel (affiché dans « Mot de passe oublié »)</label>
+              <input
+                id="company-email"
+                type="email"
+                defaultValue={companySettings.email}
+                onBlur={(e) => { if (e.target.value !== companySettings.email) updateCompanySettings({ email: e.target.value.trim() }); }}
                 className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-mono outline-none"
               />
             </div>
@@ -263,8 +279,8 @@ export const SettingsView: React.FC = () => {
                 <label className="block text-slate-600 font-bold mb-1">Arrivée au plus tard (Entrée)</label>
                 <input
                   type="time"
-                  value={companySettings.defaultExpectedCheckIn}
-                  onChange={(e) => updateCompanySettings({ defaultExpectedCheckIn: e.target.value })}
+                  defaultValue={companySettings.defaultExpectedCheckIn}
+                  onBlur={(e) => { if (e.target.value !== companySettings.defaultExpectedCheckIn) updateCompanySettings({ defaultExpectedCheckIn: e.target.value }); }}
                   className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold text-center"
                 />
               </div>
@@ -272,8 +288,8 @@ export const SettingsView: React.FC = () => {
                 <label className="block text-slate-600 font-bold mb-1">Fin de service (Sortie)</label>
                 <input
                   type="time"
-                  value={companySettings.defaultExpectedCheckOut}
-                  onChange={(e) => updateCompanySettings({ defaultExpectedCheckOut: e.target.value })}
+                  defaultValue={companySettings.defaultExpectedCheckOut}
+                  onBlur={(e) => { if (e.target.value !== companySettings.defaultExpectedCheckOut) updateCompanySettings({ defaultExpectedCheckOut: e.target.value }); }}
                   className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold text-center"
                 />
               </div>
@@ -283,8 +299,8 @@ export const SettingsView: React.FC = () => {
                   type="number"
                   min="0"
                   max="60"
-                  value={companySettings.defaultToleranceMinutes}
-                  onChange={(e) => updateCompanySettings({ defaultToleranceMinutes: parseInt(e.target.value) || 10 })}
+                  defaultValue={companySettings.defaultToleranceMinutes}
+                  onBlur={(e) => { const v = parseInt(e.target.value, 10); if (!Number.isNaN(v) && v !== companySettings.defaultToleranceMinutes) updateCompanySettings({ defaultToleranceMinutes: v }); }}
                   className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 font-mono font-bold text-center"
                 />
               </div>
@@ -293,7 +309,7 @@ export const SettingsView: React.FC = () => {
               Règle : Tout pointage enregistré après l'heure d'entrée + la tolérance est automatiquement qualifié en statut « Retard ».
             </p>
           </div>
-        </div>
+        </fieldset>
       )}
 
       {/* TAB 3: DEPARTMENTS */}
@@ -305,7 +321,7 @@ export const SettingsView: React.FC = () => {
             </h3>
           </div>
 
-          <form onSubmit={handleAddDepartment} className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs p-3 rounded-xl bg-slate-50">
+          {canCreateSettings && <form onSubmit={handleAddDepartment} className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs p-3 rounded-xl bg-slate-50">
             <div>
               <label className="block text-slate-500 font-bold mb-1">Nom du département</label>
               <input
@@ -346,7 +362,7 @@ export const SettingsView: React.FC = () => {
                 + Ajouter département
               </button>
             </div>
-          </form>
+          </form>}
 
           <div className="overflow-x-auto rounded-xl border border-slate-100">
             <table className="w-full text-left text-xs">

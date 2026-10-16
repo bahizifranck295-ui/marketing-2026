@@ -22,7 +22,7 @@ export const ReportsView: React.FC<{
   /** Appelé une fois le document affiché : élément de l'aperçu et titre du rapport */
   onDocumentReady?: (el: HTMLDivElement, title: string) => void;
 }> = ({ preset, onDocumentReady }) => {
-  const { attendanceRecords, employees, departments, sanctionCases, workingDate, reportTab, reportMonth } = useApp();
+  const { attendanceRecords, employees, departments, sanctionCases, workingDate, reportTab, reportMonth, can } = useApp();
 
   // Tab: 'ATTENDANCE' (Rapports de présence) vs 'SANCTIONS' (Sanctions disciplinaires mensuelles)
   const [activeTab, setActiveTab] = useState<'ATTENDANCE' | 'SANCTIONS'>(preset ? 'ATTENDANCE' : reportTab);
@@ -285,7 +285,7 @@ export const ReportsView: React.FC<{
 
         {/* Action button: ONLY Télécharger PDF */}
         <div className="flex items-center gap-2.5">
-          <button
+          {can('reports', 'export') && <button
             onClick={handleExportPdf}
             disabled={exporting}
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-600 text-white hover:bg-rose-700 text-xs font-bold shadow-xs transition-colors disabled:opacity-60"
@@ -293,7 +293,7 @@ export const ReportsView: React.FC<{
           >
             <FileText className="w-4 h-4" />
             <span>{exporting ? 'Préparation du PDF…' : 'Télécharger PDF'}</span>
-          </button>
+          </button>}
         </div>
       </div>
 
