@@ -107,7 +107,7 @@ export const generateAttendancePdf = (
     doc.text(`PREMIDIS Attendance – Document officiel | Page ${i} sur ${pageCount} | Généré le ${new Date().toLocaleDateString('fr-FR')}`, 14, 202);
   }
 
-  doc.save(`${title.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().substring(0, 10)}.pdf`);
+  doc.save(`${title.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_|_$/g, '')}_${new Date().toISOString().substring(0, 10)}.pdf`);
 };
 
 
